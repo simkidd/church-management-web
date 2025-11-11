@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import {
   Field,
+  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -132,81 +133,72 @@ const LoginForm = () => {
   const isLoading = loginMutation.isPending;
 
   return (
-    <Card className="w-full sm:max-w-md shadow-xl">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold text-center">
-          Welcome Back
-        </CardTitle>
-        <CardDescription className="text-center">
-          Sign in to continue your spiritual journey
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form id="login-form" onSubmit={form.handleSubmit(onSubmit)}>
-          <FieldGroup>
-            <Controller
-              name="email"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="login-email">Email</FieldLabel>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      {...field}
-                      id="login-email"
-                      type="email"
-                      placeholder="john@example.com"
-                      className="pl-10"
-                      aria-invalid={fieldState.invalid}
-                      disabled={isLoading}
-                      autoComplete="email"
-                    />
-                  </div>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
+    <form id="login-form" onSubmit={form.handleSubmit(onSubmit)}>
+      <FieldGroup>
+        <div className="flex flex-col items-center gap-1 text-center">
+          <h1 className="text-2xl font-bold">Login to your account</h1>
+          <p className="text-muted-foreground text-sm text-balance">
+            Enter your email below to login to your account
+          </p>
+        </div>
 
-            <Controller
-              name="password"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <div className="flex items-center justify-between">
-                    <FieldLabel htmlFor="login-password">Password</FieldLabel>
-                    <Link
-                      href="/forgot-password"
-                      className="text-sm text-primary hover:underline"
-                    >
-                      Forgot password?
-                    </Link>
-                  </div>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      {...field}
-                      id="login-password"
-                      type="password"
-                      placeholder="••••••••"
-                      className="pl-10"
-                      aria-invalid={fieldState.invalid}
-                      disabled={isLoading}
-                      autoComplete="current-password"
-                    />
-                  </div>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-          </FieldGroup>
-        </form>
+        <Controller
+          name="email"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="login-email">Email</FieldLabel>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  {...field}
+                  id="login-email"
+                  type="email"
+                  placeholder="john@example.com"
+                  className="pl-10"
+                  aria-invalid={fieldState.invalid}
+                  disabled={isLoading}
+                  autoComplete="email"
+                />
+              </div>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
 
-        <div className="mt-6 space-y-4">
+        <Controller
+          name="password"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <div className="flex items-center justify-between">
+                <FieldLabel htmlFor="login-password">Password</FieldLabel>
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-sm text-primary hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  {...field}
+                  id="login-password"
+                  type="password"
+                  placeholder="••••••••"
+                  className="pl-10"
+                  aria-invalid={fieldState.invalid}
+                  disabled={isLoading}
+                  autoComplete="current-password"
+                />
+              </div>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+
+        <Field>
           <Button
             type="submit"
             form="login-form"
@@ -222,24 +214,15 @@ const LoginForm = () => {
               "Sign In"
             )}
           </Button>
-
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">
-                Don&apos;t have an account?
-              </span>
-            </div>
-          </div>
-
-          <Button asChild variant="outline" className="w-full" disabled={isLoading}>
-            <Link href="/auth/register">Create Account</Link>
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+        </Field>
+        <FieldDescription className="text-center">
+          Don&apos;t have an account?{" "}
+          <Link href="/auth/register">
+            Sign up
+          </Link>
+        </FieldDescription>
+      </FieldGroup>
+    </form>
   );
 };
 
