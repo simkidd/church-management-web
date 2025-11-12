@@ -21,7 +21,13 @@ import authApi from "@/lib/api/auth.api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
-import { ArrowLeft, Loader2, Mail, CheckCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  Loader2,
+  Mail,
+  CheckCircle,
+  CheckCircle2,
+} from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -76,16 +82,21 @@ const ForgotPasswordForm = () => {
   // Success state - email sent
   if (isEmailSent) {
     return (
-      <div className="space-y-4 p-0">
-        <div className="flex flex-col items-center gap-1 text-center">
-          <div className="flex justify-center mb-4">
-            <CheckCircle className="h-12 w-12 text-green-500" />
+      <div className="space-y-4">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/20">
+            <CheckCircle2 className="w-10 h-10 text-green-600 dark:text-green-400" />
           </div>
-          <h1 className="text-2xl font-bold">Check Your Email</h1>
-          <p className="text-muted-foreground text-sm text-balance">
-            We&apos;ve sent password reset instructions to
-          </p>
-          <p className="font-medium text-sm text-foreground mt-2">{sentEmail}</p>
+
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold">Check Your Email</h1>
+            <p className="text-muted-foreground text-sm text-balance">
+              We&apos;ve sent password reset instructions to
+            </p>
+            <p className="font-medium text-sm text-foreground mt-2">
+              {sentEmail}
+            </p>
+          </div>
         </div>
 
         <div className="text-sm text-muted-foreground text-center space-y-2">

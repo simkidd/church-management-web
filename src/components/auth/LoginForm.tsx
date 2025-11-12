@@ -215,12 +215,13 @@ const LoginForm = () => {
             )}
           </Button>
         </Field>
-        <FieldDescription className="text-center">
-          Don&apos;t have an account?{" "}
-          <Link href="/auth/register">
-            Sign up
-          </Link>
-        </FieldDescription>
+        
+        <Field>
+          <FieldDescription className="text-center">
+            Don&apos;t have an account?{" "}
+            <Link href="/auth/register">Sign up</Link>
+          </FieldDescription>
+        </Field>
       </FieldGroup>
     </form>
   );

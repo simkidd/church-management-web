@@ -16,7 +16,6 @@ export interface RegisterData {
   email: string;
   password: string;
   phone: string;
-  role: "instructor" | "member";
   gender: Gender;
   address?: string;
   city?: string;

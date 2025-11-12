@@ -1,15 +1,8 @@
 "use client";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   Field,
+  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -17,15 +10,35 @@ import {
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { RegisterData } from "@/interfaces/auth.interface";
+import { ApiErrorResponse } from "@/interfaces/response.interface";
 import authApi from "@/lib/api/auth.api";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Lock, Mail, MapPin, Phone, User } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { AxiosError } from "axios";
+import {
+  CheckCircle2,
+  Loader2,
+  Lock,
+  Mail,
+  MapPin,
+  Phone,
+  User,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import * as z from "zod";
 import { Label } from "../ui/label";
+import { useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { nigeriaStates } from "@/data/nigeria-states";
 
 // Define the form schema with Zod
 const formSchema = z
@@ -48,9 +61,6 @@ const formSchema = z
       .string()
       .min(1, "Phone number is required")
       .min(10, "Phone number must be at least 10 characters"),
-    role: z.enum(["member", "instructor"], {
-      error: "Please select a role",
-    }),
     gender: z.enum(["male", "female"], {
       error: "Please select your gender",
     }),
@@ -67,7 +77,7 @@ type FormData = z.infer<typeof formSchema>;
 
 const RegisterForm = () => {
   const router = useRouter();
-  const queryClient = useQueryClient();
+  const [selectedState, setSelectedState] = useState("");
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -78,8 +88,7 @@ const RegisterForm = () => {
       password: "",
       confirmPassword: "",
       phone: "",
-      role: "member",
-      gender: "male",
+      gender: undefined,
       address: "",
       city: "",
       state: "",
@@ -89,24 +98,28 @@ const RegisterForm = () => {
   const registerMutation = useMutation({
     mutationFn: (payload: RegisterData) => authApi.register(payload),
     onSuccess: () => {
-      // Redirect to verification page or login
-      router.push("/auth/verify-email");
+      setTimeout(() => {
+        router.push("/auth/login");
+      }, 300);
     },
-    onError: (error: any) => {
-      // Error will be handled in the UI
+    onError: (error: AxiosError<ApiErrorResponse>) => {
       console.error("Registration error:", error);
+      const errorMessage =
+        error.response?.data?.message || "Sign up failed. Please try again.";
+      toast.error("Sign up Failed", {
+        description: errorMessage,
+        duration: 5000,
+      });
     },
   });
 
   const onSubmit = (data: FormData) => {
-    // Transform form data to match RegisterData interface
     const payload: RegisterData = {
       firstName: data.firstName,
       lastName: data.lastName,
       email: data.email,
       password: data.password,
       phone: data.phone,
-      role: data.role,
       gender: data.gender,
       address: data.address || undefined,
       city: data.city || undefined,
@@ -118,336 +131,308 @@ const RegisterForm = () => {
 
   const isLoading = registerMutation.isPending;
 
+  if (registerMutation.isSuccess) {
+    return (
+      <div className="space-y-6 text-center">
+        <div className="flex flex-col items-center justify-center space-y-4">
+          {/* Success Icon */}
+          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/20">
+            <CheckCircle2 className="w-10 h-10 text-green-600 dark:text-green-400" />
+          </div>
+
+          {/* Success Message */}
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold">
+              Account Created Successfully!
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              Your account has been created successfully. You will be redirected
+              to the login page shortly.
+            </p>
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            Redirecting to login...
+          </p>
+        </div>
+
+        <p className="text-xs text-muted-foreground">
+          Check your email for a verification link to complete your account
+          setup.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <Card className="w-full sm:max-w-md shadow-xl">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold text-center">
-          Create Account
-        </CardTitle>
-        <CardDescription className="text-center">
-          Fill in your details to get started
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form id="register-form" onSubmit={form.handleSubmit(onSubmit)}>
-          <FieldGroup>
-            {registerMutation.isError && (
-              <Alert variant="destructive">
-                <AlertDescription>
-                  {registerMutation.error?.response?.data?.message ||
-                    "Registration failed. Please try again."}
-                </AlertDescription>
-              </Alert>
+    <form id="register-form" onSubmit={form.handleSubmit(onSubmit)}>
+      <FieldGroup>
+        <div className="flex flex-col items-center gap-1 text-center">
+          <h1 className="text-2xl font-bold"> Create Account</h1>
+          <p className="text-muted-foreground text-sm text-balance">
+            Fill in your details to get started
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <Controller
+            name="firstName"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="register-firstName">First Name</FieldLabel>
+                <div className="relative">
+                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    {...field}
+                    id="register-firstName"
+                    placeholder="John"
+                    className="pl-10"
+                    aria-invalid={fieldState.invalid}
+                    disabled={isLoading}
+                  />
+                </div>
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
             )}
+          />
 
-            <div className="grid grid-cols-2 gap-4">
-              <Controller
-                name="firstName"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="register-firstName">
-                      First Name
-                    </FieldLabel>
-                    <div className="relative">
-                      <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        {...field}
-                        id="register-firstName"
-                        placeholder="John"
-                        className="pl-10"
-                        aria-invalid={fieldState.invalid}
-                        disabled={isLoading}
-                      />
-                    </div>
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
+          <Controller
+            name="lastName"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="register-lastName">Last Name</FieldLabel>
+                <Input
+                  {...field}
+                  id="register-lastName"
+                  placeholder="Doe"
+                  aria-invalid={fieldState.invalid}
+                  disabled={isLoading}
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
                 )}
-              />
+              </Field>
+            )}
+          />
+        </div>
 
-              <Controller
-                name="lastName"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="register-lastName">
-                      Last Name
-                    </FieldLabel>
-                    <Input
-                      {...field}
-                      id="register-lastName"
-                      placeholder="Doe"
-                      aria-invalid={fieldState.invalid}
-                      disabled={isLoading}
-                    />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
-              />
-            </div>
+        <Controller
+          name="email"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="register-email">Email</FieldLabel>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  {...field}
+                  id="register-email"
+                  type="email"
+                  placeholder="john@example.com"
+                  className="pl-10"
+                  aria-invalid={fieldState.invalid}
+                  disabled={isLoading}
+                  autoComplete="email"
+                />
+              </div>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
 
-            <Controller
-              name="email"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="register-email">Email</FieldLabel>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      {...field}
-                      id="register-email"
-                      type="email"
-                      placeholder="john@example.com"
-                      className="pl-10"
-                      aria-invalid={fieldState.invalid}
-                      disabled={isLoading}
-                      autoComplete="email"
-                    />
-                  </div>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
+        <Controller
+          name="phone"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="register-phone">Phone Number</FieldLabel>
+              <div className="relative">
+                <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  {...field}
+                  id="register-phone"
+                  type="tel"
+                  placeholder="+1 (555) 123-4567"
+                  className="pl-10"
+                  aria-invalid={fieldState.invalid}
+                  disabled={isLoading}
+                  autoComplete="tel"
+                />
+              </div>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
 
-            <Controller
-              name="phone"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="register-phone">Phone Number</FieldLabel>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      {...field}
-                      id="register-phone"
-                      type="tel"
-                      placeholder="+1 (555) 123-4567"
-                      className="pl-10"
-                      aria-invalid={fieldState.invalid}
-                      disabled={isLoading}
-                      autoComplete="tel"
-                    />
-                  </div>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
-              <Controller
-                name="password"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="register-password">
-                      Password
-                    </FieldLabel>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        {...field}
-                        id="register-password"
-                        type="password"
-                        placeholder="••••••••"
-                        className="pl-10"
-                        aria-invalid={fieldState.invalid}
-                        disabled={isLoading}
-                        autoComplete="new-password"
-                      />
-                    </div>
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
-              />
-
-              <Controller
-                name="confirmPassword"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="register-confirmPassword">
-                      Confirm Password
-                    </FieldLabel>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        {...field}
-                        id="register-confirmPassword"
-                        type="password"
-                        placeholder="••••••••"
-                        className="pl-10"
-                        aria-invalid={fieldState.invalid}
-                        disabled={isLoading}
-                        autoComplete="new-password"
-                      />
-                    </div>
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
-              />
-            </div>
-
-            <Controller
-              name="gender"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel>Gender</FieldLabel>
-                  <RadioGroup
-                    value={field.value}
-                    onValueChange={field.onChange}
+        <div className="grid grid-cols-2 gap-4">
+          <Controller
+            name="password"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="register-password">Password</FieldLabel>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    {...field}
+                    id="register-password"
+                    type="password"
+                    placeholder="••••••••"
+                    className="pl-10"
+                    aria-invalid={fieldState.invalid}
                     disabled={isLoading}
-                    className="flex space-x-4"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="male" id="male" />
-                      <Label
-                        htmlFor="male"
-                        className="font-normal cursor-pointer"
-                      >
-                        Male
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="female" id="female" />
-                      <Label
-                        htmlFor="female"
-                        className="font-normal cursor-pointer"
-                      >
-                        Female
-                      </Label>
-                    </div>
-                  </RadioGroup>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
+                    autoComplete="new-password"
+                  />
+                </div>
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
 
-            <Controller
-              name="role"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel>I am registering as:</FieldLabel>
-                  <RadioGroup
-                    value={field.value}
-                    onValueChange={field.onChange}
+          <Controller
+            name="confirmPassword"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="register-confirmPassword">
+                  Confirm Password
+                </FieldLabel>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    {...field}
+                    id="register-confirmPassword"
+                    type="password"
+                    placeholder="••••••••"
+                    className="pl-10"
+                    aria-invalid={fieldState.invalid}
                     disabled={isLoading}
-                    className="flex space-x-4"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="member" id="member" />
-                      <Label
-                        htmlFor="member"
-                        className="font-normal cursor-pointer"
-                      >
-                        Church Member
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="instructor" id="instructor" />
-                      <Label
-                        htmlFor="instructor"
-                        className="font-normal cursor-pointer"
-                      >
-                        Instructor
-                      </Label>
-                    </div>
-                  </RadioGroup>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-
-            <Controller
-              name="address"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="register-address">Address </FieldLabel>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      {...field}
-                      id="register-address"
-                      placeholder="123 Main Street"
-                      className="pl-10"
-                      aria-invalid={fieldState.invalid}
-                      disabled={isLoading}
-                      autoComplete="street-address"
-                    />
-                  </div>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
-              <Controller
-                name="city"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="register-city">City </FieldLabel>
-                    <Input
-                      {...field}
-                      id="register-city"
-                      placeholder="New York"
-                      aria-invalid={fieldState.invalid}
-                      disabled={isLoading}
-                      autoComplete="address-level2"
-                    />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
+                    autoComplete="new-password"
+                  />
+                </div>
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
                 )}
-              />
+              </Field>
+            )}
+          />
+        </div>
 
-              <Controller
-                name="state"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="register-state">State </FieldLabel>
-                    <Input
-                      {...field}
-                      id="register-state"
-                      placeholder="NY"
-                      aria-invalid={fieldState.invalid}
-                      disabled={isLoading}
-                      autoComplete="address-level1"
-                    />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
+        <Controller
+          name="gender"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel>Gender</FieldLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <SelectTrigger className="cursor-pointer">
+                  <SelectValue placeholder="Select gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                </SelectContent>
+              </Select>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+
+        <Controller
+          name="address"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="register-address">Address </FieldLabel>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  {...field}
+                  id="register-address"
+                  placeholder="123 Main Street"
+                  className="pl-10"
+                  aria-invalid={fieldState.invalid}
+                  disabled={isLoading}
+                  autoComplete="street-address"
+                />
+              </div>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+
+        <div className="grid grid-cols-2 gap-4">
+          <Controller
+            name="state"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="register-state">State </FieldLabel>
+                <Select
+                  value={field.value}
+                  onValueChange={(val) => {
+                    field.onChange(val);
+                    setSelectedState(val);
+                    form.setValue("city", "");
+                  }}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger className="cursor-pointer">
+                    <SelectValue placeholder="Select State" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.keys(nigeriaStates).map((state) => (
+                      <SelectItem key={state} value={state}>
+                        {state}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
                 )}
-              />
-            </div>
-          </FieldGroup>
-        </form>
+              </Field>
+            )}
+          />
 
-        <div className="mt-6 space-y-4">
+          <Controller
+            name="city"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="register-city">City </FieldLabel>
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  disabled={!selectedState}
+                >
+                  <SelectTrigger className="cursor-pointer">
+                    <SelectValue placeholder="Select city" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {selectedState &&
+                      nigeriaStates[selectedState]?.map((city) => (
+                        <SelectItem key={city} value={city}>
+                          {city}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+        </div>
+
+        <Field>
           <Button
             type="submit"
             form="register-form"
@@ -463,26 +448,15 @@ const RegisterForm = () => {
               "Create Account"
             )}
           </Button>
+        </Field>
 
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">
-                Already have an account?
-              </span>
-            </div>
-          </div>
-
-          <Link href="/auth/login">
-            <Button variant="outline" className="w-full" disabled={isLoading}>
-              Sign In
-            </Button>
-          </Link>
-        </div>
-      </CardContent>
-    </Card>
+        <Field>
+          <FieldDescription className="text-center">
+            Already have an account? <Link href="/auth/login">Sign in</Link>
+          </FieldDescription>
+        </Field>
+      </FieldGroup>
+    </form>
   );
 };
 
