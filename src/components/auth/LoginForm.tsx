@@ -142,61 +142,67 @@ const LoginForm = () => {
           </p>
         </div>
 
-        <Controller
-          name="email"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="login-email">Email</FieldLabel>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  {...field}
-                  id="login-email"
-                  type="email"
-                  placeholder="john@example.com"
-                  className="pl-10"
-                  aria-invalid={fieldState.invalid}
-                  disabled={isLoading}
-                  autoComplete="email"
-                />
-              </div>
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
-        />
+        <div className="space-y-4">
+          <Controller
+            name="email"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="login-email">Email</FieldLabel>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    {...field}
+                    id="login-email"
+                    type="email"
+                    placeholder="john@example.com"
+                    className="pl-10"
+                    aria-invalid={fieldState.invalid}
+                    disabled={isLoading}
+                    autoComplete="email"
+                  />
+                </div>
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
 
-        <Controller
-          name="password"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <div className="flex items-center justify-between">
-                <FieldLabel htmlFor="login-password">Password</FieldLabel>
-                <Link
-                  href="/auth/forgot-password"
-                  className="text-sm text-primary hover:underline"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  {...field}
-                  id="login-password"
-                  type="password"
-                  placeholder="••••••••"
-                  className="pl-10"
-                  aria-invalid={fieldState.invalid}
-                  disabled={isLoading}
-                  autoComplete="current-password"
-                />
-              </div>
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
-        />
+          <Controller
+            name="password"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <div className="flex items-center justify-between">
+                  <FieldLabel htmlFor="login-password">Password</FieldLabel>
+                  <Link
+                    href="/auth/forgot-password"
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    {...field}
+                    id="login-password"
+                    type="password"
+                    placeholder="••••••••"
+                    className="pl-10"
+                    aria-invalid={fieldState.invalid}
+                    disabled={isLoading}
+                    autoComplete="current-password"
+                  />
+                </div>
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+        </div>
 
         <Field>
           <Button
@@ -215,7 +221,7 @@ const LoginForm = () => {
             )}
           </Button>
         </Field>
-        
+
         <Field>
           <FieldDescription className="text-center">
             Don&apos;t have an account?{" "}
