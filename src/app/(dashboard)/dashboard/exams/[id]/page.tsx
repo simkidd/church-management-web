@@ -1,4 +1,4 @@
-import ExamDetails from "@/components/dashboard/exams/ExamDetails";
+// import ExamDetails from "@/components/dashboard/exams/ExamDetails";
 
 const ExamDetailsPage = async ({
   params,
@@ -9,7 +9,7 @@ const ExamDetailsPage = async ({
 
   return (
     <div className="w-full">
-      <ExamDetails id={id} />
+      {/* <ExamDetails id={id} /> */}
     </div>
   );
 };

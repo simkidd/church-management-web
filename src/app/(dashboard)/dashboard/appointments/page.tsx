@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { AppointmentCalendar } from "@/components/dashboard/appointments/AppointmentCalendar"
+// import { AppointmentCalendar } from "@/components/dashboard/appointments/AppointmentCalendar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function AppointmentsPage() {
@@ -23,7 +23,7 @@ export default function AppointmentsPage() {
               <CardTitle>Appointment Calendar</CardTitle>
             </CardHeader>
             <CardContent>
-              <AppointmentCalendar />
+              {/* <AppointmentCalendar /> */}
             </CardContent>
           </Card>
         </TabsContent>
