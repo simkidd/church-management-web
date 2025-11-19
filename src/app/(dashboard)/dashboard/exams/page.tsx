@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ExamList } from "@/components/dashboard/exams/ExamList";
+// import { ExamList } from "@/components/dashboard/exams/ExamList";
 import { FileCheck, Plus } from "lucide-react";
 import Link from "next/link";
 
@@ -26,7 +26,7 @@ export default function ExamsPage() {
         </Link>
       </div>
 
-      <ExamList />
+      {/* <ExamList /> */}
     </div>
   );
 }

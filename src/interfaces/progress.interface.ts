@@ -1,8 +1,9 @@
-import { ICourse } from "./course.interface";
+import { ICourse, ILesson } from "./course.interface";
+import { IUser } from "./user.interface";
 
 export interface IProgress {
   _id: string;
-  user: string;
+  user: IUser;
   course: ICourse;
   lessonsProgress: ILessonProgress[];
   overallProgress: number;
@@ -10,11 +11,15 @@ export interface IProgress {
   lastAccessedAt: string;
   completedAt?: string;
   certificateIssued: boolean;
+  certificateUrl?: string;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
 }
 
 export interface ILessonProgress {
-  lessonId: string;
+  lessonId: ILesson;
   isCompleted: boolean;
   completedAt?: string;
   timeSpent?: number;
+  lastAccessedAt?: Date;
 }

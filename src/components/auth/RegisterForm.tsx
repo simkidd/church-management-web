@@ -17,6 +17,8 @@ import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import {
   CheckCircle2,
+  Eye,
+  EyeOff,
   Loader2,
   Lock,
   Mail,
@@ -78,6 +80,8 @@ type FormData = z.infer<typeof formSchema>;
 const RegisterForm = () => {
   const router = useRouter();
   const [selectedState, setSelectedState] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -287,13 +291,25 @@ const RegisterForm = () => {
                     <Input
                       {...field}
                       id="register-password"
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
                       className="pl-10"
                       aria-invalid={fieldState.invalid}
                       disabled={isLoading}
                       autoComplete="new-password"
                     />
+
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground cursor-pointer"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
                   </div>
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
@@ -315,13 +331,26 @@ const RegisterForm = () => {
                     <Input
                       {...field}
                       id="register-confirmPassword"
-                      type="password"
+                      type={showConfirmPassword ? "text" : "password"}
                       placeholder="••••••••"
                       className="pl-10"
                       aria-invalid={fieldState.invalid}
                       disabled={isLoading}
                       autoComplete="new-password"
                     />
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground cursor-pointer"
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
                   </div>
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />

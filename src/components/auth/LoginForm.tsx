@@ -2,13 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   Field,
   FieldDescription,
   FieldError,
@@ -23,9 +16,10 @@ import { useAuthStore } from "@/stores/auth.store";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
-import { Loader2, Lock, Mail } from "lucide-react";
+import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
@@ -49,6 +43,7 @@ const LoginForm = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
+  const [showPassword, setShowPassword] = useState(false);
 
   const redirectUrl = searchParams.get("redirect");
 
@@ -65,11 +60,6 @@ const LoginForm = () => {
     onSuccess: (data) => {
       const { user, accessToken, refreshToken } = data.data;
 
-      console.log("login>>", {
-        message: data.message,
-        data: data.data,
-      });
-
       // Update store
       setUser(user);
       setTokens({ accessToken, refreshToken });
@@ -81,10 +71,7 @@ const LoginForm = () => {
         description: `Welcome back, ${user.firstName}! Redirecting to your dashboard...`,
       });
 
-      const finalRedirectPath = getFinalRedirectPath(user.role, redirectUrl);
-      setTimeout(() => {
-        router.push(finalRedirectPath);
-      }, 1500);
+      router.push(redirectUrl || "/dashboard");
     },
     onError: (error: AxiosError<ApiErrorResponse>) => {
       // You can handle specific error messages here
@@ -98,33 +85,6 @@ const LoginForm = () => {
       console.error("Login error:", error);
     },
   });
-
-  // Helper function to determine final redirect path
-  const getFinalRedirectPath = (role: string, redirectParam: string | null) => {
-    // Priority 1: Use redirect URL from middleware if present
-    if (redirectParam) {
-      return redirectParam;
-    }
-
-    // Priority 2: Fall back to role-based default
-    return getRoleBasedRedirectPath(role);
-  };
-
-  // Helper function for role-based default redirects
-  const getRoleBasedRedirectPath = (role: string) => {
-    switch (role) {
-      case "admin":
-      case "super-admin":
-        return "/admin/dashboard";
-      case "instructor":
-        return "/instructor/dashboard";
-      case "pastor":
-        return "/pastor/dashboard";
-      case "member":
-      default:
-        return "/member/dashboard";
-    }
-  };
 
   const onSubmit = (data: FormData) => {
     loginMutation.mutate(data);
@@ -188,13 +148,24 @@ const LoginForm = () => {
                   <Input
                     {...field}
                     id="login-password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     className="pl-10"
                     aria-invalid={fieldState.invalid}
                     disabled={isLoading}
                     autoComplete="current-password"
                   />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground cursor-pointer"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
                 </div>
                 {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />

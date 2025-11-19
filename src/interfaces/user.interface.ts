@@ -1,4 +1,5 @@
 export interface IUser {
+  _id: string;
   id: string;
   firstName: string;
   lastName: string;
@@ -15,6 +16,11 @@ export interface IUser {
   lastLogin: string;
   createdAt: string;
   updatedAt: string;
+
+  isAdmin: boolean;
+  isSuperAdmin: boolean;
+  isInstructor: boolean;
+  isPastor: boolean;
 }
 
 export type Gender = "male" | "female";

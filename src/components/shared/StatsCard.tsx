@@ -1,7 +1,8 @@
-"use client"
+"use client";
 import { motion } from "framer-motion";
 import { LucideIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface StatsCardProps {
   title: string;
@@ -28,7 +29,7 @@ export const StatsCard = ({
     >
       <Card
         className={`overflow-hidden ${
-          gradient ? "gradient-primary text-primary-foreground" : ""
+          gradient ? "bg-gradient-primary text-primary-foreground" : ""
         } hover:shadow-elevated transition-smooth`}
       >
         <CardContent className="p-6">
@@ -54,7 +55,14 @@ export const StatsCard = ({
             >
               {title}
             </p>
-            <p className="text-3xl font-bold font-serif">{value}</p>
+            <p
+              className={cn(
+                "text-3xl font-bold font-serif",
+                gradient ? "text-white/70" : "text-muted-foreground"
+              )}
+            >
+              {value}
+            </p>
             {description && (
               <p
                 className={`text-sm ${
