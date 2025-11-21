@@ -5,6 +5,7 @@ import {
 } from "@/interfaces/response.interface";
 import api from "../axios";
 import { IProgress } from "@/interfaces/progress.interface";
+import { IExam, IExamByCourseResponse } from "@/interfaces/exam.interface";
 
 export const courseApi = {
   //  GET all courses
@@ -41,6 +42,66 @@ export const courseApi = {
     const response = await api.post(
       `/courses/${id}/lessons/${lessonId}/complete`
     );
+    return response.data;
+  },
+
+  // Exam methods
+  getExamByCourseId: async (
+    courseId: string
+  ): Promise<ApiResponse<IExamByCourseResponse>> => {
+    const response = await api.get(`/courses/${courseId}/exam`);
+    return response.data;
+  },
+
+  // Check exam eligibility
+  checkExamEligibility: async (
+    courseId: string
+  ): Promise<
+    ApiResponse<{
+      canTakeExam: boolean;
+      completedLessons: number;
+      totalLessons: number;
+      progress: number;
+      hasExistingSubmission: boolean;
+      canRetake: boolean;
+      previousScore?: number;
+      previousPassed?: boolean;
+      examDetails?: {
+        title: string;
+        duration: number;
+        passingScore: number;
+        totalQuestions: number;
+      };
+    }>
+  > => {
+    const response = await api.get(`/courses/${courseId}/exam/eligibility`);
+    return response.data;
+  },
+
+  // Submit course exam
+  submitCourseExam: async (
+    courseId: string,
+    data: { answers: { questionId: string; answer: string }[] }
+  ): Promise<
+    ApiResponse<{
+      submission: {
+        id: string;
+        score: number;
+        percentage: number;
+        isPassed: boolean;
+        isGraded: boolean;
+        maxScore: number;
+        submittedAt: string;
+      };
+      message: string;
+    }>
+  > => {
+    const response = await api.post(`/courses/${courseId}/exam/submit`, data);
+    return response.data;
+  },
+
+  getExamResults: async (courseId: string) => {
+    const response = await api.get(`/courses/${courseId}/exam/results`);
     return response.data;
   },
 };

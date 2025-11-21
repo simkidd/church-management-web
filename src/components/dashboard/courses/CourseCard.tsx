@@ -42,7 +42,7 @@ const CourseCard = ({ course }: { course: ICourse }) => {
           </CardTitle>
           {isEnrolled && overallProgress === 100 && (
             <Badge variant="default" className="bg-green-500 whitespace-nowrap">
-              <CheckCircle2 className="h-3 w-3 mr-1" />
+              <CheckCircle2 className="h-3 w-3" />
               Completed
             </Badge>
           )}

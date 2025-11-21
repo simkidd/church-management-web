@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { toast } from "sonner";
 import LessonSkeleton from "./lesson/LessonSkeleton";
 import { CourseProgress } from "./CourseProgress";
@@ -46,6 +46,7 @@ const LessonPageContent = ({
 }) => {
   const router = useRouter();
   const [videoProgress, setVideoProgress] = useState(0);
+  const hasShownToast = useRef(false);
 
   const {
     data: courseData,
@@ -200,13 +201,21 @@ const LessonPageContent = ({
     return () => document.removeEventListener("keydown", handleKeyPress);
   }, [isCompleted, handleMarkComplete, goToNextLesson, goToPreviousLesson]);
 
+  const milestoneData = useMemo(() => {
+    if (!progress || !course) return null;
+
+    const completedCount = progress.lessonsProgress.filter(
+      (lp) => lp.isCompleted
+    ).length;
+    const totalLessons = course.lessons?.length || 0;
+
+    return { completedCount, totalLessons };
+  }, [progress, course]);
+
   // Progress milestone celebrations
   useEffect(() => {
-    if (isCompleted && progress) {
-      const completedCount = progress.lessonsProgress.filter(
-        (lp) => lp.isCompleted
-      ).length;
-      const totalLessons = course?.lessons?.length || 0;
+    if (isCompleted && milestoneData && !hasShownToast.current) {
+      const { completedCount, totalLessons } = milestoneData;
 
       // Celebrate milestones
       if (completedCount === totalLessons) {
@@ -225,8 +234,14 @@ const LessonPageContent = ({
           duration: 2000,
         });
       }
+
+      hasShownToast.current = true;
     }
-  }, [isCompleted, progress, course?.lessons?.length]);
+
+    return () => {
+      hasShownToast.current = false;
+    };
+  }, [isCompleted, milestoneData, lessonId]);
 
   if (isPending) {
     return <LessonSkeleton />;

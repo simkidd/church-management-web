@@ -3,7 +3,8 @@ import {
   IExam,
   IExamResult,
   IExamSubmission,
-  ListExamsParams
+  IExamSubmissionResponse,
+  ListExamsParams,
 } from "@/interfaces/exam.interface";
 import {
   ApiResponse,
@@ -26,15 +27,19 @@ export const examsApi = {
     return response.data;
   },
 
+  // Get exams by course ID
+  getExamsByCourseId: async (
+    courseId: string
+  ): Promise<ApiResponse<PaginatedResponse<IExam>>> => {
+    const response = await api.get(`/exams/course/${courseId}`);
+    return response.data;
+  },
+
   // Submit exam
   submitExam: async (
     id: string,
     data: ExamSubmissionData
-  ): Promise<
-    ApiResponse<{
-      submission: IExamSubmission;
-    }>
-  > => {
+  ): Promise<ApiResponse<IExamSubmissionResponse>> => {
     const response = await api.post(`/exams/${id}/submit`, data);
     return response.data;
   },
@@ -42,11 +47,7 @@ export const examsApi = {
   // Get exam results
   getExamResults: async (
     id: string
-  ): Promise<
-    ApiResponse<{
-      results: IExamResult;
-    }>
-  > => {
+  ): Promise<ApiResponse<IExamResult>> => {
     const response = await api.get(`/exams/${id}/results`);
     return response.data;
   },
@@ -54,12 +55,16 @@ export const examsApi = {
   // Get my submission
   getMySubmission: async (
     id: string
-  ): Promise<
-    ApiResponse<{
-      submission: IExamSubmission;
-    }>
-  > => {
+  ): Promise<ApiResponse<IExamSubmission>> => {
     const response = await api.get(`/exams/${id}/my-submission`);
+    return response.data;
+  },
+
+  // Get submission history
+  getMySubmissionHistory: async (
+    id: string
+  ): Promise<ApiResponse<{ submissions: IExamSubmission[] }>> => {
+    const response = await api.get(`/exams/${id}/my-submission-history`);
     return response.data;
   },
 };
