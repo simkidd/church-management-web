@@ -7,6 +7,8 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import { ThemeToggler } from "./ThemeToggler";
+import Logo from "./Logo";
+import { config } from "@/utils/config";
 
 const SCROLL_THRESHOLD = 20;
 
@@ -47,13 +49,9 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="p-2 rounded-lg bg-gradient-primary">
-              <Church className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <span className="font-serif font-bold text-xl text-foreground group-hover:text-primary transition-smooth">
-             Church
-            </span>
+          <Link href="/" className="flex items-center gap-2 font-medium">
+            <Logo className="h-8" />
+            {config.SITE_NAME}
           </Link>
 
           {/* Desktop Navigation */}

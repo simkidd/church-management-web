@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import {
   Church,
   MapPin,
@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import React from "react";
+import Logo from "./Logo";
+import { config } from "@/utils/config";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -21,14 +23,10 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* About */}
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="p-2 rounded-lg bg-gold">
-                <Church className="h-5 w-5 text-gold-foreground" />
-              </div>
-              <span className="font-serif font-bold text-lg">
-                Grace Community
-              </span>
-            </div>
+            <Link href="/" className="flex items-center gap-2 font-medium mb-4">
+              <Logo className="h-8" />
+              {config.SITE_NAME}
+            </Link>
             <p className="text-primary-foreground/80 text-sm leading-relaxed">
               Inspiring faith and building community through worship, teaching,
               and service.
