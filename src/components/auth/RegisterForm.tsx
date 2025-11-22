@@ -41,6 +41,7 @@ import {
   SelectValue,
 } from "../ui/select";
 import { nigeriaStates } from "@/data/nigeria-states";
+import { formatPhoneNumber } from "@/utils/helpers/phone";
 
 // Define the form schema with Zod
 const formSchema = z
@@ -62,7 +63,10 @@ const formSchema = z
     phone: z
       .string()
       .min(1, "Phone number is required")
-      .min(10, "Phone number must be at least 10 characters"),
+      .regex(
+        /^(\+?234|0)[789][01]\d{8}$/,
+        "Please enter a valid Nigerian phone number"
+      ),
     gender: z.enum(["male", "female"], {
       error: "Please select your gender",
     }),
@@ -118,12 +122,14 @@ const RegisterForm = () => {
   });
 
   const onSubmit = (data: FormData) => {
+    const formattedPhone = formatPhoneNumber(data.phone);
+
     const payload: RegisterData = {
       firstName: data.firstName,
       lastName: data.lastName,
       email: data.email,
       password: data.password,
-      phone: data.phone,
+      phone: formattedPhone,
       gender: data.gender,
       address: data.address || undefined,
       city: data.city || undefined,
