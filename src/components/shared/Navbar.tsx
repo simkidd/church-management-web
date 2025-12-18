@@ -29,8 +29,8 @@ const Navbar = () => {
     { name: "Home", href: "/" },
     { name: "Sermons", href: "/sermons" },
     { name: "Events", href: "/events" },
-    { name: "About", href: "/" },
-    { name: "Contact", href: "/" },
+    { name: "About", href: "/about-us" },
+    { name: "Contact", href: "/contact" },
   ];
 
   const isActive = (url: string) => {
@@ -38,9 +38,9 @@ const Navbar = () => {
   };
 
   return (
-    <nav
+    <header
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+        "sticky top-0 left-0 right-0 z-50 transition-all duration-300",
         isScrolled
           ? "bg-background/95 backdrop-blur-md shadow-soft"
           : "bg-transparent"
@@ -49,35 +49,47 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 font-medium">
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-slate-900 dark:text-white "
+          >
             <Logo className="h-8" />
-            {config.SITE_NAME}
+            <div className="flex flex-col">
+              <span className="text-lg font-bold tracking-tight leading-3">
+                {config.SITE_NAME}
+              </span>
+              <span className="text-xs font-medium">{config.BRANCH_NAME}</span>
+            </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  "font-medium transition-smooth relative",
-                  isActive(link.href)
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
+          <div className="hidden md:flex flex-1 items-center justify-end gap-8">
+            <nav className="flex items-center gap-8">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    "font-medium transition-colors relative text-sm",
+                    isActive(link.href)
+                      ? "text-primary dark:text-primary-light font-bold border-b-2 border-primary dark:border-primary-light pb-0.5"
+                      : "text-slate-600 dark:text-slate-500 hover:text-primary dark:hover:text-primary-light pb-0.5 border-b-2 border-transparent"
+                  )}
+                >
+                  {link.name}
+                </Link>
+              ))}
+            </nav>
+            <div className="flex gap-3 pl-4 border-l border-slate-200 dark:border-slate-700">
+              <Button
+                asChild
+                className="bg-primary hover:bg-primary-dark text-white h-10 px-6 rounded-full text-sm font-bold shadow-md shadow-primary/20 transition-all hover:shadow-lg hover:shadow-primary/30 transform hover:-translate-y-0.5"
               >
-                {link.name}
-                {isActive(link.href) && (
-                  <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-gold" />
-                )}
-              </Link>
-            ))}
-            <Button asChild className="gradient-primary shadow-glow">
-              <Link href="/auth/login">Sign In</Link>
-            </Button>
+                <Link href="/auth/login">Sign In</Link>
+              </Button>
 
-            <ThemeToggler />
+              <ThemeToggler />
+            </div>
           </div>
 
           {/* Mobile Menu Button */}
@@ -115,7 +127,7 @@ const Navbar = () => {
           </div>
         )}
       </div>
-    </nav>
+    </header>
   );
 };
 

@@ -1,144 +1,162 @@
 "use client";
-import {
-  Church,
-  MapPin,
-  Phone,
-  Mail,
-  Facebook,
-  Instagram,
-  Twitter,
-  Youtube,
-} from "lucide-react";
-import Link from "next/link";
-import React from "react";
-import Logo from "./Logo";
 import { config } from "@/utils/config";
+import { Calendar, Facebook, Instagram, Twitter } from "lucide-react";
+import Logo from "./Logo";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-primary text-primary-foreground">
+    <footer className="w-full border-t border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark mt-10">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* About */}
-          <div>
-            <Link href="/" className="flex items-center gap-2 font-medium mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+          <div className="col-span-1 md:col-span-1 flex flex-col gap-4">
+            <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
               <Logo className="h-8" />
-              {config.SITE_NAME}
-            </Link>
-            <p className="text-primary-foreground/80 text-sm leading-relaxed">
-              Inspiring faith and building community through worship, teaching,
-              and service.
+              <div className="flex flex-col">
+                <span className="text-lg font-bold tracking-tight leading-4">
+                  {config.SITE_NAME}
+                </span>
+                <span className="text-xs font-medium">
+                  {config.BRANCH_NAME}
+                </span>
+              </div>
+            </div>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+              A community dedicated to faith, hope, and love. Join us this
+              Sunday.
             </p>
-          </div>
 
-          {/* Quick Links */}
-          <div>
-            <h3 className="font-serif font-semibold text-lg mb-4">
-              Quick Links
-            </h3>
-            <ul className="space-y-2">
-              <li>
-                <Link
-                  href="/sermons"
-                  className="text-primary-foreground/80 hover:text-gold transition-smooth text-sm"
-                >
-                  Sermons
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/events"
-                  className="text-primary-foreground/80 hover:text-gold transition-smooth text-sm"
-                >
-                  Events
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/about"
-                  className="text-primary-foreground/80 hover:text-gold transition-smooth text-sm"
-                >
-                  About Us
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/contact"
-                  className="text-primary-foreground/80 hover:text-gold transition-smooth text-sm"
-                >
-                  Contact
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Contact Info */}
-          <div>
-            <h3 className="font-serif font-semibold text-lg mb-4">
-              Contact Us
-            </h3>
-            <ul className="space-y-3">
-              <li className="flex items-start gap-2">
-                <MapPin className="h-4 w-4 mt-1 text-gold" />
-                <span className="text-primary-foreground/80 text-sm">
-                  123 Faith Street, Hope City, HC 12345
-                </span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-gold" />
-                <span className="text-primary-foreground/80 text-sm">
-                  (555) 123-4567
-                </span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-gold" />
-                <span className="text-primary-foreground/80 text-sm">
-                  info@gracecommunity.org
-                </span>
-              </li>
-            </ul>
-          </div>
-
-          {/* Social Media */}
-          <div>
-            <h3 className="font-serif font-semibold text-lg mb-4">
-              Connect With Us
-            </h3>
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               <a
+                className="size-8 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-primary hover:text-white transition-all"
                 href="#"
-                className="p-2 rounded-lg bg-primary-foreground/10 hover:bg-gold hover:text-gold-foreground transition-smooth"
-                aria-label="Facebook"
               >
-                <Facebook className="h-5 w-5" />
+                <span className="sr-only">Facebook</span>
+                <Facebook size={12} />
               </a>
               <a
+                className="size-8 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-primary hover:text-white transition-all"
                 href="#"
-                className="p-2 rounded-lg bg-primary-foreground/10 hover:bg-gold hover:text-gold-foreground transition-smooth"
-                aria-label="Instagram"
               >
-                <Instagram className="h-5 w-5" />
+                <span className="sr-only">Instagram</span>
+                <Instagram size={12} />
               </a>
               <a
+                className="size-8 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-primary hover:text-white transition-all"
                 href="#"
-                className="p-2 rounded-lg bg-primary-foreground/10 hover:bg-gold hover:text-gold-foreground transition-smooth"
-                aria-label="Twitter"
               >
-                <Twitter className="h-5 w-5" />
-              </a>
-              <a
-                href="#"
-                className="p-2 rounded-lg bg-primary-foreground/10 hover:bg-gold hover:text-gold-foreground transition-smooth"
-                aria-label="YouTube"
-              >
-                <Youtube className="h-5 w-5" />
+                <span className="sr-only">Twitter</span>
+                <Twitter size={12} />
               </a>
             </div>
-            <p className="text-primary-foreground/60 text-xs mt-6">
-              © {currentYear} Grace Community Church. All rights reserved.
-            </p>
+          </div>
+          <div>
+            <h4 className="font-bold text-slate-900 dark:text-white mb-4">
+              Ministries
+            </h4>
+            <ul className="flex flex-col gap-2 text-sm text-slate-500 dark:text-slate-400">
+              <li>
+                <a className="hover:text-primary transition-colors" href="#">
+                  Kids &amp; Youth
+                </a>
+              </li>
+              <li>
+                <a className="hover:text-primary transition-colors" href="#">
+                  Small Groups
+                </a>
+              </li>
+              <li>
+                <a className="hover:text-primary transition-colors" href="#">
+                  Outreach
+                </a>
+              </li>
+              <li>
+                <a className="hover:text-primary transition-colors" href="#">
+                  Missions
+                </a>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-bold text-slate-900 dark:text-white mb-4">
+              Resources
+            </h4>
+            <ul className="flex flex-col gap-2 text-sm text-slate-500 dark:text-slate-400">
+              <li>
+                <a className="hover:text-primary transition-colors" href="#">
+                  Sermon Archive
+                </a>
+              </li>
+              <li>
+                <a className="hover:text-primary transition-colors" href="#">
+                  Blog
+                </a>
+              </li>
+              <li>
+                <a className="hover:text-primary transition-colors" href="#">
+                  Member Portal
+                </a>
+              </li>
+              <li>
+                <a className="hover:text-primary transition-colors" href="#">
+                  Give Online
+                </a>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-bold text-slate-900 dark:text-white mb-4">
+              Service Times
+            </h4>
+            <ul className="flex flex-col gap-2 text-sm text-slate-500 dark:text-slate-400">
+              <li className="flex items-center gap-2">
+                <Calendar size={16} />
+                Sundays: 9:00 AM &amp; 11:00 AM
+              </li>
+              <li className="flex items-center gap-2">
+                <Calendar size={16} />
+                Wednesdays: 7:00 PM
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-bold text-slate-900 dark:text-white mb-6 text-sm uppercase tracking-wider">
+              Visit Us
+            </h4>
+            <div className="space-y-3 text-sm text-slate-500 dark:text-slate-400">
+              <p className="flex items-start gap-2">
+                <Calendar
+                  size={16}
+                  className="mt-0.5"
+                />
+                <span>
+                  123 Grace Blvd
+                  <br />
+                  Springfield, IL 62704
+                </span>
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="mt-12 pt-8 border-t border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-400">
+          <p>
+            &copy; {currentYear} Grace Community Church. All rights reserved.
+          </p>
+          <div className="flex gap-4">
+            <a
+              className="hover:text-slate-600 dark:hover:text-slate-200"
+              href="#"
+            >
+              Privacy Policy
+            </a>
+            <a
+              className="hover:text-slate-600 dark:hover:text-slate-200"
+              href="#"
+            >
+              Terms of Service
+            </a>
           </div>
         </div>
       </div>

@@ -1,51 +1,36 @@
-"use client"
-import { motion } from 'framer-motion'
-import Link from 'next/link'
-import React from 'react'
-import { Button } from '../ui/button'
-
 const WelcomeMessage = () => {
   return (
-     <section className="py-20 px-4">
-        <div className="container mx-auto max-w-6xl">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              <img
-                src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auhref=format&fit=crop&w=800&q=80"
-                alt="Pastor"
-                className="rounded-2xl shadow-elevated"
-              />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4">
-                A Word from Our Pastor
+    <section className="w-full container mx-auto px-4 py-12">
+      <div className="">
+        <div className="flex flex-col gap-8 py-6 md:py-10 md:flex-row items-center">
+          <div
+            className="w-full md:w-1/2 bg-center bg-no-repeat aspect-4/3 bg-cover rounded-2xl shadow-xl"
+            data-alt="Pastor speaking warmly to the congregation with soft stage lighting"
+            style={{
+              backgroundImage:
+                "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCm1WXWqaBuKXvQkL27xPoL5riEz48RymemKpoocAA-JG4ndKU6oHCRbiyp4Kg02pLAe6ppkJnCJ2tu_EmMRrQim7aPE3twonO3mGnzs2xPxeFot6Dqnw469M7TssWe8I9M8jVTeoHC8rtJPPqDm5iziCUw-pk0pixUBB9H-mAHAsx6cQDI1ENIFDO9_XXVwrsgKtesFk49F4a7KNuMw8SN5DzKUemKob8OJIIeeNY6t2mXxqLuTnhOL00N5Bug87ls2ummb91AS7xq')",
+            }}
+          ></div>
+          <div className="w-full md:w-1/2 flex flex-col gap-6 md:pl-10">
+            <div className="flex flex-col gap-3 text-left">
+              <div className="flex items-center gap-2 text-primary dark:text-primary-light font-bold uppercase tracking-wider text-sm">
+                <span className="w-8 h-0.5 bg-primary dark:bg-primary-light"></span>
+                Leadership
+              </div>
+              <h2 className="text-slate-900 dark:text-white text-3xl md:text-5xl font-black leading-tight tracking-[-0.02em]">
+                A Message from Our Pastors
               </h2>
-              <p className="text-lg text-muted-foreground leading-relaxed mb-6">
-                "Welcome to Grace Community Church! Whether you're visiting for the first time or have been part of our
-                family for years, we're grateful you're here. Our church is a place where everyone is welcome to
-                encounter God's love, grow in faith, and find meaningful community."
+              <p className="text-slate-600 dark:text-slate-400 text-lg font-normal leading-relaxed mt-2">
+                &quot;We are dedicated to helping you discover your purpose and
+                walk in dominion. Join us as we raise leaders that transform
+                society through the power of the Gospel.&quot;
               </p>
-              <p className="text-lg font-semibold mb-2">Pastor Michael Johnson</p>
-              <p className="text-muted-foreground mb-6">Senior Pastor</p>
-              <Button asChild variant="outline">
-                <Link href="/about">Meet Our Team</Link>
-              </Button>
-            </motion.div>
+            </div>
           </div>
         </div>
-      </section>
-  )
-}
+      </div>
+    </section>
+  );
+};
 
-export default WelcomeMessage
+export default WelcomeMessage;
