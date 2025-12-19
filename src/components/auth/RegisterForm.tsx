@@ -40,7 +40,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { nigeriaStates } from "@/data/nigeria-states";
 import { formatPhoneNumber } from "@/utils/helpers/phone";
 
 // Define the form schema with Zod
@@ -70,9 +69,6 @@ const formSchema = z
     gender: z.enum(["male", "female"], {
       error: "Please select your gender",
     }),
-    address: z.string().optional(),
-    city: z.string().optional(),
-    state: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -83,7 +79,6 @@ type FormData = z.infer<typeof formSchema>;
 
 const RegisterForm = () => {
   const router = useRouter();
-  const [selectedState, setSelectedState] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -97,9 +92,6 @@ const RegisterForm = () => {
       confirmPassword: "",
       phone: "",
       gender: undefined,
-      address: "",
-      city: "",
-      state: "",
     },
   });
 
@@ -131,9 +123,6 @@ const RegisterForm = () => {
       password: data.password,
       phone: formattedPhone,
       gender: data.gender,
-      address: data.address || undefined,
-      city: data.city || undefined,
-      state: data.state || undefined,
     };
 
     registerMutation.mutate(payload);
@@ -143,66 +132,133 @@ const RegisterForm = () => {
 
   if (registerMutation.isSuccess) {
     return (
-      <div className="space-y-6 text-center">
-        <div className="flex flex-col items-center justify-center space-y-4">
-          {/* Success Icon */}
-          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/20">
-            <CheckCircle2 className="w-10 h-10 text-green-600 dark:text-green-400" />
+      <div className="max-w-md w-full">
+        {/* <!-- Success Icon --> */}
+        <div className="flex flex-col items-center text-center">
+          <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 dark:bg-primary/20">
+            <CheckCircle2 size={36} className="text-primary" />
           </div>
-
-          {/* Success Message */}
-          <div className="space-y-2">
-            <h1 className="text-2xl font-bold">
-              Account Created Successfully!
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              Your account has been created successfully. You will be redirected
-              to the login page shortly.
-            </p>
-          </div>
-
-          <p className="text-xs text-muted-foreground">
-            Redirecting to login...
+          {/* <!-- Headline --> */}
+          <h1 className="text-[#111418] dark:text-white text-3xl font-bold leading-tight tracking-[-0.033em] mb-4">
+            Welcome to the Family!
+          </h1>
+          {/* <!-- Body Text --> */}
+          <p className="text-[#637288] dark:text-gray-400 text-sm font-normal leading-relaxed mb-8">
+            Your account has been successfully created. We&apos;ve sent a
+            verification link to your email address. Please check your inbox to
+            activate your account and start your journey with us.
           </p>
         </div>
 
-        <p className="text-xs text-muted-foreground">
-          Check your email for a verification link to complete your account
-          setup.
+        <p className="text-xs text-muted-foreground text-center mb-8">
+          Redirecting to login...
         </p>
+
+        {/* <!-- Action Area --> */}
+        <div className="flex flex-col gap-4">
+          {/* <!-- Primary Button --> */}
+          <Link href={"/auth/login"}>
+            <button className="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl py-3.5 px-5 bg-primary hover:bg-primary-light transition-colors duration-200 text-white text-base font-bold leading-normal tracking-[0.015em] shadow-lg shadow-blue-500/20">
+              <span className="truncate">Proceed to Login</span>
+            </button>
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <form id="register-form" onSubmit={form.handleSubmit(onSubmit)}>
-      <FieldGroup>
-        <div className="flex flex-col items-center gap-1 text-center">
-          <h1 className="text-2xl font-bold"> Create Account</h1>
-          <p className="text-muted-foreground text-sm text-balance">
-            Fill in your details to get started
-          </p>
-        </div>
+    <div className="max-w-md w-full">
+      <div className="mb-8 text-left">
+        <h1 className="text-3xl lg:text-4xl font-extrabold text-[#111418] dark:text-white tracking-tight mb-3">
+          Create Account
+        </h1>
+        <p className="text-base text-gray-500 dark:text-gray-400 leading-relaxed">
+          Join our community to connect, grow, and serve together.
+        </p>
+      </div>
 
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+      {/* form */}
+      <form id="register-form" onSubmit={form.handleSubmit(onSubmit)}>
+        <FieldGroup>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <Controller
+                name="firstName"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="register-firstName">
+                      First Name
+                    </FieldLabel>
+                    <div className="relative group">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary dark:group-focus-within:text-primary-light transition-colors">
+                        <User size={20} />
+                      </div>
+                      <Input
+                        {...field}
+                        id="register-firstName"
+                        placeholder="John"
+                        className="block w-full h-full pl-11 pr-4 py-4 rounded-xl bg-surface-light-2 dark:bg-surface-dark border-transparent focus:border-primary focus:bg-white dark:focus:bg-[#1a222d] focus:ring-2 focus:ring-primary/20 text-[#111418] dark:text-white placeholder-gray-400 transition-all duration-200 outline-none font-medium"
+                        aria-invalid={fieldState.invalid}
+                        disabled={isLoading}
+                      />
+                    </div>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name="lastName"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="register-lastName">
+                      Last Name
+                    </FieldLabel>
+                    <div className="relative group">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary dark:group-focus-within:text-primary-light transition-colors">
+                        <User size={20} />
+                      </div>
+                      <Input
+                        {...field}
+                        id="register-lastName"
+                        placeholder="Doe"
+                        className="block w-full h-full pl-11 pr-4 py-4 rounded-xl bg-surface-light-2 dark:bg-surface-dark border-transparent focus:border-primary focus:bg-white dark:focus:bg-[#1a222d] focus:ring-2 focus:ring-primary/20 text-[#111418] dark:text-white placeholder-gray-400 transition-all duration-200 outline-none font-medium"
+                        aria-invalid={fieldState.invalid}
+                        disabled={isLoading}
+                      />
+                    </div>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+            </div>
+
             <Controller
-              name="firstName"
+              name="email"
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="register-firstName">
-                    First Name
-                  </FieldLabel>
-                  <div className="relative">
-                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <FieldLabel htmlFor="register-email">Email</FieldLabel>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary dark:group-focus-within:text-primary-light transition-colors">
+                      <Mail size={20} />
+                    </div>
                     <Input
                       {...field}
-                      id="register-firstName"
-                      placeholder="John"
-                      className="pl-10"
+                      id="register-email"
+                      type="email"
+                      placeholder="john@example.com"
+                      className="block w-full h-full pl-11 pr-4 py-4 rounded-xl bg-surface-light-2 dark:bg-surface-dark border-transparent focus:border-primary focus:bg-white dark:focus:bg-[#1a222d] focus:ring-2 focus:ring-primary/20 text-[#111418] dark:text-white placeholder-gray-400 transition-all duration-200 outline-none font-medium"
                       aria-invalid={fieldState.invalid}
                       disabled={isLoading}
+                      autoComplete="email"
                     />
                   </div>
                   {fieldState.invalid && (
@@ -213,109 +269,26 @@ const RegisterForm = () => {
             />
 
             <Controller
-              name="lastName"
+              name="phone"
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="register-lastName">Last Name</FieldLabel>
-                  <Input
-                    {...field}
-                    id="register-lastName"
-                    placeholder="Doe"
-                    aria-invalid={fieldState.invalid}
-                    disabled={isLoading}
-                  />
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-          </div>
+                  <FieldLabel htmlFor="register-phone">Phone Number</FieldLabel>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary dark:group-focus-within:text-primary-light transition-colors">
+                      <Phone size={20} />
+                    </div>
 
-          <Controller
-            name="email"
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="register-email">Email</FieldLabel>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    {...field}
-                    id="register-email"
-                    type="email"
-                    placeholder="john@example.com"
-                    className="pl-10"
-                    aria-invalid={fieldState.invalid}
-                    disabled={isLoading}
-                    autoComplete="email"
-                  />
-                </div>
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
-              </Field>
-            )}
-          />
-
-          <Controller
-            name="phone"
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="register-phone">Phone Number</FieldLabel>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    {...field}
-                    id="register-phone"
-                    type="tel"
-                    placeholder="+1 (555) 123-4567"
-                    className="pl-10"
-                    aria-invalid={fieldState.invalid}
-                    disabled={isLoading}
-                    autoComplete="tel"
-                  />
-                </div>
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
-              </Field>
-            )}
-          />
-
-          <div className="grid grid-cols-2 gap-4">
-            <Controller
-              name="password"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="register-password">Password</FieldLabel>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
                       {...field}
-                      id="register-password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      className="pl-10"
+                      id="register-phone"
+                      type="tel"
+                      placeholder="+234 (803) 123-4567"
+                      className="block w-full h-full pl-11 pr-12 py-4 rounded-xl bg-surface-light-2 dark:bg-surface-dark border-transparent focus:border-primary focus:bg-white dark:focus:bg-[#1a222d] focus:ring-2 focus:ring-primary/20 text-[#111418] dark:text-white placeholder-gray-400 transition-all duration-200 outline-none font-medium"
                       aria-invalid={fieldState.invalid}
                       disabled={isLoading}
-                      autoComplete="new-password"
+                      autoComplete="tel"
                     />
-
-                    <button
-                      type="button"
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground cursor-pointer"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
                   </div>
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
@@ -325,119 +298,18 @@ const RegisterForm = () => {
             />
 
             <Controller
-              name="confirmPassword"
+              name="gender"
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="register-confirmPassword">
-                    Confirm Password
-                  </FieldLabel>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      {...field}
-                      id="register-confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      className="pl-10"
-                      aria-invalid={fieldState.invalid}
-                      disabled={isLoading}
-                      autoComplete="new-password"
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground cursor-pointer"
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-          </div>
-
-          <Controller
-            name="gender"
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel>Gender</FieldLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <SelectTrigger className="cursor-pointer">
-                    <SelectValue placeholder="Select gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                  </SelectContent>
-                </Select>
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
-              </Field>
-            )}
-          />
-
-          <Controller
-            name="address"
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="register-address">Address </FieldLabel>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    {...field}
-                    id="register-address"
-                    placeholder="123 Main Street"
-                    className="pl-10"
-                    aria-invalid={fieldState.invalid}
-                    disabled={isLoading}
-                    autoComplete="street-address"
-                  />
-                </div>
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
-              </Field>
-            )}
-          />
-
-          <div className="grid grid-cols-2 gap-4">
-            <Controller
-              name="state"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="register-state">State </FieldLabel>
-                  <Select
-                    value={field.value}
-                    onValueChange={(val) => {
-                      field.onChange(val);
-                      setSelectedState(val);
-                      form.setValue("city", "");
-                    }}
-                    disabled={isLoading}
-                  >
-                    <SelectTrigger className="cursor-pointer">
-                      <SelectValue placeholder="Select State" />
+                  <FieldLabel>Gender</FieldLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger className=" w-full h-full! px-4 py-4 rounded-xl bg-surface-light-2 dark:bg-surface-dark border-transparent focus:border-primary focus:bg-white dark:focus:bg-[#1a222d] focus:ring-2 focus:ring-primary/20 text-[#111418] dark:text-white placeholder-gray-400 transition-all duration-200 outline-none font-medium cursor-pointer">
+                      <SelectValue placeholder="Select Gender" />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.keys(nigeriaStates).map((state) => (
-                        <SelectItem key={state} value={state}>
-                          {state}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="male">Male</SelectItem>
+                      <SelectItem value="female">Female</SelectItem>
                     </SelectContent>
                   </Select>
                   {fieldState.invalid && (
@@ -447,61 +319,125 @@ const RegisterForm = () => {
               )}
             />
 
-            <Controller
-              name="city"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="register-city">City </FieldLabel>
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    disabled={!selectedState}
-                  >
-                    <SelectTrigger className="cursor-pointer">
-                      <SelectValue placeholder="Select city" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {selectedState &&
-                        nigeriaStates[selectedState]?.map((city) => (
-                          <SelectItem key={city} value={city}>
-                            {city}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <Controller
+                name="password"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="register-password">
+                      Password
+                    </FieldLabel>
+                    <div className="relative group">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary dark:group-focus-within:text-primary-light transition-colors">
+                        <Lock size={20} />
+                      </div>
+                      <Input
+                        {...field}
+                        id="register-password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        className="block w-full h-full pl-11 pr-12 py-4 rounded-xl bg-surface-light-2 dark:bg-surface-dark border-transparent focus:border-primary focus:bg-white dark:focus:bg-[#1a222d] focus:ring-2 focus:ring-primary/20 text-[#111418] dark:text-white placeholder-gray-400 transition-all duration-200 outline-none font-medium"
+                        aria-invalid={fieldState.invalid}
+                        disabled={isLoading}
+                        autoComplete="new-password"
+                      />
+
+                      <button
+                        type="button"
+                        className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-primary dark:hover:text-primary-light transition-colors cursor-pointer focus:outline-none"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name="confirmPassword"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="register-confirmPassword">
+                      Confirm Password
+                    </FieldLabel>
+                    <div className="relative group">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary dark:group-focus-within:text-primary-light transition-colors">
+                        <Lock size={20} />
+                      </div>
+                      <Input
+                        {...field}
+                        id="register-confirmPassword"
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        className="block w-full h-full pl-11 pr-12 py-4 rounded-xl bg-surface-light-2 dark:bg-surface-dark border-transparent focus:border-primary focus:bg-white dark:focus:bg-[#1a222d] focus:ring-2 focus:ring-primary/20 text-[#111418] dark:text-white placeholder-gray-400 transition-all duration-200 outline-none font-medium"
+                        aria-invalid={fieldState.invalid}
+                        disabled={isLoading}
+                        autoComplete="new-password"
+                      />
+                      <button
+                        type="button"
+                        className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-primary dark:hover:text-primary-light transition-colors cursor-pointer focus:outline-none"
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+            </div>
           </div>
-        </div>
-        <Field>
-          <Button
-            type="submit"
-            form="register-form"
-            className="w-full"
-            disabled={isLoading}
+          <Field>
+            <Button
+              type="submit"
+              form="register-form"
+              className="w-full h-full py-3.5 px-6 rounded-xl bg-primary hover:bg-primary-light text-white font-bold text-base shadow-lg shadow-primary/30 hover:shadow-primary/40 active:scale-[0.98] transition-all duration-200"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Creating account...
+                </>
+              ) : (
+                "Create Account"
+              )}
+            </Button>
+          </Field>
+        </FieldGroup>
+      </form>
+
+      <div className="mt-8 text-center">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          Already have an account?{" "}
+          <Link
+            className="font-bold text-primary dark:text-primary-light hover:text-primary transition-colors"
+            href="/auth/login"
           >
-            {isLoading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Creating account...
-              </>
-            ) : (
-              "Create Account"
-            )}
-          </Button>
-        </Field>
-        <Field>
-          <FieldDescription className="text-center">
-            Already have an account? <Link href="/auth/login">Sign in</Link>
-          </FieldDescription>
-        </Field>
-      </FieldGroup>
-    </form>
+            Sign In
+          </Link>
+        </p>
+      </div>
+    </div>
   );
 };
 

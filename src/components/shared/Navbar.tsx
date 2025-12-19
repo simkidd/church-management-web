@@ -33,8 +33,16 @@ const Navbar = () => {
     { name: "Contact", href: "/contact" },
   ];
 
-  const isActive = (url: string) => {
-    if (pathname === url) return true;
+  const isActive = (itemUrl: string) => {
+    // Exact match
+    if (pathname === itemUrl) return true;
+
+    // Special case for "/admin" to prevent matching all admin routes
+    if (itemUrl === "/admin") {
+      return pathname === "/admin";
+    }
+
+    return pathname.startsWith(`${itemUrl}/`) || pathname === itemUrl;
   };
 
   return (

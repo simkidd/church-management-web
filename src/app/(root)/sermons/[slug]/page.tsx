@@ -24,26 +24,26 @@ const SermonPage = () => {
     <div className="container px-4 mx-auto py-5">
       <nav className="flex flex-wrap items-center gap-2 mb-6 text-sm">
         <a
-          className="text-text-muted hover:text-primary transition-colors"
+          className="text-[#637288] hover:text-primary transition-colors"
           href="#"
         >
           Home
         </a>
-        <span className="text-text-muted">/</span>
+        <span className="text-[#637288]">/</span>
         <a
-          className="text-text-muted hover:text-primary transition-colors"
+          className="text-[#637288] hover:text-primary transition-colors"
           href="#"
         >
           Sermons
         </a>
-        <span className="text-text-muted">/</span>
+        <span className="text-[#637288]">/</span>
         <a
-          className="text-text-muted hover:text-primary transition-colors"
+          className="text-[#637288] hover:text-primary transition-colors"
           href="#"
         >
           Romans: The Gospel of God
         </a>
-        <span className="text-text-muted">/</span>
+        <span className="text-[#637288]">/</span>
         <span className="text-primary dark:text-white font-medium truncate max-w-[200px] sm:max-w-none">
           Walking in Faith: Romans 8
         </span>

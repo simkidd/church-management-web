@@ -126,7 +126,7 @@ const LatestSermons: React.FC = () => {
         </div>
         <Link
           className="text-sm font-bold text-primary dark:text-primary-light hover:text-primary-hover flex items-center gap-1 transition-colors px-3 py-1.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"
-          href="#"
+          href="/sermons/archive"
         >
           View All
           <ArrowRight size={14} />

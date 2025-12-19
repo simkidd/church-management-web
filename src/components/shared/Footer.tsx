@@ -95,7 +95,7 @@ const Footer = () => {
               </li>
               <li>
                 <a className="hover:text-primary transition-colors" href="#">
-                  Member Portal
+                  Admin Portal
                 </a>
               </li>
               <li>
@@ -142,7 +142,7 @@ const Footer = () => {
         </div>
         <div className="mt-12 pt-8 border-t border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-400">
           <p>
-            &copy; {currentYear} Grace Community Church. All rights reserved.
+            &copy; {currentYear} {config.SITE_NAME}, {config.BRANCH_NAME}. All rights reserved.
           </p>
           <div className="flex gap-4">
             <a

@@ -1,6 +1,7 @@
 "use client";
 
 import { Calendar, PlayCircle, Plus } from "lucide-react";
+import Link from "next/link";
 
 export const FeaturedSermons = () => {
   return (
@@ -39,10 +40,12 @@ export const FeaturedSermons = () => {
             book of Hebrews.
           </p>
           <div className="flex flex-wrap gap-4 pt-2">
-            <button className="bg-white hover:bg-slate-50 text-primary px-6 py-3 md:px-8 md:py-4 rounded-xl font-bold text-sm md:text-base flex items-center gap-2 transition-all transform hover:scale-105 shadow-lg cursor-pointer">
-              <PlayCircle />
-              Watch Sermon
-            </button>
+            <Link href={`/sermons/slug`}>
+              <button className="bg-white hover:bg-slate-50 text-primary px-6 py-3 md:px-8 md:py-4 rounded-xl font-bold text-sm md:text-base flex items-center gap-2 transition-all transform hover:scale-105 shadow-lg cursor-pointer">
+                <PlayCircle />
+                Watch Sermon
+              </button>
+            </Link>
             <button className="bg-white/10 hover:bg-white/20 backdrop-blur-md text-white px-6 py-3 md:px-8 md:py-4 rounded-xl font-bold text-sm md:text-base flex items-center gap-2 transition-all border border-white/20 hover:border-white/40 cursor-pointer">
               <Plus />
               Add to List

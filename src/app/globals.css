@@ -51,6 +51,7 @@
   --color-accent-warm-2: var(--accent-warm-2);
   --color-accent-warm-dark: var(--accent-warm-dark);
   --color-surface-light: var(--surface-light);
+  --color-surface-light-2: var(--surface-light-2);
   --color-surface-dark: var(--surface-dark);
 }
 
@@ -98,6 +99,7 @@
   --accent-warm: #fff8e6;
   --accent-warm-2: #f59e0b;
   --surface-light: #ffffff;
+  --surface-light-2: #f2f4f8;
 }
 
 .dark {
