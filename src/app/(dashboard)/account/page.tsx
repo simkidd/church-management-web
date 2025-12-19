@@ -1,9 +1,9 @@
-import DashboardComp from "@/components/dashboard/overview/DashboardComp";
+import OverviewComp from "@/components/dashboard/overview/OverviewComp";
 
 const DashboardPage = () => {
   return (
     <div>
-      <DashboardComp />
+      <OverviewComp />
     </div>
   );
 };

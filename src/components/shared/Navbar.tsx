@@ -37,11 +37,6 @@ const Navbar = () => {
     // Exact match
     if (pathname === itemUrl) return true;
 
-    // Special case for "/admin" to prevent matching all admin routes
-    if (itemUrl === "/admin") {
-      return pathname === "/admin";
-    }
-
     return pathname.startsWith(`${itemUrl}/`) || pathname === itemUrl;
   };
 
