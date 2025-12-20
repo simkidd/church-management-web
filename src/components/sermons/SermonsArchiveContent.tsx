@@ -1,13 +1,13 @@
 import {
   Bookmark,
   Calendar,
+  Clock,
   Download,
   Headphones,
   History,
   Play,
   Search,
 } from "lucide-react";
-import React from "react";
 
 // Interface for sermon data
 interface Sermon {
@@ -236,7 +236,7 @@ const SermonsArchiveContent = () => {
                 ></div>
                 <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors"></div>
                 <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-xs font-medium text-white flex items-center gap-1">
-                  <Calendar size={14} />
+                  <Clock size={14} />
                   {sermon.duration}
                 </div>
                 <div

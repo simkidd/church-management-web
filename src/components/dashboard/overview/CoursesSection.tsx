@@ -57,7 +57,7 @@ const CoursesSection = () => {
             <ArrowRight size={18} />
           </button>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-6">
           <div className="bg-white dark:bg-surface-dark rounded-2xl p-5 border border-slate-100 dark:border-slate-800 flex flex-col justify-center items-center text-center hover:border-primary/20 transition-colors">
             <div className="size-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 mb-3">
               <CheckCircle2 />

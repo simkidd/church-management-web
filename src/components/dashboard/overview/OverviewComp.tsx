@@ -1,8 +1,7 @@
 "use client";
-import React from "react";
 import CoursesSection from "./CoursesSection";
-import SermonsSection from "./SermonsSection";
 import EventsSection from "./EventsSection";
+import SermonsSection from "./SermonsSection";
 
 const OverviewComp = () => {
   return (
@@ -23,7 +22,7 @@ const OverviewComp = () => {
       {/* My courses section */}
       <CoursesSection />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <SermonsSection />
         <EventsSection />
       </div>

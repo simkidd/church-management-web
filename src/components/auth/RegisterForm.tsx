@@ -2,16 +2,15 @@
 import { Button } from "@/components/ui/button";
 import {
   Field,
-  FieldDescription,
   FieldError,
   FieldGroup,
-  FieldLabel,
+  FieldLabel
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { RegisterData } from "@/interfaces/auth.interface";
 import { ApiErrorResponse } from "@/interfaces/response.interface";
 import authApi from "@/lib/api/auth.api";
+import { formatPhoneNumber } from "@/utils/helpers/phone";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
@@ -22,17 +21,15 @@ import {
   Loader2,
   Lock,
   Mail,
-  MapPin,
   Phone,
-  User,
+  User
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
-import { Label } from "../ui/label";
-import { useState } from "react";
 import {
   Select,
   SelectContent,
@@ -40,7 +37,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { formatPhoneNumber } from "@/utils/helpers/phone";
 
 // Define the form schema with Zod
 const formSchema = z
