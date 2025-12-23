@@ -4,11 +4,16 @@ import { ThemeToggler } from "../shared/ThemeToggler";
 import Link from "next/link";
 import Logo from "../shared/Logo";
 import { config } from "@/utils/config";
-import { SunIcon, MoonIcon, Calendar } from "lucide-react";
+import { SunIcon, MoonIcon, Calendar, Menu } from "lucide-react";
 import { WiSunrise } from "react-icons/wi";
+import { useSidebarStore } from "@/stores/sidebar.store";
+import { useAuthStore } from "@/stores/auth.store";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 const DashboardHeader = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const { toggle, isOpen } = useSidebarStore();
+  const { user, hasHydrated } = useAuthStore();
 
   // Update time every minute (instead of every second for better performance)
   useEffect(() => {
@@ -56,11 +61,30 @@ const DashboardHeader = () => {
       };
     }, [currentTime]);
 
+  const userName = `${user?.firstName} ${user?.lastName}`;
+
+  const getUserInitials = () => {
+    if (!userName) return "U";
+    return userName
+      .split(" ")
+      .map((n) => n[0])
+      .join("");
+  };
+
   return (
-    <header className="sticky top-0 z-50 bg-card-light/90 dark:bg-card-dark/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
+    <header className="sticky top-0 z-50 bg-white/90 dark:bg-surface-dark/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-2">
+            {/* Mobile Menu Button */}
+            <button
+              onClick={toggle}
+              className="lg:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              aria-label={isOpen ? "Close menu" : "Open menu"}
+            >
+              <Menu size={24} />
+            </button>
+
             <Link
               href="/"
               className="flex items-center gap-2 text-slate-900 dark:text-white "
@@ -82,7 +106,7 @@ const DashboardHeader = () => {
               <div className="flex items-center gap-2 text-slate-600 dark:text-slate-500">
                 {greetingIcon}
                 <span>
-                  Good {greeting}, <span className="font-medium">Sarah</span>
+                  Good {greeting}, <span className="font-medium">{user?.firstName}</span>
                 </span>
               </div>
               <div className="flex items-center gap-2 text-slate-600 dark:text-slate-500">
@@ -98,15 +122,15 @@ const DashboardHeader = () => {
 
             <ThemeToggler />
             <div className="relative">
-              <div
-                className="size-9 rounded-full bg-cover bg-center cursor-pointer ring-2 ring-primary/20 hover:ring-primary/50 transition-all"
-                data-alt="User profile picture thumbnail"
-                style={{
-                  backgroundImage:
-                    "url('https://lh3.googleusercontent.com/aida-public/AB6AXuA2-8xQn93rs82BYV8YyFnryxIMerQ1vril_kTHQTolaDsfBKyzyJiItlXocc-hbqEAeh5Tp1tCPQyfoZVL0w2yDsKFugRJyIAf_vEbgqYwnqx2nWxB-yPQlrJpHJT6gYLskc-yoB0dslSqQzCjzEFtLZdqxMKpKh5aJloN1qOt3NvY90uB91Zrz4E1wAEDW-Pzyr3k0GgkBd0zSoS456-n-3XZXzjRv9LtKTKd1QoQ6-IJw9x_JshzT9jBJtIqjFkXZdeyqb_4OKDN')                ",
-                }}
-              ></div>
-              <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white dark:border-card-dark rounded-full"></div>
+              <Avatar className="h-9 w-9 border-2 border-accent-warm-2 hover:border-accent-warm-2 transition-colors">
+                <AvatarImage
+                  src={user?.avatar?.url || ""}
+                  alt={`${userName}'s avatar`}
+                />
+                <AvatarFallback className="border-accent-warm-2 text-accent-warm-2 font-semibold bg-accent-warm">
+                  {getUserInitials()}
+                </AvatarFallback>
+              </Avatar>
             </div>
           </div>
         </div>

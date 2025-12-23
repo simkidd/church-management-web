@@ -3,10 +3,9 @@
 import { Button } from "@/components/ui/button";
 import {
   Field,
-  FieldDescription,
   FieldError,
   FieldGroup,
-  FieldLabel,
+  FieldLabel
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { LoginCredentials } from "@/interfaces/auth.interface";
@@ -71,7 +70,7 @@ const LoginForm = () => {
         description: `Welcome back, ${user.firstName}! Redirecting to your dashboard...`,
       });
 
-      router.push(redirectUrl || "/dashboard");
+      router.push(redirectUrl || "/");
     },
     onError: (error: AxiosError<ApiErrorResponse>) => {
       // You can handle specific error messages here

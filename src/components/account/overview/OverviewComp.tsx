@@ -1,9 +1,12 @@
 "use client";
+import { useAuthStore } from "@/stores/auth.store";
 import CoursesSection from "./CoursesSection";
 import EventsSection from "./EventsSection";
 import SermonsSection from "./SermonsSection";
 
 const OverviewComp = () => {
+  const { user, hasHydrated } = useAuthStore();
+
   return (
     <div className=" space-y-8">
       {/* welcome */}
@@ -11,7 +14,7 @@ const OverviewComp = () => {
         <div className="absolute right-0 top-0 w-32 h-32 bg-accent rounded-bl-full -mr-4 -mt-4 pointer-events-none"></div>
         <div className="relative z-10">
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-            Welcome back, Sarah
+            Welcome back, {user?.firstName}
           </h2>
           <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">
             Here&apos;s what&apos;s happening in your spiritual journey today.

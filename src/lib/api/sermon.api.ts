@@ -20,6 +20,12 @@ export const sermonsApi = {
     return response.data;
   },
 
+  // Get sermon by ID
+  getSermonBySlug: async (slug: string): Promise<ApiResponse<ISermon>> => {
+    const response = await api.get(`/sermons/slug/${slug}`);
+    return response.data;
+  },
+
   // Get popular sermons
   getPopular: async (limit?: number): Promise<ApiResponse<ISermon[]>> => {
     const response = await api.get("/sermons/popular", {

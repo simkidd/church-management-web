@@ -13,7 +13,7 @@ const publicRoutes = ["/", "/sermons", "/events", "/about", "/contact"];
 const authRoutes = ["/auth/*"];
 
 // Define admin/dashboard routes that require authentication
-const protectedRoutes = ["/dashboard", "/dashboard/*"];
+const protectedRoutes = ["/account", "/account/*"];
 
 export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -43,7 +43,7 @@ export default function proxy(request: NextRequest) {
   if (accessToken && refreshToken) {
     // If user is authenticated and tries to access auth routes, redirect to dashboard
     if (isAuthRoute) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      return NextResponse.redirect(new URL("/account", request.url));
     }
 
     // Allow access to protected routes

@@ -1,4 +1,4 @@
-import OverviewComp from "@/components/dashboard/overview/OverviewComp";
+import OverviewComp from "@/components/account/overview/OverviewComp";
 
 const DashboardPage = () => {
   return (

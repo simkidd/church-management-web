@@ -1,3 +1,4 @@
+"use client"
 import { Bookmark, ChevronDown, Clock, Play } from "lucide-react";
 import React, { useState } from "react";
 

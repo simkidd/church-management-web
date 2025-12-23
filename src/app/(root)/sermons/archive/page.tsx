@@ -6,7 +6,7 @@ const SermonsArchive = () => {
   return (
     <div className="space-y-12">
       {/* <!-- Breadcrumbs & Heading Area --> */}
-      <div className="mb-8 container px-4 mx-auto">
+      <div className="mb-8 container px-4 mx-auto py-5">
         <div className="flex flex-wrap gap-2 items-center mb-4">
           <Link
             className="text-[#637288] hover:text-primary text-sm font-medium"

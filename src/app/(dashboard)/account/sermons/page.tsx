@@ -1,7 +1,4 @@
-"use client";
 import SavedSermonsGrid from "@/components/account/sermons/SavedSermonsGrid";
-import { Bookmark } from "lucide-react";
-import React from "react";
 
 const SavedSermonsPage = () => {
   return (
