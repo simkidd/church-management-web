@@ -1,12 +1,11 @@
 "use client";
 import { useSermonView } from "@/hooks/useSermonView";
 import { ISermon } from "@/interfaces/sermon.interface";
+import { format } from "date-fns";
 import {
-  ArrowRight,
   Bookmark,
   BookOpen,
   Calendar,
-  Download,
   Headphones,
   Layers,
   PlayCircle,
@@ -14,9 +13,9 @@ import {
   Tag,
 } from "lucide-react";
 import Link from "next/link";
-import VideoPlayer from "./VideoPlayer";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { format } from "date-fns";
+import MoreFromSeries from "./MoreFromSeries";
+import VideoPlayer from "./VideoPlayer";
 
 const SermonDetails = ({ sermon }: { sermon: ISermon }) => {
   useSermonView(sermon._id);
@@ -164,14 +163,18 @@ const SermonDetails = ({ sermon }: { sermon: ISermon }) => {
                 {sermon.description}
               </p>
 
-              <h3 className="text-xl font-bold text-text-main dark:text-white mt-6 mb-3">
-                Key Takeaways
-              </h3>
-              <ul className="list-disc pl-5 space-y-2 marker:text-primary">
-                {sermon.keyTakeaways?.map((item, i) => (
-                  <li key={i}>{item}</li>
-                ))}
-              </ul>
+              {sermon.keyTakeaways && sermon.keyTakeaways?.length > 0 && (
+                <>
+                  <h3 className="text-xl font-bold text-text-main dark:text-white mt-6 mb-3">
+                    Key Takeaways
+                  </h3>
+                  <ul className="list-disc pl-5 space-y-2 marker:text-primary">
+                    {sermon.keyTakeaways?.map((item, i) => (
+                      <li key={i}>{item}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -254,7 +257,7 @@ const SermonDetails = ({ sermon }: { sermon: ISermon }) => {
                 </div>
               )}
 
-              {sermon.tags && (
+              {sermon.tags && sermon.tags.length > 0 && (
                 <div className="flex gap-4 items-start">
                   <div className="size-10 rounded-full bg-primary/10 dark:bg-white/10 flex items-center justify-center shrink-0 text-primary dark:text-blue-300">
                     <Tag />
@@ -296,131 +299,7 @@ const SermonDetails = ({ sermon }: { sermon: ISermon }) => {
       </div>
 
       {/* more from this series */}
-
-      <section className="mt-20 border-t border-gray-100 dark:border-white/10 pt-10">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-bold text-text-main dark:text-white">
-            More from this Series
-          </h2>
-          <Link
-            className="text-sm font-bold text-primary dark:text-primary-light hover:text-primary-hover flex items-center gap-1 transition-colors px-3 py-1.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"
-            href="#"
-          >
-            View All
-            <ArrowRight size={18} />
-          </Link>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <a className="group flex flex-col gap-3" href="#">
-            <div className="aspect-video w-full rounded-xl overflow-hidden relative bg-gray-100 dark:bg-white/5">
-              <div
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                data-alt="Open bible on a wooden table with warm lighting"
-                style={{
-                  backgroundImage:
-                    "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCfqDThRHlIZ_nTY2MJoI1Ifyj3Yc-naWzbw0nYY5vj7YR0M5zDQKK9vBG-kUTsLF-Dt4wZb3_ByamKpCiICGRpB0pX9en0wdaoAVOCCOTr1ArAWCafLujrFKxpFQJ6Lx3UGp1HyGwnWyAuPRQ0q4R7YWxpbdg_32Z4ZbK9Y9IugT6DwJHKwc29iMXHwLUp_u6j_GA7AGPere_TIsWnuHuCcHBJO9cWlVFTkdNVhnkEAI9HZi50tM1kFPtWi7DdmhDYEVxmmeckEKGx')",
-                }}
-              ></div>
-              <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 mix-blend-multiply"></div>
-              <div className="absolute bottom-3 right-3 bg-black/70 text-white text-[10px] font-bold px-2 py-1 rounded backdrop-blur-sm border border-white/10">
-                42:15
-              </div>
-            </div>
-            <div>
-              <p className="text-xs text-text-muted font-medium mb-1">
-                Part 3 • Oct 08, 2023
-              </p>
-              <h3 className="text-base font-bold text-text-main dark:text-white leading-tight group-hover:text-primary transition-colors">
-                The Law and Sin
-              </h3>
-              <p className="text-sm text-text-muted mt-1 truncate">
-                Understanding the purpose of the law in a believer&apsos;s life.
-              </p>
-            </div>
-          </a>
-          <a className="group flex flex-col gap-3" href="#">
-            <div className="aspect-video w-full rounded-xl overflow-hidden relative bg-gray-100 dark:bg-white/5">
-              <div
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                data-alt="Person raising hands in worship during a church service silhouette"
-                style={{
-                  backgroundImage:
-                    "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCdF_iwTvdz1d0t_8ife9DHcboRg00rpI8Lfaze_Pa2QhNvC44vx3Z1eVZW3wr_I9lTftd1AA1VlJYEn7r_LBbqEETTQQ1BM05i3ezT1jN2ZY70j-xy3XJvPM_-nd_vnu2J60oUIAJdoWgsy6SoDnAjLZKAhtLgb8H6ivRHgdfErYKTlFbPl3Ca6UDBBKIEu58AToEngIfymODYNyt86t8XwV0QjU24HfnyqKsKF-Ri4KA-_mQL5jarDzdkksDprIOSi-1qfEOTbhbt')",
-                }}
-              ></div>
-              <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 mix-blend-multiply"></div>
-              <div className="absolute bottom-3 right-3 bg-black/70 text-white text-[10px] font-bold px-2 py-1 rounded backdrop-blur-sm border border-white/10">
-                38:40
-              </div>
-            </div>
-            <div>
-              <p className="text-xs text-text-muted font-medium mb-1">
-                Part 2 • Oct 01, 2023
-              </p>
-              <h3 className="text-base font-bold text-text-main dark:text-white leading-tight group-hover:text-primary transition-colors">
-                Dead to Sin, Alive in Christ
-              </h3>
-              <p className="text-sm text-text-muted mt-1 truncate">
-                Exploring the meaning of baptism and new life.
-              </p>
-            </div>
-          </a>
-          <a className="group flex flex-col gap-3" href="#">
-            <div className="aspect-video w-full rounded-xl overflow-hidden relative bg-gray-100 dark:bg-white/5">
-              <div
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                data-alt="Group of people praying together holding hands"
-                style={{
-                  backgroundImage:
-                    "url('https://lh3.googleusercontent.com/aida-public/AB6AXuA347o2ryw7553OdpF0TLGgUI3tDqq1FXgx44Qu1BllIuoyd2SlyxLqdHk3cMn97enUslMFTNyI7GVIWTcg0AJvla1BJh0qVSAyBNBMaPoM_GuqgiP9j1sGOFslKsdjSdGHjZIYmYDmihIE736526X74bvJ5w46DzNfI1udBYy6B9q33d-GJXuUEG1JysVptRSGOAWlX8-LhxBACEeuEf22GxJyaQ7y3dcb2jmInB77a5XtFle-qKj-pSwjCRrBcm97PKrquU43PP6q')",
-                }}
-              ></div>
-              <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 mix-blend-multiply"></div>
-              <div className="absolute bottom-3 right-3 bg-black/70 text-white text-[10px] font-bold px-2 py-1 rounded backdrop-blur-sm border border-white/10">
-                45:10
-              </div>
-            </div>
-            <div>
-              <p className="text-xs text-text-muted font-medium mb-1">
-                Part 1 • Sep 24, 2023
-              </p>
-              <h3 className="text-base font-bold text-text-main dark:text-white leading-tight group-hover:text-primary transition-colors">
-                Justified by Faith
-              </h3>
-              <p className="text-sm text-text-muted mt-1 truncate">
-                The foundation of our relationship with God.
-              </p>
-            </div>
-          </a>
-          <a className="group flex flex-col gap-3" href="#">
-            <div className="aspect-video w-full rounded-xl overflow-hidden relative bg-gray-100 dark:bg-white/5">
-              <div
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                data-alt="Sunlight streaming through trees in a forest"
-                style={{
-                  backgroundImage:
-                    "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAbXhyMZWcenZEALtPgq5WUBd_EDFG7w-wNlZ4_yDGpsI_YxQr4RncdAuF7kynyKC9sXhCrZqj5xJMJeKp0mPol8CI3gaDVwDMvqIkwnqJKQlL8cmVYR6DMxvwqP_OfeFL7JUI8CWTyNnpbpbl0o9fSwL9v4pbzYzKnLySAj7wGz0v46o8i-BnLt2D6NbVDpjCmIMBGSXffXVDW5-rWkGO4mb_yjhFxJlxG4rvzwghChX1sQmDUxgpCWW_elukeiTZxiqGDhIk5y1_O')",
-                }}
-              ></div>
-              <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 mix-blend-multiply"></div>
-              <div className="absolute bottom-3 right-3 bg-black/70 text-white text-[10px] font-bold px-2 py-1 rounded backdrop-blur-sm border border-white/10">
-                41:00
-              </div>
-            </div>
-            <div>
-              <p className="text-xs text-text-muted font-medium mb-1">
-                Intro • Sep 17, 2023
-              </p>
-              <h3 className="text-base font-bold text-text-main dark:text-white leading-tight group-hover:text-primary transition-colors">
-                Series Introduction: Romans
-              </h3>
-              <p className="text-sm text-text-muted mt-1 truncate">
-                An overview of Paul&apos;s letter to the Romans.
-              </p>
-            </div>
-          </a>
-        </div>
-      </section>
+      <MoreFromSeries sermon={sermon} />
     </div>
   );
 };

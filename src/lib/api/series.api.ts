@@ -71,4 +71,22 @@ export const seriesApi = {
   deleteSeries: async (id: string): Promise<void> => {
     await api.delete(`/series/${id}/delete`);
   },
+
+  getMoreFromSeries: async ({
+    seriesId,
+    exclude,
+    limit,
+  }: {
+    seriesId: string;
+    exclude?: string;
+    limit?: number;
+  }): Promise<ApiResponse<ISermon[]>> => {
+    const response = await api.get(`/series/${seriesId}/sermons/more`, {
+      params: {
+        exclude,
+        limit,
+      },
+    });
+    return response.data;
+  },
 };
