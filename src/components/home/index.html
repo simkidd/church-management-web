@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Dominion City - Courses</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#003399",
+              "primary-hover": "#002266",
+              "accent-warm": "#FFB347",
+              "background-light": "#FAFAFA",
+              "background-dark": "#0F172A",
+              "surface-light": "#ffffff",
+              "surface-dark": "#1E293B",
+              "text-main": "#1e293b",
+              "text-muted": "#64748b",
+            },
+            fontFamily: {
+              display: ["Inter", "sans-serif"],
+            },
+            borderRadius: {
+              DEFAULT: "0.5rem",
+              lg: "1rem",
+              xl: "1.5rem",
+              "2xl": "2rem",
+              full: "9999px",
+            },
+            boxShadow: {
+              soft: "0 4px 20px -2px rgba(0, 0, 0, 0.05)",
+              glow: "0 0 15px rgba(255, 179, 71, 0.3)",
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body
+    class="bg-background-light dark:bg-background-dark font-display text-text-main dark:text-white transition-colors duration-200 antialiased selection:bg-primary/20 selection:text-primary"
+  >
+    <div
+      class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden"
+    >
+      <header
+        class="sticky top-0 z-50 w-full bg-surface-light/90 dark:bg-surface-dark/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800"
+      >
+        <div class="layout-container flex h-full grow flex-col">
+          <div class="px-4 md:px-10 flex flex-1 justify-center py-4">
+            <div
+              class="layout-content-container flex w-full max-w-[1200px] items-center justify-between"
+            >
+              <div
+                class="flex items-center gap-3 text-slate-900 dark:text-white cursor-pointer group"
+              >
+                <div
+                  class="size-10 text-primary transition-transform duration-300 group-hover:scale-105"
+                >
+                  <svg
+                    class="h-full w-full drop-shadow-sm"
+                    fill="none"
+                    viewBox="0 0 48 48"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M24 44C24 44 42 32 42 19C42 11.8203 36.1797 6 29 6C25.4101 6 24 9 24 9C24 9 22.5899 6 19 6C11.8203 6 6 11.8203 6 19C6 32 24 44 24 44Z"
+                      fill="currentColor"
+                    ></path>
+                    <path d="M14 34V24H18V34" fill="white"></path>
+                    <path d="M20 34V18H28V34" fill="white"></path>
+                    <path d="M30 34V22H34V34" fill="white"></path>
+                  </svg>
+                </div>
+                <h2
+                  class="text-xl font-extrabold leading-tight tracking-tight text-slate-900 dark:text-white"
+                >
+                  Dominion City
+                </h2>
+              </div>
+              <nav class="hidden md:flex items-center gap-1">
+                <a
+                  class="px-4 py-2 rounded-full text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary hover:bg-slate-50 dark:hover:bg-white/5 transition-all"
+                  href="#"
+                  >Home</a
+                >
+                <a
+                  class="px-4 py-2 rounded-full text-sm font-semibold text-primary bg-blue-50 dark:bg-primary/10 transition-colors"
+                  href="#"
+                  >Courses</a
+                >
+                <a
+                  class="px-4 py-2 rounded-full text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary hover:bg-slate-50 dark:hover:bg-white/5 transition-all"
+                  href="#"
+                  >Events</a
+                >
+                <a
+                  class="px-4 py-2 rounded-full text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary hover:bg-slate-50 dark:hover:bg-white/5 transition-all"
+                  href="#"
+                  >Giving</a
+                >
+              </nav>
+              <div class="flex items-center gap-3">
+                <button
+                  class="flex items-center justify-center rounded-full size-10 text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-blue-50 dark:hover:bg-slate-800 transition-all"
+                >
+                  <span
+                    class="material-symbols-outlined"
+                    style="font-size: 24px"
+                    >search</span
+                  >
+                </button>
+                <div
+                  class="h-10 w-10 overflow-hidden rounded-full border-2 border-white dark:border-slate-700 shadow-md cursor-pointer ring-2 ring-transparent hover:ring-primary/20 transition-all"
+                  data-alt="User profile avatar"
+                  style="
+                    background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBK8GU3HoImS46e0NaIOr6PbMKfeR6DquRXy4MO9laKncc2qu6IpGlYcW1fjxZcs8ac6OpT6EwcVHCp-W0VXANqyaX_4_y99FXpxBpf3br8_QhA9Y4A2BS0M8LZrF4XtOpGymRJ2Nzm0DU8emYbWhjftoncG1VsUYGOL93knO3QUPebb2q7ONm_J6_F21YT-Naod2DvK4Kk6wkda4nG91DzkWsbplC8ohfAKAfiQWya_kXQWcb-j5rL_X0zeWDXd1P6_pcdNPqox2-w');
+                    background-size: cover;
+                    background-position: center;
+                  "
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+      <main
+        class="flex-1 w-full max-w-[1200px] mx-auto px-4 md:px-10 py-8 md:py-12 flex flex-col gap-10"
+      >
+        <section
+          class="flex flex-col md:flex-row md:items-end justify-between gap-6"
+        >
+          <div class="flex flex-col gap-2">
+            <span
+              class="text-primary font-semibold text-sm uppercase tracking-wider"
+              >Bible Academy</span
+            >
+            <h1
+              class="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight"
+            >
+              Available Courses
+            </h1>
+            <p class="text-slate-500 dark:text-slate-400 max-w-xl">
+              Deepen your faith and understanding with our structured learning
+              paths.
+            </p>
+          </div>
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="relative group">
+              <span
+                class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 group-focus-within:text-primary transition-colors"
+              >
+                <span class="material-symbols-outlined text-xl">search</span>
+              </span>
+              <input
+                class="pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark text-sm focus:border-primary focus:ring-primary dark:text-white w-full md:w-64 shadow-sm outline-none transition-all"
+                placeholder="Search courses..."
+                type="text"
+              />
+            </div>
+            <button
+              class="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark text-slate-600 dark:text-slate-300 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
+            >
+              <span class="material-symbols-outlined text-lg">filter_list</span>
+              Filter
+            </button>
+            <div class="relative">
+              <select
+                class="appearance-none pl-4 pr-10 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark text-slate-600 dark:text-slate-300 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm cursor-pointer outline-none focus:border-primary"
+              >
+                <option>Sort by: Popular</option>
+                <option>Sort by: Newest</option>
+                <option>Sort by: A-Z</option>
+              </select>
+              <span
+                class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400"
+              >
+                <span class="material-symbols-outlined text-lg"
+                  >expand_more</span
+                >
+              </span>
+            </div>
+          </div>
+        </section>
+        <section
+          class="w-full rounded-2xl bg-gradient-to-r from-primary to-blue-800 text-white p-8 md:p-12 relative overflow-hidden shadow-lg"
+        >
+          <div
+            class="absolute top-0 right-0 w-96 h-96 bg-accent-warm/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"
+          ></div>
+          <div
+            class="absolute bottom-0 left-0 w-64 h-64 bg-blue-400/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3"
+          ></div>
+          <div
+            class="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-center"
+          >
+            <div class="flex flex-col gap-4">
+              <span
+                class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm text-xs font-bold uppercase tracking-wider w-fit border border-white/20"
+              >
+                <span class="material-symbols-outlined text-sm text-accent-warm"
+                  >star</span
+                >
+                Featured Course
+              </span>
+              <h2 class="text-3xl md:text-4xl font-bold leading-tight">
+                Foundations of Faith II
+              </h2>
+              <p class="text-blue-100 text-lg leading-relaxed mb-2">
+                Build upon your spiritual foundation with advanced biblical
+                principles and practical applications for daily Christian
+                living.
+              </p>
+              <div
+                class="flex items-center gap-6 text-sm font-medium text-blue-100"
+              >
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined">menu_book</span>
+                  8 Modules
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined">schedule</span>
+                  4 Weeks
+                </div>
+              </div>
+              <div class="flex gap-4 mt-4">
+                <button
+                  class="bg-white text-primary hover:bg-blue-50 px-6 py-3 rounded-xl font-bold text-sm tracking-wide transition-all shadow-lg flex items-center gap-2"
+                >
+                  Enroll Now
+                  <span class="material-symbols-outlined text-lg"
+                    >arrow_forward</span
+                  >
+                </button>
+                <button
+                  class="bg-white/10 text-white hover:bg-white/20 px-6 py-3 rounded-xl font-bold text-sm tracking-wide transition-all border border-white/20 flex items-center gap-2"
+                >
+                  Learn More
+                </button>
+              </div>
+            </div>
+            <div class="hidden md:flex justify-center">
+              <div
+                class="relative w-full max-w-sm aspect-video rounded-xl overflow-hidden shadow-2xl border-4 border-white/10 rotate-2 hover:rotate-0 transition-transform duration-500"
+              >
+                <div
+                  class="absolute inset-0 bg-cover bg-center"
+                  style="
+                    background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBfjBfvVhNL3gNXj9tL_dQMQX65BxPGw75wTp1Bs6s3O7WU0Mr3QCidRZm22L_UCcluyD13oE0qw_tIt6qcwV9YWbG82FSuGddUpHFA8UQFR0ArnNGkGVrjXeRl2rZydweMGzqu2ksUos3kAry8VIx9bOg5duKLm_d33nzcEwW_p16En0LA4z1INpHGYtiu3TyWU7A7jbvJy7iGrEEm__dXjDGm9NE8d7VNwmCB8vFvuYAQlefE9AaCJesDccAFaE5-LqMXYbXPzr1U');
+                  "
+                ></div>
+                <div class="absolute inset-0 bg-black/20"></div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                  <div
+                    class="size-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/40 shadow-lg cursor-pointer hover:scale-110 transition-transform"
+                  >
+                    <span class="material-symbols-outlined text-4xl text-white"
+                      >play_arrow</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="flex overflow-x-auto pb-4 gap-3 no-scrollbar">
+          <button
+            class="whitespace-nowrap px-5 py-2 rounded-full bg-primary text-white text-sm font-semibold shadow-md shadow-primary/20"
+          >
+            All Courses
+          </button>
+          <button
+            class="whitespace-nowrap px-5 py-2 rounded-full bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium hover:border-primary hover:text-primary transition-all"
+          >
+            Biblical Studies
+          </button>
+          <button
+            class="whitespace-nowrap px-5 py-2 rounded-full bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium hover:border-primary hover:text-primary transition-all"
+          >
+            Leadership
+          </button>
+          <button
+            class="whitespace-nowrap px-5 py-2 rounded-full bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium hover:border-primary hover:text-primary transition-all"
+          >
+            Marriage &amp; Family
+          </button>
+          <button
+            class="whitespace-nowrap px-5 py-2 rounded-full bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium hover:border-primary hover:text-primary transition-all"
+          >
+            Finances
+          </button>
+          <button
+            class="whitespace-nowrap px-5 py-2 rounded-full bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium hover:border-primary hover:text-primary transition-all"
+          >
+            Discipleship
+          </button>
+        </section>
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div
+            class="group flex flex-col bg-white dark:bg-surface-dark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 shadow-soft hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full"
+          >
+            <div class="relative h-48 overflow-hidden">
+              <div
+                class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                style="
+                  background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDmk5LqKVzohmPyCtpOTDRNBb63ARJ6Za0xnLNVNtpe4AtwmeFhpJONRDBVjX48Vm6hMkJrnPqBDZjg3umPUH8LENxr926rxD935KF2wqBDv3BqpRHT10dmwEpuEqEnlEU-9XuFPNOmpVy9OjE5q9tYE4N1m4xVIiVP3a4PjuWAjqvpNUqN1OMR5uIdNKlTzu6X192_F5w6cOK_ma_fIuYulfglp9Jl5r7zMSoiGAc9ENcmdv5zSsSJhF2h9krgJdwo70oqF_cgXb8x');
+                "
+              ></div>
+              <div
+                class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"
+              ></div>
+              <div
+                class="absolute bottom-4 left-4 right-4 flex justify-between items-end"
+              >
+                <span
+                  class="px-2.5 py-1 rounded-md bg-accent-warm text-white text-xs font-bold uppercase tracking-wide shadow-sm"
+                  >Intermediate</span
+                >
+              </div>
+            </div>
+            <div class="p-6 flex flex-col flex-1 gap-4">
+              <div class="flex-1">
+                <div
+                  class="flex items-center gap-2 text-xs font-semibold text-primary mb-2"
+                >
+                  <span class="material-symbols-outlined text-sm">school</span>
+                  BIBLICAL STUDIES
+                </div>
+                <h3
+                  class="text-xl font-bold text-slate-900 dark:text-white mb-2 leading-tight group-hover:text-primary transition-colors"
+                >
+                  Understanding the Old Testament
+                </h3>
+                <p
+                  class="text-sm text-slate-500 dark:text-slate-400 line-clamp-2"
+                >
+                  A comprehensive journey through the history, culture, and key
+                  themes of the Old Testament scriptures.
+                </p>
+              </div>
+              <div
+                class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800 text-sm text-slate-500 dark:text-slate-400"
+              >
+                <div class="flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-lg">person</span>
+                  <span>Dr. James Wilson</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <span
+                    class="material-symbols-outlined text-lg text-accent-warm"
+                    >star</span
+                  >
+                  <span class="font-medium text-slate-700 dark:text-slate-200"
+                    >4.9</span
+                  >
+                  <span class="text-xs">(120)</span>
+                </div>
+              </div>
+            </div>
+            <div class="px-6 pb-6 mt-auto flex gap-3">
+              <button
+                class="flex-1 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
+              >
+                View Details
+              </button>
+              <button
+                class="flex-1 py-3 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary-hover transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+              >
+                Enroll Now
+              </button>
+            </div>
+          </div>
+          <div
+            class="group flex flex-col bg-white dark:bg-surface-dark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 shadow-soft hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full"
+          >
+            <div class="relative h-48 overflow-hidden">
+              <div
+                class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                style="
+                  background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCKLkpNUByLSXGPfKVixdF0oetZnKCsO25wHZrwqdd_9V9LksLAPC4C7uZidfOm59oy7d7ZQaN0Wof5NMkgB3FHcXtLaUIs7uMrdjdL1A_OThqeKTRM4C_klebFnXJKega08gNWcImCV8E9WQobNfcjtCqro58Xol-ZJnHp8oUp8WvoDU8yN_UhAgy2BUrlD4GN3c6iq1vtNLfttTmud3IaOiQY3xwzrKZa3ME7N-oorg8Rfs99lqt0XhAQGAYnNjTyQtlSYeysT9Sy');
+                "
+              ></div>
+              <div
+                class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"
+              ></div>
+              <div
+                class="absolute bottom-4 left-4 right-4 flex justify-between items-end"
+              >
+                <span
+                  class="px-2.5 py-1 rounded-md bg-green-500 text-white text-xs font-bold uppercase tracking-wide shadow-sm"
+                  >Beginner</span
+                >
+              </div>
+            </div>
+            <div class="p-6 flex flex-col flex-1 gap-4">
+              <div class="flex-1">
+                <div
+                  class="flex items-center gap-2 text-xs font-semibold text-primary mb-2"
+                >
+                  <span class="material-symbols-outlined text-sm">church</span>
+                  DISCIPLESHIP
+                </div>
+                <h3
+                  class="text-xl font-bold text-slate-900 dark:text-white mb-2 leading-tight group-hover:text-primary transition-colors"
+                >
+                  New Believers Class
+                </h3>
+                <p
+                  class="text-sm text-slate-500 dark:text-slate-400 line-clamp-2"
+                >
+                  Start your walk with Christ on the right foot. Learn the
+                  essentials of salvation, prayer, and community.
+                </p>
+              </div>
+              <div
+                class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800 text-sm text-slate-500 dark:text-slate-400"
+              >
+                <div class="flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-lg">person</span>
+                  <span>Pastor Sarah Lee</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <span
+                    class="material-symbols-outlined text-lg text-accent-warm"
+                    >star</span
+                  >
+                  <span class="font-medium text-slate-700 dark:text-slate-200"
+                    >5.0</span
+                  >
+                  <span class="text-xs">(85)</span>
+                </div>
+              </div>
+            </div>
+            <div class="px-6 pb-6 mt-auto flex gap-3">
+              <button
+                class="flex-1 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
+              >
+                View Details
+              </button>
+              <button
+                class="flex-1 py-3 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary-hover transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+              >
+                Enroll Now
+              </button>
+            </div>
+          </div>
+          <div
+            class="group flex flex-col bg-white dark:bg-surface-dark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 shadow-soft hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full"
+          >
+            <div class="relative h-48 overflow-hidden">
+              <div
+                class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                style="
+                  background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCh3Z9DOWwdrwO21NYc_X38CJpNJhrD7KakdtHUqRdtgRIcpMX5eBi3n9cyumpKr8C43CIgA3L4EeACgOzAJ6o-sPRlx8nHLG3Ypc0WmQQNi45JwKpp9VFLzF6TMGdOZNOLqJdF10PoG3omZdptpZkSD--Lgou0P1K7BbwZwJo3_Tmj6I4Hzq_R65thA8_Vu3g1OrW2OvJQh_lK0KEsq6VaoFbP3G04ZYfwEGaonRKWjSB-raqjdFHj1oDyb91329XuV58KrS-6P--o');
+                "
+              ></div>
+              <div
+                class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"
+              ></div>
+              <div
+                class="absolute bottom-4 left-4 right-4 flex justify-between items-end"
+              >
+                <span
+                  class="px-2.5 py-1 rounded-md bg-blue-500 text-white text-xs font-bold uppercase tracking-wide shadow-sm"
+                  >Advanced</span
+                >
+              </div>
+            </div>
+            <div class="p-6 flex flex-col flex-1 gap-4">
+              <div class="flex-1">
+                <div
+                  class="flex items-center gap-2 text-xs font-semibold text-primary mb-2"
+                >
+                  <span class="material-symbols-outlined text-sm">groups</span>
+                  LEADERSHIP
+                </div>
+                <h3
+                  class="text-xl font-bold text-slate-900 dark:text-white mb-2 leading-tight group-hover:text-primary transition-colors"
+                >
+                  Servant Leadership 101
+                </h3>
+                <p
+                  class="text-sm text-slate-500 dark:text-slate-400 line-clamp-2"
+                >
+                  Developing the heart and skills to lead others effectively in
+                  ministry and the marketplace.
+                </p>
+              </div>
+              <div
+                class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800 text-sm text-slate-500 dark:text-slate-400"
+              >
+                <div class="flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-lg">person</span>
+                  <span>Rev. Mark Thompson</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <span
+                    class="material-symbols-outlined text-lg text-accent-warm"
+                    >star</span
+                  >
+                  <span class="font-medium text-slate-700 dark:text-slate-200"
+                    >4.8</span
+                  >
+                  <span class="text-xs">(210)</span>
+                </div>
+              </div>
+            </div>
+            <div class="px-6 pb-6 mt-auto flex gap-3">
+              <button
+                class="flex-1 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
+              >
+                View Details
+              </button>
+              <button
+                class="flex-1 py-3 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary-hover transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+              >
+                Enroll Now
+              </button>
+            </div>
+          </div>
+          <div
+            class="group flex flex-col bg-white dark:bg-surface-dark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 shadow-soft hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full"
+          >
+            <div class="relative h-48 overflow-hidden">
+              <div
+                class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                style="
+                  background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA1s-4csAGPY19ZFRoi3mE332hy91ypvLgMFqJE0dm33JKT137ZBOvxFJgtZ3l6UlrHioV2pzViaON6lDI86ZA51RqyBD37QJJ-_N1TksdnqWvTe3N_yDZbjaJRLEZ6oyI707SvSGqltBzSg_rniViFsORQSxThmS6AP3rajVUKAYtErYokHTt1R3Cyoq9Sy3-aRq2UZGnQsWXOglhJ3T1KJcZatrZkP089Gw8afxNjF_lTlzz3AUCBoPzbIaulDsW5ijZnymOu9odY');
+                "
+              ></div>
+              <div
+                class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"
+              ></div>
+              <div
+                class="absolute bottom-4 left-4 right-4 flex justify-between items-end"
+              >
+                <span
+                  class="px-2.5 py-1 rounded-md bg-accent-warm text-white text-xs font-bold uppercase tracking-wide shadow-sm"
+                  >Intermediate</span
+                >
+              </div>
+            </div>
+            <div class="p-6 flex flex-col flex-1 gap-4">
+              <div class="flex-1">
+                <div
+                  class="flex items-center gap-2 text-xs font-semibold text-primary mb-2"
+                >
+                  <span class="material-symbols-outlined text-sm"
+                    >favorite</span
+                  >
+                  MARRIAGE &amp; FAMILY
+                </div>
+                <h3
+                  class="text-xl font-bold text-slate-900 dark:text-white mb-2 leading-tight group-hover:text-primary transition-colors"
+                >
+                  Kingdom Marriage
+                </h3>
+                <p
+                  class="text-sm text-slate-500 dark:text-slate-400 line-clamp-2"
+                >
+                  Building a lasting, God-centered relationship that thrives
+                  through all seasons of life.
+                </p>
+              </div>
+              <div
+                class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800 text-sm text-slate-500 dark:text-slate-400"
+              >
+                <div class="flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-lg">person</span>
+                  <span>Pastors John &amp; Mary</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <span
+                    class="material-symbols-outlined text-lg text-accent-warm"
+                    >star</span
+                  >
+                  <span class="font-medium text-slate-700 dark:text-slate-200"
+                    >4.9</span
+                  >
+                  <span class="text-xs">(342)</span>
+                </div>
+              </div>
+            </div>
+            <div class="px-6 pb-6 mt-auto flex gap-3">
+              <button
+                class="flex-1 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
+              >
+                View Details
+              </button>
+              <button
+                class="flex-1 py-3 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary-hover transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+              >
+                Enroll Now
+              </button>
+            </div>
+          </div>
+          <div
+            class="group flex flex-col bg-white dark:bg-surface-dark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 shadow-soft hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full"
+          >
+            <div class="relative h-48 overflow-hidden">
+              <div
+                class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                style="
+                  background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBmf5L95bU-g-RAS1xW7YmNmhSZZmmBwYOIDuGRjkxMwZiH7P-FquZEbVpVas-w3juD2DZuy_gzQUI9r0cPJgspQFBgbDqDj6UyaV0l-1uU9Abhc3dETGLFE0yAiM_XutWixLILFWaE5YMhhntWxm2b9MlkmuDaEfRuNtu6olTZ--yz5dwjO-Cnh7-n5BxqU5hHQ_z60Q4izkX08OumxSy3SKTarTBo14LkOVMehqUz39yDCj0wki2XAPS5Go-tRts7q3OdChvwJRHU');
+                "
+              ></div>
+              <div
+                class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"
+              ></div>
+              <div
+                class="absolute bottom-4 left-4 right-4 flex justify-between items-end"
+              >
+                <span
+                  class="px-2.5 py-1 rounded-md bg-green-500 text-white text-xs font-bold uppercase tracking-wide shadow-sm"
+                  >Beginner</span
+                >
+              </div>
+            </div>
+            <div class="p-6 flex flex-col flex-1 gap-4">
+              <div class="flex-1">
+                <div
+                  class="flex items-center gap-2 text-xs font-semibold text-primary mb-2"
+                >
+                  <span class="material-symbols-outlined text-sm"
+                    >account_balance</span
+                  >
+                  FINANCES
+                </div>
+                <h3
+                  class="text-xl font-bold text-slate-900 dark:text-white mb-2 leading-tight group-hover:text-primary transition-colors"
+                >
+                  Biblical Finance
+                </h3>
+                <p
+                  class="text-sm text-slate-500 dark:text-slate-400 line-clamp-2"
+                >
+                  Learn stewardship, budgeting, and generosity from a biblical
+                  perspective to achieve financial freedom.
+                </p>
+              </div>
+              <div
+                class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800 text-sm text-slate-500 dark:text-slate-400"
+              >
+                <div class="flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-lg">person</span>
+                  <span>Elder David Chen</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <span
+                    class="material-symbols-outlined text-lg text-accent-warm"
+                    >star</span
+                  >
+                  <span class="font-medium text-slate-700 dark:text-slate-200"
+                    >4.7</span
+                  >
+                  <span class="text-xs">(98)</span>
+                </div>
+              </div>
+            </div>
+            <div class="px-6 pb-6 mt-auto flex gap-3">
+              <button
+                class="flex-1 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
+              >
+                View Details
+              </button>
+              <button
+                class="flex-1 py-3 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary-hover transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+              >
+                Enroll Now
+              </button>
+            </div>
+          </div>
+          <div
+            class="group flex flex-col bg-white dark:bg-surface-dark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 shadow-soft hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full"
+          >
+            <div class="relative h-48 overflow-hidden">
+              <div
+                class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                style="
+                  background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBEixg6uj6DRdlyNddqIOOi4AK5RI9HfQzzz35QAGvaC3BUSvk-zQ-87IUrN47I4vU7M0V28CmCX-GjhyAZYj4C3uMib9c9UjD_NcVpTIlhwPi9txDOVgAfDYnxsfkFz-yQZz804lNhSNOOd0OAFGysA8sClkdzxB3r5Vs35xXTkZ4PgSdg8kEsYMkiTez4_ThbclObE0BQWeVA7qi58H2Ja8eTCcpmxeHXXQ1unnGEdUSZXzDQ3Y9qupL-mroxA8XGqxNOL7OM4DGv');
+                "
+              ></div>
+              <div
+                class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"
+              ></div>
+              <div
+                class="absolute bottom-4 left-4 right-4 flex justify-between items-end"
+              >
+                <span
+                  class="px-2.5 py-1 rounded-md bg-accent-warm text-white text-xs font-bold uppercase tracking-wide shadow-sm"
+                  >Intermediate</span
+                >
+              </div>
+            </div>
+            <div class="p-6 flex flex-col flex-1 gap-4">
+              <div class="flex-1">
+                <div
+                  class="flex items-center gap-2 text-xs font-semibold text-primary mb-2"
+                >
+                  <span class="material-symbols-outlined text-sm"
+                    >psychology</span
+                  >
+                  PERSONAL GROWTH
+                </div>
+                <h3
+                  class="text-xl font-bold text-slate-900 dark:text-white mb-2 leading-tight group-hover:text-primary transition-colors"
+                >
+                  Overcoming Anxiety
+                </h3>
+                <p
+                  class="text-sm text-slate-500 dark:text-slate-400 line-clamp-2"
+                >
+                  Finding peace in a chaotic world through scripture, prayer,
+                  and practical mental health tools.
+                </p>
+              </div>
+              <div
+                class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800 text-sm text-slate-500 dark:text-slate-400"
+              >
+                <div class="flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-lg">person</span>
+                  <span>Dr. Grace Kim</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <span
+                    class="material-symbols-outlined text-lg text-accent-warm"
+                    >star</span
+                  >
+                  <span class="font-medium text-slate-700 dark:text-slate-200"
+                    >5.0</span
+                  >
+                  <span class="text-xs">(156)</span>
+                </div>
+              </div>
+            </div>
+            <div class="px-6 pb-6 mt-auto flex gap-3">
+              <button
+                class="flex-1 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
+              >
+                View Details
+              </button>
+              <button
+                class="flex-1 py-3 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary-hover transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+              >
+                Enroll Now
+              </button>
+            </div>
+          </div>
+        </section>
+        <div class="flex justify-center mt-4">
+          <button
+            class="group flex items-center gap-2 px-6 py-3 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark text-slate-600 dark:text-slate-300 font-semibold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+          >
+            Load More Courses
+            <span
+              class="material-symbols-outlined text-lg group-hover:translate-y-0.5 transition-transform"
+              >expand_more</span
+            >
+          </button>
+        </div>
+      </main>
+      <footer
+        class="w-full border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-surface-dark mt-16"
+      >
+        <div class="max-w-[1200px] mx-auto px-4 md:px-10 py-16">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-12">
+            <div class="col-span-1 md:col-span-1 flex flex-col gap-6">
+              <div
+                class="flex items-center gap-2 text-slate-900 dark:text-white"
+              >
+                <div class="size-8 text-primary">
+                  <svg
+                    class="h-full w-full"
+                    fill="none"
+                    viewBox="0 0 48 48"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M24 44C24 44 42 32 42 19C42 11.8203 36.1797 6 29 6C25.4101 6 24 9 24 9C24 9 22.5899 6 19 6C11.8203 6 6 11.8203 6 19C6 32 24 44 24 44Z"
+                      fill="currentColor"
+                    ></path>
+                    <path d="M14 34V24H18V34" fill="white"></path>
+                    <path d="M20 34V18H28V34" fill="white"></path>
+                    <path d="M30 34V22H34V34" fill="white"></path>
+                  </svg>
+                </div>
+                <span class="text-lg font-extrabold">Dominion City</span>
+              </div>
+              <p
+                class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed"
+              >
+                Raising leaders that transform society. A community dedicated to
+                faith, excellence, and love. Join us this Sunday.
+              </p>
+              <div class="flex gap-4 mt-2">
+                <a
+                  class="size-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:bg-primary hover:text-white transition-all"
+                  href="#"
+                >
+                  <span class="material-symbols-outlined text-lg">public</span>
+                </a>
+                <a
+                  class="size-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:bg-primary hover:text-white transition-all"
+                  href="#"
+                >
+                  <span class="material-symbols-outlined text-lg">mail</span>
+                </a>
+              </div>
+            </div>
+            <div>
+              <h4 class="font-bold text-slate-900 dark:text-white mb-6">
+                Ministries
+              </h4>
+              <ul
+                class="flex flex-col gap-3 text-sm text-slate-500 dark:text-slate-400"
+              >
+                <li>
+                  <a
+                    class="hover:text-primary transition-colors flex items-center gap-2"
+                    href="#"
+                    ><span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span
+                    >Kids &amp; Youth</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="hover:text-primary transition-colors flex items-center gap-2"
+                    href="#"
+                    ><span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span
+                    >Small Groups</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="hover:text-primary transition-colors flex items-center gap-2"
+                    href="#"
+                    ><span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span
+                    >Outreach</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="hover:text-primary transition-colors flex items-center gap-2"
+                    href="#"
+                    ><span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span
+                    >Missions</a
+                  >
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 class="font-bold text-slate-900 dark:text-white mb-6">
+                Resources
+              </h4>
+              <ul
+                class="flex flex-col gap-3 text-sm text-slate-500 dark:text-slate-400"
+              >
+                <li>
+                  <a
+                    class="hover:text-primary transition-colors flex items-center gap-2"
+                    href="#"
+                    ><span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span
+                    >Sermon Archive</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="hover:text-primary transition-colors flex items-center gap-2"
+                    href="#"
+                    ><span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span
+                    >Blog &amp; News</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="hover:text-primary transition-colors flex items-center gap-2"
+                    href="#"
+                    ><span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span
+                    >Member Portal</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="hover:text-primary transition-colors flex items-center gap-2"
+                    href="#"
+                    ><span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span
+                    >Give Online</a
+                  >
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 class="font-bold text-slate-900 dark:text-white mb-6">
+                Service Times
+              </h4>
+              <ul
+                class="flex flex-col gap-4 text-sm text-slate-500 dark:text-slate-400"
+              >
+                <li class="flex items-start gap-3">
+                  <div
+                    class="mt-1 flex items-center justify-center size-8 rounded-full bg-orange-50 dark:bg-orange-900/20 text-orange-500 flex-shrink-0"
+                  >
+                    <span class="material-symbols-outlined text-sm">sunny</span>
+                  </div>
+                  <div>
+                    <p class="font-semibold text-slate-900 dark:text-white">
+                      Sundays
+                    </p>
+                    <p>9:00 AM &amp; 11:00 AM</p>
+                  </div>
+                </li>
+                <li class="flex items-start gap-3">
+                  <div
+                    class="mt-1 flex items-center justify-center size-8 rounded-full bg-blue-50 dark:bg-blue-900/20 text-primary flex-shrink-0"
+                  >
+                    <span class="material-symbols-outlined text-sm"
+                      >bedtime</span
+                    >
+                  </div>
+                  <div>
+                    <p class="font-semibold text-slate-900 dark:text-white">
+                      Wednesdays
+                    </p>
+                    <p>7:00 PM (Midweek Service)</p>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div
+            class="mt-16 pt-8 border-t border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-400"
+          >
+            <p>© 2023 Dominion City. All rights reserved.</p>
+            <div class="flex gap-6">
+              <a
+                class="hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                href="#"
+                >Privacy Policy</a
+              >
+              <a
+                class="hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                href="#"
+                >Terms of Service</a
+              >
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
