@@ -3,10 +3,9 @@
 import { Button } from "@/components/ui/button";
 import {
   Field,
-  FieldDescription,
   FieldError,
   FieldGroup,
-  FieldLabel,
+  FieldLabel
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { LoginCredentials } from "@/interfaces/auth.interface";
@@ -71,7 +70,7 @@ const LoginForm = () => {
         description: `Welcome back, ${user.firstName}! Redirecting to your dashboard...`,
       });
 
-      router.push(redirectUrl || "/dashboard");
+      router.push(redirectUrl || "/");
     },
     onError: (error: AxiosError<ApiErrorResponse>) => {
       // You can handle specific error messages here
@@ -93,30 +92,29 @@ const LoginForm = () => {
   const isLoading = loginMutation.isPending;
 
   return (
-    <form id="login-form" onSubmit={form.handleSubmit(onSubmit)}>
+    <form
+      id="login-form"
+      onSubmit={form.handleSubmit(onSubmit)}
+      className="space-y-6"
+    >
       <FieldGroup>
-        <div className="flex flex-col items-center gap-1 text-center">
-          <h1 className="text-2xl font-bold">Login to your account</h1>
-          <p className="text-muted-foreground text-sm text-balance">
-            Enter your email below to login to your account
-          </p>
-        </div>
-
         <div className="space-y-4">
           <Controller
             name="email"
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="login-email">Email</FieldLabel>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <FieldLabel htmlFor="login-email">Email Address</FieldLabel>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary dark:group-focus-within:text-primary-light transition-colors">
+                    <Mail size={20} />
+                  </div>
                   <Input
                     {...field}
                     id="login-email"
                     type="email"
                     placeholder="john@example.com"
-                    className="pl-10"
+                    className="block w-full h-full pl-11 pr-4 py-4 rounded-xl bg-surface-light-2 dark:bg-surface-dark border-transparent focus:border-primary focus:bg-white dark:focus:bg-[#1a222d] focus:ring-2 focus:ring-primary/20 text-[#111418] dark:text-white placeholder-gray-400 transition-all duration-200 outline-none font-medium"
                     aria-invalid={fieldState.invalid}
                     disabled={isLoading}
                     autoComplete="email"
@@ -136,35 +134,35 @@ const LoginForm = () => {
               <Field data-invalid={fieldState.invalid}>
                 <div className="flex items-center justify-between">
                   <FieldLabel htmlFor="login-password">Password</FieldLabel>
+
                   <Link
+                    className="text-sm font-semibold text-primary dark:text-primary-light hover:text-primary transition-colors"
                     href="/auth/forgot-password"
-                    className="text-sm text-primary hover:underline"
                   >
-                    Forgot password?
+                    Forgot Password?
                   </Link>
                 </div>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary dark:group-focus-within:text-primary-light transition-colors">
+                    <Lock size={20} />
+                  </div>
                   <Input
                     {...field}
                     id="login-password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    className="pl-10"
+                    className="block w-full h-full pl-11 pr-12 py-4 rounded-xl bg-surface-light-2 dark:bg-surface-dark border-transparent focus:border-primary focus:bg-white dark:focus:bg-[#1a222d] focus:ring-2 focus:ring-primary/20 text-[#111418] dark:text-white placeholder-gray-400 transition-all duration-200 outline-none font-medium"
                     aria-invalid={fieldState.invalid}
                     disabled={isLoading}
                     autoComplete="current-password"
                   />
                   <button
                     type="button"
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground cursor-pointer"
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-primary dark:hover:text-primary-light transition-colors cursor-pointer focus:outline-none"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
                 {fieldState.invalid && (
@@ -173,13 +171,15 @@ const LoginForm = () => {
               </Field>
             )}
           />
+
+          <Field></Field>
         </div>
 
         <Field>
           <Button
             type="submit"
             form="login-form"
-            className="w-full"
+            className="w-full h-full py-3.5 px-6 rounded-xl bg-primary hover:bg-primary-light text-white font-bold text-base shadow-lg shadow-primary/30 hover:shadow-primary/40 active:scale-[0.98] transition-all duration-200"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -191,13 +191,6 @@ const LoginForm = () => {
               "Sign In"
             )}
           </Button>
-        </Field>
-
-        <Field>
-          <FieldDescription className="text-center">
-            Don&apos;t have an account?{" "}
-            <Link href="/auth/register">Sign up</Link>
-          </FieldDescription>
         </Field>
       </FieldGroup>
     </form>

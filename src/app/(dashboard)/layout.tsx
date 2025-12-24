@@ -1,21 +1,24 @@
-import { DashboardHeader } from "@/components/shared/DashboardHeader";
-import DashboardSidebar from "@/components/shared/DashboardSidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import DashboardHeader from "@/components/account/DashboardHeader";
+import DashboardSidebar from "@/components/account/DashboardSidebar";
+import MobileTabbar from "@/components/account/MobileTabbar";
 
-export default async function DashboardLayout({
+export default async function AccountLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <SidebarProvider>
-      <DashboardSidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <DashboardHeader />
-        <main className="flex-1 p-4 lg:p-6 overflow-y-auto">
-          <div className="max-w-7xl mx-auto">{children}</div>
-        </main>
+    <div className="w-full">
+      <DashboardHeader />
+      <div className="container px-4 mx-auto lg:pt-8 pb-24 lg:pb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative">
+          <aside className="lg:col-span-3 relative">
+            <DashboardSidebar />
+          </aside>
+          <div className="lg:col-span-9">{children}</div>
+        </div>
       </div>
-    </SidebarProvider>
+      <MobileTabbar />
+    </div>
   );
 }

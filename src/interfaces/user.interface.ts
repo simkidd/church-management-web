@@ -6,7 +6,7 @@ export interface IUser {
   email: string;
   phone: string;
   gender: Gender;
-  avatar: IAvatar;
+  avatar?: IAvatar | null;
   address: string;
   city: string;
   state: string;

@@ -1,18 +1,17 @@
-import CTASection from "@/components/home/CTASection";
 import Hero from "@/components/home/Hero";
-import OurMission from "@/components/home/OurMission";
-import StatsSection from "@/components/home/StatsSection";
+import QuickAccess from "@/components/home/QuickAccess";
+import VOTD from "@/components/home/VOTD";
 import WelcomeMessage from "@/components/home/WelcomeMessage";
-import React from "react";
 
 const HomePage = () => {
   return (
-    <div>
+    <div className="space-y-12">
       <Hero />
-      <OurMission />
-      <StatsSection />
+      <QuickAccess />,
+      <VOTD />
+      {/* <FeaturedSermons /> */}
       <WelcomeMessage />
-      <CTASection />
+      {/* <CTASection /> */}
     </div>
   );
 };

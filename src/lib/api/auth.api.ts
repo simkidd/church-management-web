@@ -72,12 +72,13 @@ export const authApi = {
     return data;
   },
 
-  // changePassword: async (
-  //   payload: ChangePasswordPayload
-  // ): Promise<{ message: string }> => {
-  //   const { data } = await api.put("/auth/change-password", payload);
-  //   return data;
-  // },
+  changePassword: async (payload: {
+    currentPassword: string;
+    newPassword: string;
+  }): Promise<{ message: string }> => {
+    const { data } = await api.put("/auth/change-password", payload);
+    return data;
+  },
 };
 
 export default authApi;
