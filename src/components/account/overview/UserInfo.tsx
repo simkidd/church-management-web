@@ -22,10 +22,7 @@ const UserInfo = () => {
       <div className="absolute top-0 left-0 w-full h-32 bg-linear-to-b from-primary/10 to-transparent"></div>
       <div className="relative mb-4 mt-2">
         <Avatar className="h-24 w-24 ring-4 ring-white dark:ring-slate-600 transition-colors">
-          <AvatarImage
-            src={user?.avatar?.url}
-            alt={`${userName}'s avatar`}
-          />
+          <AvatarImage src={user?.avatar?.url} alt={`${userName}'s avatar`} />
           <AvatarFallback className="border-accent-warm-2 text-accent-warm-2 font-semibold bg-accent-warm text-2xl">
             {getUserInitials()}
           </AvatarFallback>
@@ -38,7 +35,8 @@ const UserInfo = () => {
         Worship Team
       </p>
       <p className="text-xs text-slate-500 dark:text-slate-400">
-        Member since {format(user?.createdAt || "", "yyy")}
+        Member since{" "}
+        {user?.createdAt ? format(new Date(user.createdAt), "yyyy") : "—"}{" "}
       </p>
     </div>
   );

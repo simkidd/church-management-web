@@ -13,7 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 const DashboardHeader = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const { toggle, isOpen } = useSidebarStore();
-  const { user, hasHydrated } = useAuthStore();
+  const { user } = useAuthStore();
 
   // Update time every minute (instead of every second for better performance)
   useEffect(() => {
