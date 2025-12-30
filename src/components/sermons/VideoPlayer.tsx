@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import {
   AlertCircle,
@@ -7,9 +8,10 @@ import {
   Minimize2,
   Pause,
   Play,
+  RotateCw,
   Settings,
   Volume2,
-  VolumeX
+  VolumeX,
 } from "lucide-react";
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
@@ -48,6 +50,11 @@ export interface VideoPlayerProps {
   onError?: (error: Error) => void;
 }
 
+// Type declaration for ScreenOrientation with lock method
+interface ScreenOrientationWithLock extends ScreenOrientation {
+  lock?: (orientation: string) => Promise<void>;
+}
+
 const VideoPlayer2: React.FC<VideoPlayerProps> = ({
   media,
   type = "generic",
@@ -69,10 +76,12 @@ const VideoPlayer2: React.FC<VideoPlayerProps> = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(media.duration || 0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isLandscape, setIsLandscape] = useState(false);
   const [showControls, setShowControls] = useState(controls);
   const [progress, setProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [supportsOrientationLock, setSupportsOrientationLock] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -80,6 +89,23 @@ const VideoPlayer2: React.FC<VideoPlayerProps> = ({
 
   const videoUrl = media.video?.url;
   const thumbnailUrl = media.thumbnail?.url;
+
+  // Check if device is mobile/tablet
+  const isMobileDevice = () => {
+    if (typeof window === "undefined") return false;
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
+  };
+
+  // Check for orientation lock support
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const orientation = window.screen.orientation as ScreenOrientationWithLock;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSupportsOrientationLock(!!orientation?.lock);
+    }
+  }, []);
 
   // Format time display (HH:MM:SS or MM:SS)
   const formatTime = (timeInSeconds: number): string => {
@@ -147,18 +173,198 @@ const VideoPlayer2: React.FC<VideoPlayerProps> = ({
     }
   };
 
-  // Toggle fullscreen
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement && containerRef.current) {
-      containerRef.current.requestFullscreen();
-      setIsFullscreen(true);
-    } else if (document.exitFullscreen) {
-      document.exitFullscreen();
-      setIsFullscreen(false);
+  // Apply landscape rotation
+  const applyLandscapeRotation = () => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const video = videoRef.current;
+    
+    // Force landscape using CSS
+    container.style.transform = "rotate(90deg)";
+    container.style.transformOrigin = "center center";
+    container.style.width = "100vh";
+    container.style.height = "100vw";
+    container.style.position = "fixed";
+    container.style.top = "50%";
+    container.style.left = "50%";
+    container.style.transform = "translate(-50%, -50%) rotate(90deg)";
+    
+    if (video) {
+      video.style.objectFit = "contain";
+    }
+    
+    setIsLandscape(true);
+  };
+
+  // Remove landscape rotation
+  const removeLandscapeRotation = () => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const video = videoRef.current;
+    
+    // Reset styles
+    container.style.transform = "";
+    container.style.transformOrigin = "";
+    container.style.width = "";
+    container.style.height = "";
+    container.style.position = "";
+    container.style.top = "";
+    container.style.left = "";
+    
+    if (video) {
+      video.style.objectFit = "";
+    }
+    
+    setIsLandscape(false);
+  };
+
+  // Toggle landscape mode
+  const toggleLandscape = () => {
+    if (isLandscape) {
+      removeLandscapeRotation();
+    } else {
+      applyLandscapeRotation();
     }
   };
 
-  // Show controls on mouse move
+  // Toggle fullscreen with landscape support for mobile
+  const toggleFullscreen = async () => {
+    if (!containerRef.current) return;
+
+    const container = containerRef.current;
+    const isMobile = isMobileDevice();
+
+    try {
+      if (!document.fullscreenElement) {
+        // Enter fullscreen
+        if (container.requestFullscreen) {
+          await container.requestFullscreen();
+        } else if ((container as any).webkitRequestFullscreen) {
+          // Safari
+          await (container as any).webkitRequestFullscreen();
+        } else if ((container as any).msRequestFullscreen) {
+          // IE/Edge
+          await (container as any).msRequestFullscreen();
+        }
+
+        // For mobile devices, try to force landscape
+        if (isMobile && !isLandscape) {
+          // Try to use screen orientation API if available
+          const orientation = window.screen.orientation as ScreenOrientationWithLock;
+          
+          if (orientation?.lock) {
+            try {
+              await orientation.lock("landscape");
+              setIsLandscape(true);
+            } catch (lockError) {
+              console.warn("Orientation lock failed:", lockError);
+              // Fallback to CSS rotation
+              applyLandscapeRotation();
+            }
+          } else {
+            // Fallback to CSS rotation
+            applyLandscapeRotation();
+          }
+        }
+
+        setIsFullscreen(true);
+        
+        // Focus on video for better playback controls
+        if (videoRef.current) {
+          videoRef.current.focus();
+        }
+      } else {
+        // Exit fullscreen
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if ((document as any).webkitExitFullscreen) {
+          // Safari
+          await (document as any).webkitExitFullscreen();
+        } else if ((document as any).msExitFullscreen) {
+          // IE/Edge
+          await (document as any).msExitFullscreen();
+        }
+
+        // Reset landscape
+        if (isLandscape) {
+          // Try to unlock orientation if it was locked
+          if (window.screen.orientation && (window.screen.orientation as any).unlock) {
+            try {
+              await (window.screen.orientation as any).unlock();
+            } catch (unlockError) {
+              console.warn("Orientation unlock failed:", unlockError);
+            }
+          }
+          
+          // Remove CSS rotation
+          removeLandscapeRotation();
+        }
+
+        setIsFullscreen(false);
+      }
+    } catch (error) {
+      console.error("Fullscreen error:", error);
+      
+      // Fallback: toggle a CSS class for pseudo-fullscreen on unsupported browsers
+      if (!document.fullscreenEnabled) {
+        container.classList.toggle("pseudo-fullscreen");
+        setIsFullscreen(!isFullscreen);
+        
+        // For mobile fallback, also apply landscape
+        if (isMobile && !isLandscape && isFullscreen) {
+          applyLandscapeRotation();
+        }
+      }
+    }
+  };
+
+  // Handle fullscreen change events
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const fullscreenElement =
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement;
+
+      setIsFullscreen(!!fullscreenElement);
+
+      // If exiting fullscreen, reset landscape
+      if (!fullscreenElement && isLandscape) {
+        removeLandscapeRotation();
+      }
+    };
+
+    const handleOrientationChange = () => {
+      // Update isLandscape based on actual device orientation
+      if (isFullscreen && isMobileDevice()) {
+        const isCurrentlyLandscape = 
+          window.matchMedia("(orientation: landscape)").matches ||
+          window.screen.orientation?.type.includes("landscape");
+        
+        setIsLandscape(isCurrentlyLandscape);
+      }
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    document.addEventListener("mozfullscreenchange", handleFullscreenChange);
+    document.addEventListener("MSFullscreenChange", handleFullscreenChange);
+    
+    window.addEventListener("orientationchange", handleOrientationChange);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
+      document.removeEventListener("mozfullscreenchange", handleFullscreenChange);
+      document.removeEventListener("MSFullscreenChange", handleFullscreenChange);
+      window.removeEventListener("orientationchange", handleOrientationChange);
+    };
+  }, [isFullscreen, isLandscape]);
+
+  // Show controls on mouse move/touch
   const handleMouseMove = () => {
     setShowControls(true);
 
@@ -167,7 +373,7 @@ const VideoPlayer2: React.FC<VideoPlayerProps> = ({
     }
 
     controlsTimeoutRef.current = setTimeout(() => {
-      if (isPlaying) {
+      if (isPlaying && isFullscreen) {
         setShowControls(false);
       }
     }, 3000);
@@ -189,18 +395,44 @@ const VideoPlayer2: React.FC<VideoPlayerProps> = ({
 
     const handleEnded = () => {
       setIsPlaying(false);
+      onEnded?.();
+    };
+
+    const handlePlay = () => {
+      setIsPlaying(true);
+      setIsLoading(false);
+    };
+
+    const handlePause = () => {
+      setIsPlaying(false);
+    };
+
+    const handleWaiting = () => {
+      setIsLoading(true);
+    };
+
+    const handlePlaying = () => {
+      setIsLoading(false);
     };
 
     video.addEventListener("timeupdate", handleTimeUpdate);
     video.addEventListener("loadedmetadata", handleLoadedMetadata);
     video.addEventListener("ended", handleEnded);
+    video.addEventListener("play", handlePlay);
+    video.addEventListener("pause", handlePause);
+    video.addEventListener("waiting", handleWaiting);
+    video.addEventListener("playing", handlePlaying);
 
     return () => {
       video.removeEventListener("timeupdate", handleTimeUpdate);
       video.removeEventListener("loadedmetadata", handleLoadedMetadata);
       video.removeEventListener("ended", handleEnded);
+      video.removeEventListener("play", handlePlay);
+      video.removeEventListener("pause", handlePause);
+      video.removeEventListener("waiting", handleWaiting);
+      video.removeEventListener("playing", handlePlaying);
     };
-  }, [duration]);
+  }, [duration, onEnded]);
 
   // Clean up timeout on unmount
   useEffect(() => {
@@ -214,15 +446,20 @@ const VideoPlayer2: React.FC<VideoPlayerProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`w-full rounded-2xl overflow-hidden shadow-2xl shadow-primary/10 bg-black aspect-video relative group ring-1 ring-black/5 dark:ring-white/10 ${className}`}
+      className={`w-full rounded-2xl overflow-hidden shadow-2xl shadow-primary/10 bg-black aspect-video relative group ring-1 ring-black/5 dark:ring-white/10 ${className} ${
+        isFullscreen ? "fixed inset-0 z-50 !rounded-none" : ""
+      } ${isLandscape ? "landscape-fullscreen" : ""}`}
       onMouseMove={handleMouseMove}
-      onMouseLeave={() => controls && isPlaying && setShowControls(false)}
+      onTouchMove={handleMouseMove}
+      onMouseLeave={() =>
+        controls && isPlaying && isFullscreen && setShowControls(false)
+      }
     >
       {/* Video element */}
       {videoUrl && !hasError ? (
         <video
           ref={videoRef}
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-contain bg-black"
           poster={thumbnailUrl}
           preload="metadata"
           onClick={togglePlay}
@@ -230,6 +467,8 @@ const VideoPlayer2: React.FC<VideoPlayerProps> = ({
           muted={muted}
           loop={loop}
           playsInline
+          webkit-playsinline="true"
+          x5-playsinline="true"
         >
           <source src={videoUrl} type={media.video?.type || "video/mp4"} />
           Your browser does not support the video tag.
@@ -311,23 +550,23 @@ const VideoPlayer2: React.FC<VideoPlayerProps> = ({
       {/* Controls */}
       {controls && (
         <div
-          className={`absolute inset-x-0 bottom-0 px-6 py-4 z-20 bg-linear-to-t from-black/80 via-black/40 to-transparent transition-all duration-300 ${
-            showControls
+          className={`absolute inset-x-0 bottom-0 px-4 sm:px-6 py-3 sm:py-4 z-20 bg-linear-to-t from-black/90 via-black/60 to-transparent transition-all duration-300 ${
+            showControls || !isPlaying
               ? "opacity-100 translate-y-0"
               : "opacity-0 translate-y-2"
           }`}
         >
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2 sm:gap-3">
             {/* Progress bar */}
             <div
-              className="flex h-1.5 w-full cursor-pointer items-center bg-white/30 rounded-full hover:h-2 transition-all"
+              className="flex h-1.5 sm:h-2 w-full cursor-pointer items-center bg-white/30 rounded-full hover:h-2 sm:hover:h-2.5 transition-all"
               onClick={handleProgressClick}
             >
               <div
                 className="h-full rounded-full bg-primary relative transition-all duration-150"
                 style={{ width: `${progress}%` }}
               >
-                <div className="absolute -right-1.5 -top-[3px] size-3 rounded-full bg-white scale-0 group-hover:scale-100 transition-transform"></div>
+                <div className="absolute -right-1.5 -top-0.75 size-3 sm:size-3.5 rounded-full bg-white scale-0 group-hover:scale-100 transition-transform"></div>
               </div>
               {isLoading && (
                 <div className="h-full w-full rounded-full bg-linear-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
@@ -336,29 +575,33 @@ const VideoPlayer2: React.FC<VideoPlayerProps> = ({
 
             {/* Control buttons */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
                 <button
                   onClick={togglePlay}
                   className="text-white hover:text-primary transition-colors cursor-pointer"
                   disabled={hasError}
                 >
-                  {isPlaying ? <Pause size={20} /> : <Play size={20} />}
+                  {isPlaying ? (
+                    <Pause size={20} className="sm:size-22" />
+                  ) : (
+                    <Play size={20} className="sm:size-22" />
+                  )}
                 </button>
 
                 <button
                   onClick={toggleMute}
-                  className="text-white hover:text-primary transition-colors cursor-pointer"
+                  className="text-white hover:text-primary transition-colors cursor-pointer hidden sm:block"
                   disabled={hasError}
                 >
                   {isMuted || volume === 0 ? (
-                    <VolumeX size={20} />
+                    <VolumeX size={20} className="sm:size-22" />
                   ) : (
-                    <Volume2 size={20} />
+                    <Volume2 size={20} className="sm:size-22" />
                   )}
                 </button>
 
                 {/* Volume slider */}
-                <div className="w-24 hidden sm:block">
+                <div className="w-20 sm:w-24 hidden sm:block">
                   <input
                     type="range"
                     min="0"
@@ -371,32 +614,48 @@ const VideoPlayer2: React.FC<VideoPlayerProps> = ({
                   />
                 </div>
 
-                <span className="text-white/90 text-xs font-medium tracking-wide">
+                <span className="text-white/90 text-xs sm:text-sm font-medium tracking-wide">
                   {formatTime(currentTime)} / {formatTime(duration)}
                 </span>
               </div>
 
-              <div className="flex items-center gap-4">
-                <button
-                  className="text-white hover:text-primary transition-colors cursor-pointer"
+              <div className="flex items-center gap-3 sm:gap-4">
+                {/* <button
+                  className="text-white hover:text-primary transition-colors cursor-pointer hidden sm:block"
                   disabled={hasError}
                 >
-                  <ClosedCaption size={20} />
-                </button>
-                <button
-                  className="text-white hover:text-primary transition-colors cursor-pointer"
+                  <ClosedCaption size={20} className="sm:size-22" />
+                </button> */}
+                {/* <button
+                  className="text-white hover:text-primary transition-colors cursor-pointer hidden sm:block"
                   disabled={hasError}
                 >
-                  <Settings size={20} />
-                </button>
+                  <Settings size={20} className="sm:size-22" />
+                </button> */}
+
+                {/* Landscape toggle button for mobile in fullscreen */}
+                {isFullscreen && isMobileDevice() && (
+                  <button
+                    onClick={toggleLandscape}
+                    className="text-white hover:text-primary transition-colors cursor-pointer"
+                  >
+                    <RotateCw
+                      size={20}
+                      className={`sm:size-22 transition-transform ${
+                        isLandscape ? "rotate-90" : ""
+                      }`}
+                    />
+                  </button>
+                )}
+
                 <button
                   onClick={toggleFullscreen}
                   className="text-white hover:text-primary transition-colors cursor-pointer"
                 >
                   {isFullscreen ? (
-                    <Minimize2 size={20} />
+                    <Minimize2 size={20} className="sm:size-22" />
                   ) : (
-                    <Maximize2 size={20} />
+                    <Maximize2 size={20} className="sm:size-22" />
                   )}
                 </button>
               </div>
@@ -406,9 +665,9 @@ const VideoPlayer2: React.FC<VideoPlayerProps> = ({
       )}
 
       {/* Media title overlay */}
-      {showTitle && media.title && (
-        <div className="absolute top-4 left-4 right-4 z-10">
-          <div className="bg-black/60 backdrop-blur-sm rounded-lg px-4 py-3 inline-block max-w-full">
+      {showTitle && media.title && !isFullscreen && (
+        <div className="absolute top-3 sm:top-4 left-3 sm:left-4 right-3 sm:right-4 z-10">
+          <div className="bg-black/60 backdrop-blur-sm rounded-lg px-3 sm:px-4 py-2 sm:py-3 inline-block max-w-full">
             <div className="flex items-center gap-2">
               <div
                 className={`px-2 py-1 rounded text-[10px] font-bold ${
@@ -425,13 +684,29 @@ const VideoPlayer2: React.FC<VideoPlayerProps> = ({
                   ? "LESSON"
                   : "VIDEO"}
               </div>
-              <h3 className="text-white text-xs font-medium truncate">
+              <h3 className="text-white text-xs sm:text-sm font-medium truncate">
                 {media.title}
               </h3>
             </div>
-            
           </div>
         </div>
+      )}
+
+      {/* Fullscreen exit hint for mobile */}
+      {isFullscreen && isMobileDevice() && (
+        <div className="absolute top-4 left-4 z-10">
+          <p className="text-white/70 text-xs bg-black/50 px-3 py-1 rounded-full">
+            {isLandscape ? "Tap to show controls" : "Tap ↻ to rotate"}
+          </p>
+        </div>
+      )}
+
+      {/* Tap to show controls hint in fullscreen */}
+      {isFullscreen && !showControls && (
+        <div
+          className="absolute inset-0 z-5 cursor-pointer"
+          onClick={() => setShowControls(true)}
+        />
       )}
     </div>
   );

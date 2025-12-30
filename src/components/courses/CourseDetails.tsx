@@ -28,6 +28,9 @@ import { formatDuration } from "@/utils/helpers/time";
 import { IProgressStats } from "@/interfaces/progress.interface";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
+import { Card, CardContent } from "../ui/card";
+import { Button } from "../ui/button";
+import CourseDetailSkeleton from "./CourseDetailSkeleton";
 
 const CourseDetails = ({ course }: { course: ICourse }) => {
   const router = useRouter();
@@ -82,8 +85,7 @@ const CourseDetails = ({ course }: { course: ICourse }) => {
   }, [lessonId, flatLessons, router, course._id]);
 
   const markCompleteMutation = useMutation({
-    mutationFn: () =>
-      courseApi.markLessonComplete(activeLesson?._id as string),
+    mutationFn: () => courseApi.markLessonComplete(activeLesson?._id as string),
 
     onSuccess: (res) => {
       toast.success("Lesson completed");
@@ -140,14 +142,14 @@ const CourseDetails = ({ course }: { course: ICourse }) => {
     return null;
   })();
 
-
   const currentModule = modules.find((m) =>
     m.lessons?.some((l) => l._id === activeLesson?._id)
   );
 
   const lessonIndex =
     currentModule?.lessons?.findIndex((l) => l._id === activeLesson?._id) ?? 0;
-  if (isPending || !activeLesson) return null;
+
+  if (isPending || !activeLesson) return <CourseDetailSkeleton />;
 
   const mediaItem = {
     id: activeLesson._id,
@@ -315,14 +317,6 @@ const CourseDetails = ({ course }: { course: ICourse }) => {
                     <span>Self-reflection exercise on Gentleness.</span>
                   </li>
                 </ul>
-                <div className="bg-amber-50 dark:bg-amber-900/10 border-l-4 border-amber-400 p-4 mt-6 rounded-r-xl">
-                  <p className="text-sm text-accent-warm-2 dark:text-amber-200 font-medium m-0 flex gap-2">
-                    <Lightbulb />
-                    <strong>Reflection:</strong> Which aspect of the Fruit of
-                    the Spirit do you find most challenging to demonstrate in
-                    your workplace?
-                  </p>
-                </div>
               </div>
             </div>
           </div>
@@ -343,7 +337,6 @@ const CourseDetails = ({ course }: { course: ICourse }) => {
                     " " +
                     course.instructor?.lastName}
                 </h5>
-               
               </div>
             </div>
           </div>
