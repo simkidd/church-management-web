@@ -6,6 +6,7 @@ import { config } from "@/utils/config";
 import { Suspense } from "react";
 import { Toaster } from "sonner";
 import NextTopLoader from "nextjs-toploader";
+import Loading from "./loading";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,7 +35,7 @@ export default function RootLayout({
       >
         <NextTopLoader color="var(--primary)" showSpinner={false} />
         <Providers>
-          <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+          <Suspense fallback={<Loading />}>{children}</Suspense>
           <Toaster position="top-right" expand={false} richColors closeButton />
         </Providers>
       </body>
