@@ -317,14 +317,6 @@ const CourseDetails = ({ course }: { course: ICourse }) => {
                     <span>Self-reflection exercise on Gentleness.</span>
                   </li>
                 </ul>
-                <div className="bg-amber-50 dark:bg-amber-900/10 border-l-4 border-amber-400 p-4 mt-6 rounded-r-xl">
-                  <p className="text-sm text-accent-warm-2 dark:text-amber-200 font-medium m-0 flex gap-2">
-                    <Lightbulb />
-                    <strong>Reflection:</strong> Which aspect of the Fruit of
-                    the Spirit do you find most challenging to demonstrate in
-                    your workplace?
-                  </p>
-                </div>
               </div>
             </div>
           </div>

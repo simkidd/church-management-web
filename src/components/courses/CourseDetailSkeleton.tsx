@@ -18,7 +18,7 @@ const CourseDetailSkeleton = () => {
         {/* Left Column - Main Content */}
         <div className="lg:col-span-8 flex flex-col gap-8">
           {/* Video Player Skeleton */}
-          <Card className="overflow-hidden py-0">
+          <Card className="overflow-hidden py-0 rounded-3xl">
             <CardHeader className="p-0">
               <Skeleton className="aspect-video w-full" />
             </CardHeader>
@@ -29,7 +29,7 @@ const CourseDetailSkeleton = () => {
           </Card>
 
           {/* Title and Navigation Skeleton */}
-          <Card className="py-0">
+          <Card className="py-0 rounded-3xl">
             <CardContent className="p-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="space-y-2 flex-1">
@@ -49,7 +49,7 @@ const CourseDetailSkeleton = () => {
           </Card>
 
           {/* Lesson Content Skeleton */}
-          <Card>
+          <Card className="rounded-3xl">
             <CardHeader>
               <div className="flex space-x-4">
                 <Skeleton className="h-9 w-24" />
@@ -84,8 +84,11 @@ const CourseDetailSkeleton = () => {
         {/* Right Column - Sidebar */}
         <div className="lg:col-span-4 flex flex-col gap-6">
           {/* Instructor Card Skeleton */}
-          <Card>
-            <CardContent>
+          <Card className="rounded-3xl">
+            <CardHeader>
+              <Skeleton className="h-4 w-24" />
+            </CardHeader>
+            <CardContent >
               <div className="flex items-center gap-3">
                 <Skeleton className="h-10 w-10 rounded-full" />
                 <div className="space-y-2">
@@ -97,7 +100,7 @@ const CourseDetailSkeleton = () => {
           </Card>
 
           {/* Course Content Skeleton */}
-          <Card className="">
+          <Card className="rounded-3xl">
             <CardHeader className="border-b">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
