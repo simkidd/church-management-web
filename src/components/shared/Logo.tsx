@@ -3,7 +3,7 @@ import Image from "next/image";
 
 const Logo = ({ ...props }: React.ComponentProps<"div">) => {
   return (
-    <div className="h-10" {...props}>
+    <div className="h-10 shrink-0" {...props}>
       <Image
         src={"/logos/pngegg.png"}
         alt="logo"
