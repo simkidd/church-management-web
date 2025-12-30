@@ -1,7 +1,7 @@
 import { IUser } from "./user.interface";
 
 export interface ICourse {
-  _id: string;
+ _id: string;
   title: string;
   description: string;
   instructor?: IUser;
@@ -9,32 +9,13 @@ export interface ICourse {
     url: string;
     publicId: string;
   };
-  lessons?: ILesson[];
   isPublished: boolean;
-  enrolledStudents: IUser[];
+  isFeatured: boolean;
   duration: string;
+  category?: string;
+
   createdAt?: string | Date;
   updatedAt?: string | Date;
-
-  progress?: {
-    overallProgress: number;
-    completedLessons: number;
-    totalLessons: number;
-    lastAccessedAt?: string;
-    isEnrolled: boolean;
-  };
-}
-
-export interface ILesson {
-  _id: string;
-  title: string;
-  content: string;
-  video?: {
-    url: string;
-    publicId: string;
-  };
-  duration?: number;
-  order: number;
 }
 
 export interface ListCourseParams {

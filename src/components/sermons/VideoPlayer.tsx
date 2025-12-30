@@ -1,20 +1,18 @@
 "use client";
 import {
-  Play,
-  Pause,
-  Volume2,
-  VolumeX,
+  AlertCircle,
   ClosedCaption,
-  Settings,
-  Fullscreen,
+  Loader2,
   Maximize2,
   Minimize2,
-  AlertCircle,
-  Loader2,
+  Pause,
+  Play,
+  Settings,
+  Volume2,
+  VolumeX
 } from "lucide-react";
-import React, { useState, useRef, useEffect } from "react";
-import { ISermon } from "@/interfaces/sermon.interface";
 import Image from "next/image";
+import React, { useEffect, useRef, useState } from "react";
 
 // types/media-player.types.ts
 export interface MediaItem {
@@ -36,7 +34,7 @@ export interface MediaItem {
 
 export interface VideoPlayerProps {
   media: MediaItem;
-  type?: "sermon" | "course" | "generic";
+  type?: "sermon" | "lesson" | "generic";
   showTitle?: boolean;
   autoPlay?: boolean;
   muted?: boolean;
@@ -259,8 +257,8 @@ const VideoPlayer2: React.FC<VideoPlayerProps> = ({
                 <p className="text-white/80">
                   {type === "sermon"
                     ? "Sermon Video"
-                    : type === "course"
-                    ? "Course Video"
+                    : type === "lesson"
+                    ? "Lesson Video"
                     : "Media Content"}
                 </p>
               </div>
@@ -416,15 +414,15 @@ const VideoPlayer2: React.FC<VideoPlayerProps> = ({
                 className={`px-2 py-1 rounded text-[10px] font-bold ${
                   type === "sermon"
                     ? "bg-blue-600/80"
-                    : type === "course"
+                    : type === "lesson"
                     ? "bg-green-600/80"
                     : "bg-purple-600/80"
                 } text-white`}
               >
                 {type === "sermon"
                   ? "SERMON"
-                  : type === "course"
-                  ? "COURSE"
+                  : type === "lesson"
+                  ? "LESSON"
                   : "VIDEO"}
               </div>
               <h3 className="text-white text-xs font-medium truncate">

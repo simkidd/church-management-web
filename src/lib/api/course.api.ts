@@ -1,11 +1,12 @@
 import { ICourse, ListCourseParams } from "@/interfaces/course.interface";
+import { IModuleWithLessons } from "@/interfaces/module.interface";
 import {
   ApiResponse,
   PaginatedResponse,
 } from "@/interfaces/response.interface";
 import api from "../axios";
-import { IProgress } from "@/interfaces/progress.interface";
-import { IExam, IExamByCourseResponse } from "@/interfaces/exam.interface";
+import { IProgressStats } from "@/interfaces/progress.interface";
+import { IMarkLessonCompleteResponse } from "@/interfaces/lesson.interface";
 
 export const courseApi = {
   //  GET all courses
@@ -22,86 +23,39 @@ export const courseApi = {
     return response.data;
   },
 
-  // get course progress
-  getCourseProgress: async (id: string): Promise<ApiResponse<IProgress>> => {
-    const response = await api.get(`/courses/${id}/progress`);
-    return response.data;
-  },
+  // // get course progress
+  // getCourseProgress: async (id: string): Promise<ApiResponse<IProgress>> => {
+  //   const response = await api.get(`/courses/${id}/progress`);
+  //   return response.data;
+  // },
 
-  //enroll in course
-  enrollInCourse: async (id: string): Promise<ApiResponse<IProgress>> => {
-    const response = await api.post(`/courses/${id}/enroll`);
-    return response.data;
-  },
+  // //enroll in course
+  // enrollInCourse: async (id: string): Promise<ApiResponse<IProgress>> => {
+  //   const response = await api.post(`/courses/${id}/enroll`);
+  //   return response.data;
+  // },
 
   // mark as complete
   markLessonComplete: async (
-    id: string,
     lessonId: string
-  ): Promise<ApiResponse<IProgress>> => {
+  ): Promise<ApiResponse<IMarkLessonCompleteResponse>> => {
     const response = await api.post(
-      `/courses/${id}/lessons/${lessonId}/complete`
+      `/lessons/${lessonId}/complete`
     );
     return response.data;
   },
 
-  // Exam methods
-  getExamByCourseId: async (
-    courseId: string
-  ): Promise<ApiResponse<IExamByCourseResponse>> => {
-    const response = await api.get(`/courses/${courseId}/exam`);
-    return response.data;
-  },
-
-  // Check exam eligibility
-  checkExamEligibility: async (
+  // get course modules
+  getCourseModules: async (
     courseId: string
   ): Promise<
     ApiResponse<{
-      canTakeExam: boolean;
-      completedLessons: number;
-      totalLessons: number;
-      progress: number;
-      hasExistingSubmission: boolean;
-      canRetake: boolean;
-      previousScore?: number;
-      previousPassed?: boolean;
-      examDetails?: {
-        title: string;
-        duration: number;
-        passingScore: number;
-        totalQuestions: number;
-      };
+      course: ICourse;
+      progress: IProgressStats;
+      modules: IModuleWithLessons[];
     }>
   > => {
-    const response = await api.get(`/courses/${courseId}/exam/eligibility`);
-    return response.data;
-  },
-
-  // Submit course exam
-  submitCourseExam: async (
-    courseId: string,
-    data: { answers: { questionId: string; answer: string }[] }
-  ): Promise<
-    ApiResponse<{
-      submission: {
-        id: string;
-        score: number;
-        percentage: number;
-        isPassed: boolean;
-        isGraded: boolean;
-        maxScore: number;
-        submittedAt: string;
-      };
-      message: string;
-    }>
-  > => {
-    const response = await api.post(`/courses/${courseId}/exam/submit`, data);
-    return response.data;
-  },
-
-  getExamResults: async (courseId: string) => {
-    const response = await api.get(`/courses/${courseId}/exam/results`);
+    const response = await api.get(`/courses/${courseId}/modules`);
     return response.data;
   },
 };

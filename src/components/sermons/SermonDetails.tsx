@@ -74,7 +74,7 @@ const SermonDetails = ({ sermon }: { sermon: ISermon }) => {
           </>
         )}
         <span className="text-[#637288]">/</span>
-        <span className="text-primary dark:text-white font-medium truncate max-w-[200px] sm:max-w-none capitalize">
+        <span className="text-primary dark:text-white font-medium truncate max-w-50 sm:max-w-none capitalize">
           {sermon.title}
         </span>
       </nav>
