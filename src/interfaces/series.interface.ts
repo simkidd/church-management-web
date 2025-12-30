@@ -1,7 +1,6 @@
 import { IMedia } from "./sermon.interface";
 import { IUser } from "./user.interface";
 
-// interfaces/series.interface.ts
 export interface ISeries {
   _id: string;
   title: string;

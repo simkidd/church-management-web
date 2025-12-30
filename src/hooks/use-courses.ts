@@ -4,7 +4,7 @@ import {
   PaginatedResponse,
 } from "@/interfaces/response.interface";
 import { courseApi } from "@/lib/api/course.api";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
 const useCourses = (params?: ListCourseParams) => {
@@ -13,6 +13,27 @@ const useCourses = (params?: ListCourseParams) => {
   >({
     queryKey: ["courses", params],
     queryFn: async () => courseApi.getAllCourses(params),
+  });
+
+  // Infinite query version
+  const infiniteQuery = useInfiniteQuery<
+    ApiResponse<PaginatedResponse<ICourse>>,
+    Error
+  >({
+    queryKey: ["courses-infinite", params],
+    queryFn: ({ pageParam = 1 }) =>
+      courseApi.getAllCourses({
+        ...params,
+        page: pageParam as number,
+        limit: params?.limit || 10,
+      }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.data.pagination.page < lastPage.data.pagination.totalPages) {
+        return lastPage.data.pagination.page + 1;
+      }
+      return undefined;
+    },
   });
 
   const { courses, totalCourses, totalPages } = useMemo(() => {
@@ -33,6 +54,18 @@ const useCourses = (params?: ListCourseParams) => {
     isPending,
     isError,
     refetch,
+
+    // Infinite query methods
+    infiniteQuery: {
+      ...infiniteQuery,
+      courses: infiniteQuery.data?.pages.flatMap((page) => page.data.data) || [],
+      isLoadingInfinite: infiniteQuery.isPending,
+      isFetchingNextPage: infiniteQuery.isFetchingNextPage,
+    },
+
+    // Helper methods
+    hasMore: infiniteQuery.hasNextPage,
+    loadMore: infiniteQuery.fetchNextPage,
   };
 };
 
