@@ -9,7 +9,7 @@ import {
   Play,
   Settings,
   Volume2,
-  VolumeX
+  VolumeX,
 } from "lucide-react";
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
@@ -148,13 +148,35 @@ const VideoPlayer2: React.FC<VideoPlayerProps> = ({
   };
 
   // Toggle fullscreen
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement && containerRef.current) {
-      containerRef.current.requestFullscreen();
-      setIsFullscreen(true);
-    } else if (document.exitFullscreen) {
-      document.exitFullscreen();
-      setIsFullscreen(false);
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement && containerRef.current) {
+        // Enter fullscreen
+        await containerRef.current.requestFullscreen();
+        setIsFullscreen(true);
+
+        // Lock to landscape orientation on mobile
+        if (screen.orientation && 'lock' in screen.orientation) {
+          try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await (screen.orientation as any).lock("landscape");
+          } catch (orientationError) {
+            console.warn("Orientation lock failed:", orientationError);
+            // Orientation lock may fail on some devices/browsers, but fullscreen will still work
+          }
+        }
+      } else if (document.exitFullscreen) {
+        // Exit fullscreen
+        await document.exitFullscreen();
+        setIsFullscreen(false);
+
+        // Unlock orientation
+        if (screen.orientation && screen.orientation.unlock) {
+          screen.orientation.unlock();
+        }
+      }
+    } catch (error) {
+      console.error("Fullscreen toggle failed:", error);
     }
   };
 
@@ -429,7 +451,6 @@ const VideoPlayer2: React.FC<VideoPlayerProps> = ({
                 {media.title}
               </h3>
             </div>
-            
           </div>
         </div>
       )}
