@@ -13,7 +13,7 @@ const publicRoutes = ["/", "/sermons", "/events", "/about", "/contact"];
 const authRoutes = ["/auth/*"];
 
 // Define admin/dashboard routes that require authentication
-const protectedRoutes = ["/account", "/account/*"];
+const protectedRoutes = ["/account", "/account/*", "/courses", "/courses/*"];
 
 export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
