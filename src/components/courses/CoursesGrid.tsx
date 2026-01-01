@@ -1,11 +1,13 @@
 "use client";
 import useCourses from "@/hooks/use-courses";
 import { ListCourseParams } from "@/interfaces/course.interface";
-import { ChevronDown, Loader2, User, User2 } from "lucide-react";
+import { ArrowRight, ChevronDown, Loader2, User, User2 } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from "react";
 import { Card, CardContent, CardFooter } from "../ui/card";
 import { Skeleton } from "../ui/skeleton";
+import { cn } from "@/lib/utils";
+import CourseCard from "./CourseCard";
 
 const CoursesGrid = () => {
   const [filters, setFilters] = useState<ListCourseParams>({
@@ -51,56 +53,9 @@ const CoursesGrid = () => {
       )}
 
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {courses.map((course) => (
-          <div
-            key={course._id}
-            className="group flex flex-col bg-white dark:bg-surface-dark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 shadow-soft hover:shadow-xl transition-all duration-300 h-full"
-          >
-            <div className="relative h-48 overflow-hidden">
-              <div
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                style={{
-                  backgroundImage: `url('${course.thumbnail?.url}')`,
-                }}
-              ></div>
-              <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent"></div>
-              {/* Level badge removed from here */}
-            </div>
-            <div className="p-6 flex flex-col flex-1 gap-4">
-              <div className="flex-1">
-                {/* <div className="flex items-center gap-2 text-xs font-semibold text-primary dark:text-primary-light mb-2">
-                  {course.category}
-                </div> */}
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 leading-tight group-hover:text-primary transition-colors">
-                  {course.title}
-                </h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
-                  {course.description}
-                </p>
-              </div>
-              <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
-                <div className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
-                  <User2 size={18} />
-                  <span>
-                    {course.instructor?.firstName +
-                      " " +
-                      course.instructor?.lastName}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="px-6 pb-6 mt-auto flex gap-3">
-              <Link href={`/courses/${course._id}`} className="flex-1">
-                <button className="py-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 cursor-pointer w-full">
-                  View Details
-                </button>
-              </Link>
-              <button className="flex-1 py-3 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary-hover transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg cursor-pointer">
-                Enroll Now
-              </button>
-            </div>
-          </div>
-        ))}
+        {courses.map((course) => {
+          return <CourseCard key={course._id} course={course} />;
+        })}
 
         {/* Show skeleton cards while fetching next page */}
         {isFetchingNextPage && (

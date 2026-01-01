@@ -11,7 +11,7 @@ const CoursePage = async ({
   const { courseId } = await params;
   const { data: course } = await courseApi.getCourseById(courseId);
 
-  if(!course){
+  if (!course) {
     notFound();
   }
 

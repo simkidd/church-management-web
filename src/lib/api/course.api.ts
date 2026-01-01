@@ -29,19 +29,24 @@ export const courseApi = {
   //   return response.data;
   // },
 
-  // //enroll in course
-  // enrollInCourse: async (id: string): Promise<ApiResponse<IProgress>> => {
-  //   const response = await api.post(`/courses/${id}/enroll`);
-  //   return response.data;
-  // },
+  //enroll in course
+  enrollInCourse: async (
+    id: string
+  ): Promise<
+    ApiResponse<{
+      enrollmentId: string;
+      status: string;
+    }>
+  > => {
+    const response = await api.post(`/courses/${id}/enroll`);
+    return response.data;
+  },
 
   // mark as complete
   markLessonComplete: async (
     lessonId: string
   ): Promise<ApiResponse<IMarkLessonCompleteResponse>> => {
-    const response = await api.post(
-      `/lessons/${lessonId}/complete`
-    );
+    const response = await api.post(`/lessons/${lessonId}/complete`);
     return response.data;
   },
 
@@ -51,6 +56,7 @@ export const courseApi = {
   ): Promise<
     ApiResponse<{
       course: ICourse;
+      enrolled: {isEnrolled: boolean};
       progress: IProgressStats;
       modules: IModuleWithLessons[];
     }>
