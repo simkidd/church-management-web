@@ -170,8 +170,6 @@ const CourseDetails = ({ course }: { course: ICourse }) => {
   const isEnrolled = data?.data.enrolled?.isEnrolled === true;
   const progressPercentage = canPlayLesson ? progress?.percentage ?? 0 : 0;
 
-  console.log("modules>>>", modules)
-
   return (
     <div className="container px-4 mx-auto py-5">
       <nav className="flex flex-wrap items-center gap-2 mb-6 text-sm">
@@ -204,7 +202,7 @@ const CourseDetails = ({ course }: { course: ICourse }) => {
 
           {/* video player */}
           <div>
-            {isEnrolled && canPlayLesson ? (
+            {isEnrolled ? (
               <VideoPlayer2
                 media={mediaItem as any}
                 type="lesson"
@@ -259,7 +257,7 @@ const CourseDetails = ({ course }: { course: ICourse }) => {
               )}
             </div>
 
-            {isEnrolled && canPlayLesson && (
+            {isEnrolled && (
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => markCompleteMutation.mutate()}
@@ -296,10 +294,10 @@ const CourseDetails = ({ course }: { course: ICourse }) => {
                   onClick={() => {
                     if (!nextPlayable) return;
                     router.push(
-                      `/courses/${course._id}?${
+                      `${
                         nextPlayable.type === "lesson"
-                          ? `lesson=${nextPlayable.id}`
-                          : `quiz=${nextPlayable.id}`
+                          ? `/courses/${course._id}?lesson=${nextPlayable.id}`
+                          : `/courses/${course._id}/quiz/${nextPlayable.id}`
                       }`,
                       { scroll: false }
                     );
@@ -312,9 +310,7 @@ const CourseDetails = ({ course }: { course: ICourse }) => {
             )}
           </div>
 
-          {!isEnrolled && (
-            <EnrollmentCTA courseId={course._id} />
-          )}
+          {!isEnrolled && <EnrollmentCTA courseId={course._id} />}
 
           {isEnrolled && canPlayLesson && (
             <div className="bg-card-light dark:bg-card-dark rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -405,7 +401,7 @@ const CourseDetails = ({ course }: { course: ICourse }) => {
                 {isEnrolled ? `${progressPercentage}% Complete` : "Preview"}
               </span>
             </div>
-            
+
             <div className="overflow-y-auto custom-scrollbar grow p-3 space-y-3">
               {modules.map((module) => {
                 const isOpen = openModules[module._id] ?? false;
@@ -520,8 +516,7 @@ const CourseDetails = ({ course }: { course: ICourse }) => {
                             disabled={(module.quiz as any).isLockedForUser}
                             onClick={() =>
                               router.push(
-                                `/courses/${course._id}?quiz=${module.quiz}`,
-                                { scroll: false }
+                                `/courses/${course._id}/quiz/${module.quiz?._id}`
                               )
                             }
                             className={cn(

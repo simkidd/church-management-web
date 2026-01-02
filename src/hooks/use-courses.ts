@@ -4,10 +4,13 @@ import {
   PaginatedResponse,
 } from "@/interfaces/response.interface";
 import { courseApi } from "@/lib/api/course.api";
+import { useAuthStore } from "@/stores/auth.store";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
 const useCourses = (params?: ListCourseParams) => {
+  const { user, isLoading: isAuthLoading } = useAuthStore();
+
   const { data, isPending, isError, refetch } = useQuery<
     ApiResponse<PaginatedResponse<ICourse>>
   >({
@@ -34,6 +37,8 @@ const useCourses = (params?: ListCourseParams) => {
       }
       return undefined;
     },
+    enabled: !isAuthLoading && !!user,
+    placeholderData: (prev) => prev,
   });
 
   const { courses, totalCourses, totalPages } = useMemo(() => {
@@ -58,7 +63,8 @@ const useCourses = (params?: ListCourseParams) => {
     // Infinite query methods
     infiniteQuery: {
       ...infiniteQuery,
-      courses: infiniteQuery.data?.pages.flatMap((page) => page.data.data) || [],
+      courses:
+        infiniteQuery.data?.pages.flatMap((page) => page.data.data) || [],
       isLoadingInfinite: infiniteQuery.isPending,
       isFetchingNextPage: infiniteQuery.isFetchingNextPage,
     },

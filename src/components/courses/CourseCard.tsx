@@ -74,7 +74,7 @@ const CourseCard = ({ course }: { course: ICourse }) => {
               className={cn(
                 "w-full py-3 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2 cursor-pointer",
                 !hasStarted
-                  ? "bg-slate-800 dark:bg-slate-900 text-white dark:text-slate-900"
+                  ? "bg-slate-800 dark:bg-slate-900 text-white dark:text-slate-400"
                   : "bg-primary dark:bg-primary-light text-white"
               )}
             >
