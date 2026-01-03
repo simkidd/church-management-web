@@ -5,6 +5,9 @@ interface QuizState {
   answers: Record<string, number>;
   startedAt: number | null;
   duration: number; // seconds
+  submitted: boolean;
+  timeExpired: boolean;
+  attemptId: string | null;
 
   startQuiz: (duration: number) => void;
   selectAnswer: (questionId: string, optionIndex: number) => void;
@@ -12,6 +15,10 @@ interface QuizState {
   next: () => void;
   prev: () => void;
   reset: () => void;
+
+  markSubmitted: () => void;
+  markTimeExpired: () => void;
+  setAttempt: (id: string) => void;
 }
 
 export const useQuizStore = create<QuizState>((set) => ({
@@ -19,6 +26,9 @@ export const useQuizStore = create<QuizState>((set) => ({
   answers: {},
   startedAt: null,
   duration: 0,
+  submitted: false,
+  timeExpired: false,
+  attemptId: null,
 
   startQuiz: (duration) =>
     set({
@@ -47,5 +57,16 @@ export const useQuizStore = create<QuizState>((set) => ({
       answers: {},
       startedAt: null,
       duration: 0,
+      submitted: false,
+      timeExpired: false,
+    }),
+
+  markSubmitted: () => set({ submitted: true }),
+  markTimeExpired: () => set({ timeExpired: true }),
+
+  setAttempt: (id) =>
+    set({
+      attemptId: id,
+      submitted: true,
     }),
 }));

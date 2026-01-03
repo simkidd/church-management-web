@@ -9,7 +9,16 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function QuizHeader({ quiz }: { quiz: IQuiz }) {
-  const { answers, duration, startedAt, reset, startQuiz } = useQuizStore();
+  const {
+    answers,
+    duration,
+    startedAt,
+    reset,
+    startQuiz,
+    markSubmitted,
+    markTimeExpired,
+    setAttempt,
+  } = useQuizStore();
   const { submitQuiz, isSubmitting } = useQuiz(quiz._id);
   const [timeLeft, setTimeLeft] = useState(0);
 
@@ -23,7 +32,12 @@ export default function QuizHeader({ quiz }: { quiz: IQuiz }) {
     submitQuiz(
       { quizId: quiz._id, answers },
       {
-        onSuccess: () => reset(),
+        onSuccess: (res) => {
+          const attemptId = res.data.attempt;
+          setAttempt(attemptId);
+          markSubmitted();
+          reset();
+        },
       }
     );
   };
@@ -40,6 +54,7 @@ export default function QuizHeader({ quiz }: { quiz: IQuiz }) {
       setTimeLeft(secondsLeft);
 
       if (secondsLeft === 0) {
+        markTimeExpired();
         handleSubmit();
       }
     };
@@ -52,7 +67,7 @@ export default function QuizHeader({ quiz }: { quiz: IQuiz }) {
   }, [startedAt, duration]);
 
   return (
-    <header className="sticky top-0 z-10 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md shadow-soft px-4 sm:px-6 py-3 md:py-4 transition-colors">
+    <header className="sticky top-0 z-30 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md shadow-soft px-4 sm:px-6 py-3 md:py-4 transition-colors">
       <div className="max-w-7xl mx-auto w-full flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-0">
         {/* Left: Logo + Course info */}
         <div className="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4 w-full md:w-auto">

@@ -235,4 +235,22 @@
   .dark .shadow-glow {
     box-shadow: 0 0 15px rgba(0, 51, 153, 0.15);
   }
+
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 10px 40px -10px rgba(25, 93, 230, 0.15);
+  }
+  .dark .glass-panel {
+    background: rgba(26, 34, 49, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.4);
+  }
+  .conic-gradient-progress {
+    background: conic-gradient(
+      var(--tw-gradient-from) 0% 85%,
+      var(--tw-gradient-to) 85% 100%
+    );
+  }
 }
