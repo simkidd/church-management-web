@@ -27,7 +27,12 @@ export const quizApi = {
   // get quiz attempt (latest)
   getQuizAttemptById: async (
     attemptId: string
-  ): Promise<ApiResponse<{ attempt: IQuizAttempt; attemptsLeft: number }>> => {
+  ): Promise<
+    ApiResponse<{
+      attempt: IQuizAttempt;
+      attemptsLeft: number;
+    }>
+  > => {
     const response = await api.get(`/quizzes/quiz-attempts/${attemptId}`);
     return response.data;
   },
