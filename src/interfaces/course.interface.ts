@@ -1,7 +1,7 @@
 import { IUser } from "./user.interface";
 
 export interface ICourse {
- _id: string;
+  _id: string;
   title: string;
   description: string;
   instructor?: IUser;
@@ -16,6 +16,17 @@ export interface ICourse {
 
   createdAt?: string | Date;
   updatedAt?: string | Date;
+
+  // auth fields
+  enrollment: {
+    isEnrolled: boolean;
+    status: "active" | "revoked";
+  };
+  progress: {
+    completedLessons: number;
+    totalLessons: number;
+    percentage: number;
+  };
 }
 
 export interface ListCourseParams {
