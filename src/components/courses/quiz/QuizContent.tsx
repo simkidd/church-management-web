@@ -99,14 +99,16 @@ export default function QuizContent({
             </button>
           )}
 
-          <button
-            onClick={next}
-            disabled={currentIndex === questions.length - 1}
-            className="flex items-center ml-auto gap-2 px-8 py-3 rounded-xl bg-primary text-white font-bold hover:shadow-lg cursor-pointer"
-          >
-            Next Question
-            <ArrowRight />
-          </button>
+          {currentIndex !== questions.length - 1 && (
+            <button
+              onClick={next}
+              disabled={currentIndex === questions.length - 1}
+              className="flex items-center ml-auto gap-2 px-8 py-3 rounded-xl bg-primary text-white font-bold hover:shadow-lg cursor-pointer"
+            >
+              Next Question
+              <ArrowRight />
+            </button>
+          )}
         </div>
       </div>
     </div>

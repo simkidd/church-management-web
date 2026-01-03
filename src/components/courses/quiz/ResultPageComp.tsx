@@ -3,6 +3,7 @@ import { IQuizAttempt } from "@/interfaces/quiz.interface";
 import { ApiResponse } from "@/interfaces/response.interface";
 import { quizApi } from "@/lib/api/quiz.api";
 import { cn } from "@/lib/utils";
+import { useQuizStore } from "@/stores/quiz.store";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, CheckCircle2, RotateCw } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -10,6 +11,7 @@ import React from "react";
 
 const ResultPageComp = ({ attemptId }: { attemptId: string }) => {
   const router = useRouter();
+  const { resetAll } = useQuizStore();
 
   const { data, isLoading } = useQuery<
     ApiResponse<{ attempt: IQuizAttempt; attemptsLeft: number }>
@@ -114,11 +116,12 @@ const ResultPageComp = ({ attemptId }: { attemptId: string }) => {
               )}
               title={attemptsLeft <= 0 ? "No attempts left" : "Retake Quiz"}
               disabled={attemptsLeft <= 0}
-              onClick={() =>
+              onClick={() => {
+                resetAll();
                 router.push(
                   `/courses/${attempt.quiz.module.course}/quiz/${attempt.quiz._id}`
-                )
-              }
+                );
+              }}
             >
               <RotateCw
                 size={20}

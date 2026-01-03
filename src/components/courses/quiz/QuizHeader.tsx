@@ -6,37 +6,54 @@ import { IQuiz } from "@/interfaces/quiz.interface";
 import { useQuizStore } from "@/stores/quiz.store";
 import { Timer } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function QuizHeader({ quiz }: { quiz: IQuiz }) {
   const {
-    answers,
     duration,
     startedAt,
-    reset,
     startQuiz,
-    markSubmitted,
     markTimeExpired,
+    markSubmitted,
     setAttempt,
+    timeExpired,
+    submitted,
   } = useQuizStore();
   const { submitQuiz, isSubmitting } = useQuiz(quiz._id);
   const [timeLeft, setTimeLeft] = useState(0);
+  const isSubmittingRef = useRef(false);
 
   useEffect(() => {
-    if (!startedAt) {
-      startQuiz(15 * 60); // default to 15 minutes
+    if (!startedAt && !submitted && !timeExpired) {
+      startQuiz(15); // default to 15 minutes
     }
-  }, [startedAt, startQuiz]);
+  }, [startedAt, startQuiz, timeExpired, submitted]);
 
-  const handleSubmit = () => {
+  const handleSubmit = (expired = false) => {
+    if (submitted || timeExpired || isSubmittingRef.current) return;
+
+    isSubmittingRef.current = true;
+
+    const currentAnswers = useQuizStore.getState().answers;
+
     submitQuiz(
-      { quizId: quiz._id, answers },
+      { quizId: quiz._id, answers: currentAnswers },
       {
         onSuccess: (res) => {
           const attemptId = res.data.attempt;
           setAttempt(attemptId);
-          markSubmitted();
-          reset();
+
+          setTimeout(() => {
+            if (expired) {
+              markTimeExpired();
+            } else {
+              markSubmitted();
+            }
+            isSubmittingRef.current = false;
+          }, 100);
+        },
+        onError: () => {
+          isSubmittingRef.current = false;
         },
       }
     );
@@ -44,7 +61,7 @@ export default function QuizHeader({ quiz }: { quiz: IQuiz }) {
 
   // Timer effect
   useEffect(() => {
-    if (!startedAt) return;
+    if (!startedAt || submitted || timeExpired) return;
 
     const updateTimeLeft = () => {
       const secondsLeft = Math.max(
@@ -53,9 +70,8 @@ export default function QuizHeader({ quiz }: { quiz: IQuiz }) {
       );
       setTimeLeft(secondsLeft);
 
-      if (secondsLeft === 0) {
-        markTimeExpired();
-        handleSubmit();
+      if (secondsLeft === 0 && !isSubmittingRef.current) {
+        handleSubmit(true);
       }
     };
 
@@ -64,7 +80,7 @@ export default function QuizHeader({ quiz }: { quiz: IQuiz }) {
 
     const interval = setInterval(updateTimeLeft, 1000);
     return () => clearInterval(interval);
-  }, [startedAt, duration]);
+  }, [startedAt, duration, submitted, timeExpired]);
 
   return (
     <header className="sticky top-0 z-30 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md shadow-soft px-4 sm:px-6 py-3 md:py-4 transition-colors">
@@ -103,8 +119,8 @@ export default function QuizHeader({ quiz }: { quiz: IQuiz }) {
           )}
 
           <button
-            onClick={handleSubmit}
-            disabled={isSubmitting}
+            onClick={() => handleSubmit(false)}
+            disabled={isSubmitting || submitted}
             className="flex items-center gap-2 h-8 sm:h-10 px-3 sm:px-5 rounded-xl border bg-primary dark:bg-primary-white text-white transition-colors text-sm sm:text-base font-bold cursor-pointer"
           >
             Submit Quiz
