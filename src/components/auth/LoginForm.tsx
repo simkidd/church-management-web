@@ -70,7 +70,7 @@ const LoginForm = () => {
         description: `Welcome back, ${user.firstName}!`,
       });
 
-      router.push(redirectUrl || "/");
+      window.location.href = redirectUrl || "/";
     },
     onError: (error: AxiosError<ApiErrorResponse>) => {
       // You can handle specific error messages here
