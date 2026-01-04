@@ -1,11 +1,18 @@
 "use client";
 import useSermons from "@/hooks/useSermons";
 import { ListSermonsParams } from "@/interfaces/sermon.interface";
-import { Calendar, History, Search } from "lucide-react";
+import {
+  Calendar,
+  ChevronDown,
+  History,
+  Search,
+  FilterIcon,
+} from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import ArchiveCard from "./ArchiveCard";
 import ArchiveCardSkeleton from "./ArchiveCardSkeleton";
+import { debounce } from "@/utils/helpers/debounce";
 
 const SermonsArchiveContent = () => {
   const searchParams = useSearchParams();
@@ -14,14 +21,60 @@ const SermonsArchiveContent = () => {
   const [openFilter, setOpenFilter] = useState(false);
 
   const itemsPerPage = 12;
+  const seriesSlug = searchParams.get("series") || undefined;
+
   const [filters, setFilters] = useState<ListSermonsParams>(() => {
     return {
       page: parseInt(searchParams.get("page") || "1", 10),
       limit: itemsPerPage,
+      seriesSlug: seriesSlug,
     };
   });
+  const [search, setSearch] = useState("");
 
   const { sermons, isPending, totalSermons, totalPages } = useSermons(filters);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (filters.page) params.set("page", filters.page.toString());
+    if (filters.search) params.set("search", filters.search);
+    if (filters.seriesSlug) params.set("series", filters.seriesSlug);
+
+    router.replace(`${pathname}?${params.toString()}`);
+  }, [filters, pathname, router]);
+
+  const debouncedSearch = useMemo(
+    () =>
+      debounce((searchValue: string) => {
+        setFilters((prev) => ({
+          ...prev,
+          search: searchValue.trim() || undefined,
+          page: 1,
+        }));
+      }, 500), // 500ms delay
+    []
+  );
+
+  const handleSearchChange = useCallback(
+    (value: string) => {
+      setSearch(value);
+      debouncedSearch(value);
+    },
+    [debouncedSearch]
+  );
+
+  const handleResetFilters = () => {
+    setSearch("");
+    setFilters({
+      page: 1,
+      limit: 10,
+    });
+    debouncedSearch.cancel();
+
+    const params = new URLSearchParams();
+    params.set("page", "1");
+    router.replace(`${pathname}?${params.toString()}`);
+  };
 
   return (
     <div className="flex flex-col lg:flex-row gap-8">
@@ -29,10 +82,10 @@ const SermonsArchiveContent = () => {
       <aside className="w-full lg:w-64 shrink-0 space-y-6">
         <button className="lg:hidden w-full flex items-center justify-between p-4 bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-slate-100 dark:border-gray-800">
           <span className="font-semibold flex items-center gap-2">
-            <span className="material-symbols-outlined">filter_list</span>
+            <FilterIcon />
             Filters
           </span>
-          <span className="material-symbols-outlined">expand_more</span>
+          <ChevronDown />
         </button>
         <div className="hidden lg:block space-y-8 bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 sticky top-24">
           <div>
@@ -40,7 +93,10 @@ const SermonsArchiveContent = () => {
               <h3 className="font-bold text-[#111418] dark:text-white">
                 Sort By
               </h3>
-              <button className="text-xs text-primary dark:text-primary-light cursor-pointer font-medium hover:underline">
+              <button
+                onClick={handleResetFilters}
+                className="text-xs text-primary dark:text-primary-light cursor-pointer font-medium hover:underline"
+              >
                 Reset
               </button>
             </div>
@@ -90,11 +146,13 @@ const SermonsArchiveContent = () => {
             </div>
             <input
               className="block w-full pl-12 pr-4 py-3.5 bg-white dark:bg-surface-dark border-none ring-1 ring-slate-200 dark:ring-gray-700 rounded-xl text-[#111418] dark:text-white placeholder-[#637288] focus:ring-2 focus:ring-primary shadow-sm transition-all"
-              placeholder="Search by title, speaker, or topic..."
-              type="text"
+              placeholder="Search by title..."
+              type="search"
+              value={search}
+              onChange={(e) => handleSearchChange(e.target.value)}
             />
           </div>
-          <div className="flex flex-wrap gap-2">
+          {/* <div className="flex flex-wrap gap-2">
             <button className="flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary dark:text-blue-400 rounded-full transition-colors border border-primary/20">
               <span className="text-sm font-medium">Faith</span>
             </button>
@@ -110,7 +168,7 @@ const SermonsArchiveContent = () => {
             <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-surface-dark hover:bg-gray-50 dark:hover:bg-gray-800 text-[#637288] dark:text-gray-300 rounded-full border border-slate-200 dark:border-gray-700 transition-colors shadow-sm">
               <span className="text-sm font-medium">Family</span>
             </button>
-          </div>
+          </div> */}
         </div>
 
         {/* Sermon Grid */}

@@ -42,4 +42,6 @@ export interface ListSermonsParams {
   isFeatured?: boolean;
   sortBy?: string;
   sortOrder?: string;
+  series?: string;
+  seriesSlug?: string;
 }
