@@ -14,7 +14,8 @@ interface QuizState {
   goTo: (index: number) => void;
   next: () => void;
   prev: () => void;
-  reset: () => void;
+  resetProgress: () => void;
+  resetAll: () => void;
 
   markSubmitted: () => void;
   markTimeExpired: () => void;
@@ -51,7 +52,15 @@ export const useQuizStore = create<QuizState>((set) => ({
   prev: () =>
     set((state) => ({ currentIndex: Math.max(0, state.currentIndex - 1) })),
 
-  reset: () =>
+  resetProgress: () =>
+    set({
+      currentIndex: 0,
+      answers: {},
+      startedAt: null,
+      duration: 0,
+    }),
+
+  resetAll: () =>
     set({
       currentIndex: 0,
       answers: {},
@@ -59,6 +68,7 @@ export const useQuizStore = create<QuizState>((set) => ({
       duration: 0,
       submitted: false,
       timeExpired: false,
+      attemptId: null,
     }),
 
   markSubmitted: () => set({ submitted: true }),
@@ -67,6 +77,5 @@ export const useQuizStore = create<QuizState>((set) => ({
   setAttempt: (id) =>
     set({
       attemptId: id,
-      submitted: true,
     }),
 }));

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 const SubmitDialog = () => {
   const router = useRouter();
-  const { attemptId } = useQuizStore();
+  const { attemptId, resetAll } = useQuizStore();
 
   return (
     <div className="flex-1 w-full flex items-center justify-center p-6 relative overflow-hidden">
@@ -43,7 +43,9 @@ const SubmitDialog = () => {
           <div className="flex flex-col gap-3 w-full">
             <button
               className="w-full py-3.5 px-6 rounded-xl bg-primary dark:bg-primary-light hover:bg-primary-dark text-white shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all duration-200 font-bold text-base flex items-center justify-center gap-2 group  cursor-pointer"
-              onClick={() => router.push(`/courses/quiz-attempts/${attemptId}`)}
+              onClick={() => {
+                router.replace(`/courses/quiz-attempts/${attemptId}`);
+              }}
               disabled={!attemptId}
             >
               <span>View Results</span>

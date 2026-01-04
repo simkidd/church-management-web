@@ -67,7 +67,7 @@ const LoginForm = () => {
       queryClient.invalidateQueries({ queryKey: ["auth"] });
 
       toast.success(data.message, {
-        description: `Welcome back, ${user.firstName}! Redirecting to your dashboard...`,
+        description: `Welcome back, ${user.firstName}!`,
       });
 
       router.push(redirectUrl || "/");

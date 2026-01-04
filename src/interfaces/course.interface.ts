@@ -35,4 +35,5 @@ export interface ListCourseParams {
   search?: string;
   sortOrder?: "asc" | "desc";
   isPublished?: boolean;
+  isFeatured?: boolean;
 }

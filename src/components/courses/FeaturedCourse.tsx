@@ -1,8 +1,27 @@
 "use client";
+import useCourses from "@/hooks/use-courses";
 import { ArrowRight, BookOpen, Clock, Play, Star } from "lucide-react";
 import React from "react";
+import FeaturedCourseSkeleton from "./FeaturedCourseSkeleton";
+import Link from "next/link";
 
 const FeaturedCourse = () => {
+  const { courses, isPending } = useCourses({
+    page: 1,
+    limit: 1,
+    isFeatured: true,
+  });
+
+  const featuredCourse = courses[0];
+
+  if (isPending) {
+    return <FeaturedCourseSkeleton />;
+  }
+
+  if (!featuredCourse) return null;
+
+  const isEnrolled = featuredCourse.enrollment?.isEnrolled === true;
+
   return (
     <div className="container px-4 mx-auto">
       <section className="w-full rounded-2xl bg-linear-to-r from-primary to-blue-800 text-white p-8 md:p-12 relative overflow-hidden shadow-lg ">
@@ -11,29 +30,32 @@ const FeaturedCourse = () => {
         <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           <div className="flex flex-col gap-4">
             <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm text-xs font-bold uppercase tracking-wider w-fit border border-white/20">
-              <Star size={14} className="text-accent-warm-2 fill-accent-warm-2" />
+              <Star
+                size={14}
+                className="text-accent-warm-2 fill-accent-warm-2"
+              />
               Featured Course
             </span>
             <h2 className="text-3xl md:text-4xl font-bold leading-tight">
-              Foundations of Faith II
+              {featuredCourse.title}
             </h2>
-            <p className="text-blue-100 text-lg leading-relaxed mb-2">
-              Build upon your spiritual foundation with advanced biblical
-              principles and practical applications for daily Christian living.
+            <p className="text-blue-100 text-lg leading-relaxed mb-2 line-clamp-2">
+              {featuredCourse.description}
             </p>
             <div className="flex items-center gap-6 text-sm font-medium text-blue-100">
               <div className="flex items-center gap-2">
-                <BookOpen size={14} />8 Modules
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock size={14} />4 Weeks
+                <Clock size={14} />
+                {featuredCourse.duration}
               </div>
             </div>
             <div className="flex gap-4 mt-4">
-              <button className="bg-white text-primary hover:bg-blue-50 px-6 py-3 rounded-xl font-bold text-sm tracking-wide transition-all shadow-lg flex items-center gap-2 cursor-pointer">
-                Enroll Now
-                <ArrowRight size={18} />
-              </button>
+              <Link href={`/courses/${featuredCourse._id}`}>
+                <button className="bg-white text-primary hover:bg-blue-50 px-6 py-3 rounded-xl font-bold text-sm tracking-wide transition-all shadow-lg flex items-center gap-2 cursor-pointer">
+                  {isEnrolled ? "Continue" : " Enroll Now"}
+
+                  <ArrowRight size={18} />
+                </button>
+              </Link>
             </div>
           </div>
           <div className="hidden md:flex justify-center">
@@ -41,8 +63,7 @@ const FeaturedCourse = () => {
               <div
                 className="absolute inset-0 bg-cover bg-center"
                 style={{
-                  backgroundImage:
-                    "url('https://lh3.googleusercontent.com/aida-public/AB6AXuBfjBfvVhNL3gNXj9tL_dQMQX65BxPGw75wTp1Bs6s3O7WU0Mr3QCidRZm22L_UCcluyD13oE0qw_tIt6qcwV9YWbG82FSuGddUpHFA8UQFR0ArnNGkGVrjXeRl2rZydweMGzqu2ksUos3kAry8VIx9bOg5duKLm_d33nzcEwW_p16En0LA4z1INpHGYtiu3TyWU7A7jbvJy7iGrEEm__dXjDGm9NE8d7VNwmCB8vFvuYAQlefE9AaCJesDccAFaE5-LqMXYbXPzr1U')                  ",
+                  backgroundImage: `url('${featuredCourse.thumbnail?.url}')`,
                 }}
               ></div>
               <div className="absolute inset-0 bg-black/20"></div>

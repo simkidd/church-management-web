@@ -3,6 +3,7 @@ import { IQuizAttempt } from "@/interfaces/quiz.interface";
 import { ApiResponse } from "@/interfaces/response.interface";
 import { quizApi } from "@/lib/api/quiz.api";
 import { cn } from "@/lib/utils";
+import { useQuizStore } from "@/stores/quiz.store";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, CheckCircle2, RotateCw } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -10,9 +11,13 @@ import React from "react";
 
 const ResultPageComp = ({ attemptId }: { attemptId: string }) => {
   const router = useRouter();
+  const { resetAll } = useQuizStore();
 
   const { data, isLoading } = useQuery<
-    ApiResponse<{ attempt: IQuizAttempt; attemptsLeft: number }>
+    ApiResponse<{
+      attempt: IQuizAttempt;
+      attemptsLeft: number;
+    }>
   >({
     queryKey: ["quiz-result", attemptId],
     queryFn: () => quizApi.getQuizAttemptById(attemptId),
@@ -20,8 +25,7 @@ const ResultPageComp = ({ attemptId }: { attemptId: string }) => {
 
   if (isLoading) return <div>Loading result...</div>;
 
-  const attempt = data!.data.attempt;
-  const attemptsLeft = data!.data.attemptsLeft;
+  const { attempt, attemptsLeft} = data!.data;
 
   const getScoreColor = (score: number) => {
     if (score < 40) return "#ef4444"; // red-500
@@ -114,11 +118,12 @@ const ResultPageComp = ({ attemptId }: { attemptId: string }) => {
               )}
               title={attemptsLeft <= 0 ? "No attempts left" : "Retake Quiz"}
               disabled={attemptsLeft <= 0}
-              onClick={() =>
-                router.push(
+              onClick={() => {
+                resetAll();
+                router.replace(
                   `/courses/${attempt.quiz.module.course}/quiz/${attempt.quiz._id}`
-                )
-              }
+                );
+              }}
             >
               <RotateCw
                 size={20}
@@ -129,7 +134,14 @@ const ResultPageComp = ({ attemptId }: { attemptId: string }) => {
               />
               Retake Quiz
             </button>
-            <button className="flex-1 sm:flex-2 px-6 py-3.5 rounded-lg bg-primary dark:bg-primary-light text-white font-semibold shadow-lg shadow-primary/30 hover:bg-blue-600 hover:shadow-primary/50 transition-all flex items-center justify-center gap-2 group cursor-pointer">
+            <button
+              className="flex-1 sm:flex-2 px-6 py-3.5 rounded-lg bg-primary dark:bg-primary-light text-white font-semibold shadow-lg shadow-primary/30 hover:bg-blue-600 hover:shadow-primary/50 transition-all flex items-center justify-center gap-2 group cursor-pointer"
+              onClick={() =>
+                router.replace(
+                  `/courses/${attempt.quiz.module.course}`
+                )
+              }
+            >
               Continue to Next Module
               <ArrowRight
                 size={20}

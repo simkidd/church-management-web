@@ -1,4 +1,5 @@
 "use client";
+import { ChevronDown, FilterIcon, SearchIcon } from "lucide-react";
 import React from "react";
 
 const TitleAndFilter = () => {
@@ -19,7 +20,7 @@ const TitleAndFilter = () => {
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative group">
           <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 group-focus-within:text-primary transition-colors">
-            <span className="material-symbols-outlined text-xl">search</span>
+            <SearchIcon size={20} />
           </span>
           <input
             className="pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark text-sm focus:border-primary focus:ring-primary dark:text-white w-full md:w-64 shadow-sm outline-none transition-all"
@@ -28,7 +29,7 @@ const TitleAndFilter = () => {
           />
         </div>
         <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark text-slate-600 dark:text-slate-300 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm">
-          <span className="material-symbols-outlined text-lg">filter_list</span>
+          <FilterIcon size={18} />
           Filter
         </button>
         <div className="relative">
@@ -38,9 +39,7 @@ const TitleAndFilter = () => {
             <option>Sort by: A-Z</option>
           </select>
           <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
-            <span className="material-symbols-outlined text-lg">
-              expand_more
-            </span>
+            <ChevronDown size={18} />
           </span>
         </div>
       </div>

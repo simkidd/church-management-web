@@ -12,7 +12,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           <div className="col-span-1 md:col-span-1 flex flex-col gap-4">
             <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
-              <Logo className="h-8" />
+              <Logo className="h-8 w-8" />
               <div className="flex flex-col">
                 <span className="text-lg font-bold tracking-tight leading-4">
                   {config.SITE_NAME}
