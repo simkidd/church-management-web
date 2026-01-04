@@ -38,8 +38,8 @@ const Navbar = () => {
     { name: "Sermons", href: "/sermons" },
     { name: "Events", href: "/events" },
     { name: "Courses", href: "/courses", requiresAuth: true },
-    { name: "About Us", href: "/about-us" },
-    { name: "Contact", href: "/contact" },
+    // { name: "About Us", href: "/about-us" },
+    // { name: "Contact", href: "/contact" },
   ];
 
   const isActive = (itemUrl: string) => {
@@ -159,7 +159,7 @@ const Navbar = () => {
                       <Link
                         href={item.href}
                         className={cn(
-                          "block py-3 text-base border-b border-slate-100 dark:border-slate-800 last:border-b-0",
+                          "block py-3 text-base border- border-slate-100 dark:border-slate-800 last:border-b-0",
                           isActive(item.href)
                             ? "text-primary font-medium"
                             : "text-slate-800 dark:text-slate-200"
@@ -171,12 +171,21 @@ const Navbar = () => {
                   ))}
 
                   <DrawerClose asChild>
-                    <Link
-                      href="/auth/login"
-                      className="block py-3 text-base text-primary font-semibold mt-4 border-t border-slate-100 dark:border-slate-800 pt-4"
-                    >
-                      Sign In
-                    </Link>
+                    {hasHydrated && user ? (
+                      <Link
+                        href="/account"
+                        className="block py-3 text-base  font-semibold mt-4 border-t border-slate-100 dark:border-slate-800 pt-4"
+                      >
+                        My Account
+                      </Link>
+                    ) : (
+                      <Link
+                        href="/auth/login"
+                        className="block py-3 text-base font-semibold mt-4 border-t border-slate-100 dark:border-slate-800 pt-4"
+                      >
+                        Sign In
+                      </Link>
+                    )}
                   </DrawerClose>
                 </div>
               </DrawerContent>
