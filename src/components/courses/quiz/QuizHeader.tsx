@@ -89,7 +89,7 @@ export default function QuizHeader({ quiz }: { quiz: IQuiz }) {
         <div className="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4 w-full md:w-auto">
           <Link href="/">
             <div className="flex items-center justify-center size-10 rounded-full bg-primary/10 text-primary shrink-0">
-              <Logo className="h-7" />
+              <Logo className="h-7 w-7" />
             </div>
           </Link>
 

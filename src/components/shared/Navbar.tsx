@@ -90,7 +90,7 @@ const Navbar = () => {
             href="/"
             className="flex items-center gap-2 text-slate-900 dark:text-white"
           >
-            <Logo className="h-8" />
+            <Logo className="h-8 w-8" />
             <div className="flex flex-col">
               <span className="text-lg font-bold tracking-tight leading-3">
                 {config.SITE_NAME}

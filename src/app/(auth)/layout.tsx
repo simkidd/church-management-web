@@ -12,7 +12,7 @@ export default async function AuthLayout({
       <div className="flex flex-col w-full lg:w-[40%] bg-white dark:bg-background-dark relative z-10 px-6 py-8 lg:p-12 xl:p-24 min-h-svh h-svh overflow-y-auto">
         <div className="flex-none mb-10 lg:mb-0 lg:absolute lg:top-6 lg:left-12">
           <Link href="/" className="flex items-center gap-2 font-medium">
-            <Logo className="h-8" />
+            <Logo className="h-8 w-8" />
             <div className="flex flex-col">
               <span className="text-lg font-bold tracking-tight leading-3">
                 {config.SITE_NAME}
