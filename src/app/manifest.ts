@@ -14,12 +14,12 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#2563eb",
     icons: [
       {
-        src: "/public/icons/android-launchericon-144-144.png",
+        src: "/icons/android-launchericon-144-144.png",
         sizes: "144x144",
         type: "image/png",
       },
       {
-        src: "/public/icons/android-launchericon-192-192.png",
+        src: "/icons/android-launchericon-192-192.png",
         sizes: "192x192",
         type: "image/png",
       },
