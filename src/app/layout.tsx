@@ -19,8 +19,45 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: config.SITE_NAME,
+  title: {
+    default: config.SITE_NAME,
+    template: `%s | ${config.SITE_NAME}`,
+  },
   description: config.SITE_DESCRIPTION,
+  metadataBase: new URL(config.SITE_URL),
+  keywords: [],
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: {
+      default: config.SITE_NAME,
+      template: `%s | ${config.SITE_NAME}`,
+    },
+    description: config.SITE_DESCRIPTION,
+    url: config.SITE_URL,
+    siteName: config.SITE_NAME,
+    images: [
+      {
+        url: `/icons/android-launchericon-512-512.png`, // OpenGraph image
+        width: 1200,
+        height: 630,
+        alt: config.SITE_NAME,
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: {
+      default: config.SITE_NAME,
+      template: `%s | ${config.SITE_NAME}`,
+    },
+    description: config.SITE_DESCRIPTION,
+    images: ["/icons/android-launchericon-512-512.png"],
+    creator: "@onidev",
+  },
 };
 
 export default function RootLayout({

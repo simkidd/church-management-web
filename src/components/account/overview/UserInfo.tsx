@@ -1,5 +1,6 @@
 "use client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthStore } from "@/stores/auth.store";
 import { format } from "date-fns";
 import React from "react";
@@ -16,6 +17,17 @@ const UserInfo = () => {
       .map((n) => n[0])
       .join("");
   };
+
+  if (!hasHydrated || !user) {
+    return (
+      <div className="bg-white dark:bg-surface-dark rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 flex flex-col items-center text-center animate-pulse">
+        <Skeleton className="h-24 w-24 rounded-full mb-4 dark:bg-slate-900/40" />
+        <Skeleton className="h-6 w-32 mb-2 dark:bg-slate-900/40" />
+        <Skeleton className="h-4 w-20 mb-1 dark:bg-slate-900/40" />
+        <Skeleton className="h-4 w-24 dark:bg-slate-900/40" />
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white dark:bg-surface-dark rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 flex flex-col items-center text-center relative overflow-hidden group">
