@@ -39,4 +39,18 @@ export const sermonsApi = {
     const response = await api.post(`/sermons/${id}/track-view`);
     return response.data;
   },
+
+  // save sermon
+  toggleSaveSermon: async (sermonId: string) => {
+    const response = await api.post(`/sermons/${sermonId}/save`);
+    return response.data;
+  },
+
+  // get saved sermons
+  getMySavedSermons: async (): Promise<
+    ApiResponse<{ sermons: ISermon[]; sermonIds: string[] }>
+  > => {
+    const response = await api.get("/sermons/me/saved-sermons");
+    return response.data;
+  },
 };

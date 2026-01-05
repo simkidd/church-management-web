@@ -6,8 +6,46 @@ import Image from "next/image";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { formatVideoDuration } from "@/utils/helpers/time";
+import { ApiErrorResponse, ApiResponse } from "@/interfaces/response.interface";
+import { sermonsApi } from "@/lib/api/sermon.api";
+import { useQueryClient, useMutation, useQuery } from "@tanstack/react-query";
+import { AxiosError } from "axios";
+import { toast } from "sonner";
 
 const ArchiveCard = ({ sermon }: { sermon: ISermon }) => {
+  const queryClient = useQueryClient();
+
+  /** 🔑 get saved sermon IDs */
+  const { data: savedData } = useQuery<ApiResponse<{ sermonIds: string[] }>>({
+    queryKey: ["saved-sermons"],
+    queryFn: sermonsApi.getMySavedSermons,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const savedIds = savedData?.data.sermonIds ?? [];
+  const isSaved = savedIds.includes(sermon._id);
+
+  const toggleSave = useMutation({
+    mutationFn: (sermonId: string) => sermonsApi.toggleSaveSermon(sermonId),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["saved-sermons"] });
+      queryClient.invalidateQueries({ queryKey: ["allSermons"] });
+
+      toast.success(data.message);
+    },
+    onError: (error: AxiosError<ApiErrorResponse>) => {
+      const errorMessage =
+        error.response?.data?.message || "Failed to update saved sermon";
+      console.error("error:", errorMessage);
+    },
+  });
+
+  const handleToggleSave = () => {
+    if (!toggleSave.isPending) {
+      toggleSave.mutate(sermon._id);
+    }
+  };
+
   return (
     <div className="group bg-white dark:bg-surface-dark rounded-2xl overflow-hidden border border-slate-100 dark:border-gray-800 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col h-full">
       <div className="relative aspect-video overflow-hidden">
@@ -51,8 +89,15 @@ const ArchiveCard = ({ sermon }: { sermon: ISermon }) => {
           <span className="text-xs font-semibold text-primary dark:text-primary-light uppercase tracking-wider">
             {sermon.series?.title || sermon.category || "Sermon"}
           </span>
-          <button className="text-slate-400 hover:text-primary transition-colors cursor-pointer">
-            <Bookmark />
+          <button
+            className="text-slate-400 hover:text-primary transition-colors cursor-pointer"
+            onClick={handleToggleSave}
+            disabled={toggleSave.isPending}
+            title={isSaved ? "Remove from saved" : "Save sermon"}
+          >
+            <Bookmark
+              className={isSaved ? "fill-primary text-primary" : ""}
+            />
           </button>
         </div>
         <Link href={`/sermons/${sermon.slug}`}>
