@@ -3,9 +3,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ApiErrorResponse, ApiResponse } from "@/interfaces/response.interface";
 import { ISermon } from "@/interfaces/sermon.interface";
 import { sermonsApi } from "@/lib/api/sermon.api";
+import { formatVideoDuration } from "@/utils/helpers/time";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { Bookmark, Clock, Play } from "lucide-react";
+import Link from "next/link";
+import { toast } from "sonner";
 
 const SavedSermonsGrid = () => {
   const queryClient = useQueryClient();
@@ -21,12 +24,14 @@ const SavedSermonsGrid = () => {
 
   const removeSermon = useMutation({
     mutationFn: (sermonId: string) => sermonsApi.toggleSaveSermon(sermonId),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["saved-sermons"] });
+
+      toast.success(data.message);
     },
     onError: (error: AxiosError<ApiErrorResponse>) => {
       const errorMessage = error.response?.data?.message;
-      console.error("Login error:", errorMessage);
+      console.error("error:", errorMessage);
     },
   });
 
@@ -84,7 +89,7 @@ const SavedSermonsGrid = () => {
         {sermons.map((sermon) => (
           <div
             key={sermon._id}
-            className="group bg-card-light dark:bg-card-dark rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden hover:shadow-md transition-all flex flex-col"
+            className="group bg-white dark:bg-surface-dark rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden hover:shadow-md transition-all flex flex-col"
           >
             {/* Image with overlay */}
             <div className="relative h-48 bg-slate-200 overflow-hidden">
@@ -96,15 +101,17 @@ const SavedSermonsGrid = () => {
 
               {/* Play button overlay */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="size-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/40 shadow-lg cursor-pointer hover:bg-primary hover:border-primary transition-colors">
-                  <Play size={32} className="ml-1 text-white" />
-                </div>
+                <Link href={`/sermons/${sermon.slug}`}>
+                  <div className="size-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/40 shadow-lg cursor-pointer hover:bg-primary hover:border-primary transition-colors">
+                    <Play size={32} className="ml-1 text-white" />
+                  </div>
+                </Link>
               </div>
 
               {/* Duration badge */}
               <div className="absolute bottom-3 right-3 px-2 py-1 bg-black/60 backdrop-blur-md rounded-lg text-xs font-medium text-white flex items-center gap-1">
                 <Clock size={14} />
-                {sermon.duration}
+                {formatVideoDuration(sermon.duration)}
               </div>
             </div>
 
@@ -118,14 +125,14 @@ const SavedSermonsGrid = () => {
                 {sermon.description}
               </p>
 
-              <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                <div className="flex gap-2">
+              <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-end">
+                <div className="flex gap-2 ">
                   <button
                     onClick={() => handleRemoveSermon(sermon._id)}
-                    className="text-primary cursor-pointer"
+                    className="text-primary dark:text-primary-light cursor-pointer"
                     title="Remove from Saved"
                   >
-                    <Bookmark size={20} className="fill-primary" />
+                    <Bookmark size={20} className="fill-primary dark:fill-primary-light" />
                   </button>
                 </div>
               </div>
