@@ -2,6 +2,8 @@ import { ApiResponse } from "@/interfaces/response.interface";
 import api from "../axios";
 import { IUser } from "@/interfaces/user.interface";
 import { UserFormData } from "@/components/account/settings/UserprofileForm";
+import { ICourse } from "@/interfaces/course.interface";
+import { IProgressStats } from "@/interfaces/progress.interface";
 
 export const usersApi = {
   // Get user by ID
@@ -53,4 +55,26 @@ export const usersApi = {
     const response = await api.delete(`/users/${id}/remove-avatar`);
     return response.data;
   },
-}
+
+  // get user course stats
+  getMyCourseStats: async (): Promise<
+    ApiResponse<{
+      inProgress: number;
+      completed: number;
+      certificates: number;
+    }>
+  > => {
+    const response = await api.get(`/users/my-courses/stats`);
+    return response.data;
+  },
+
+  // get user enrolled courses
+  getMyCourses: async (params?: {
+    status: string;
+  }): Promise<
+    ApiResponse<(ICourse & IProgressStats)[]>
+  > => {
+    const response = await api.get(`/users/my-courses/enrolled`, { params });
+    return response.data;
+  },
+};
