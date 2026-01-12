@@ -1,39 +1,98 @@
 "use client";
+
 import { IEvent, ListEventsParams } from "@/interfaces/event.interface";
 import {
   ApiResponse,
   PaginatedResponse,
 } from "@/interfaces/response.interface";
 import { eventsApi } from "@/lib/api/event.api";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
 const useEvents = (params?: ListEventsParams) => {
-  const { data, isPending, isError, refetch } = useQuery<
-    ApiResponse<PaginatedResponse<IEvent>>
-  >({
+  /* -------------------------------------------------------------------------- */
+  /*                               NORMAL QUERY                                 */
+  /* -------------------------------------------------------------------------- */
+
+  const {
+    data: paginatedData,
+    isPending: isPaginatedPending,
+    isError: isPaginatedError,
+    refetch: refetchPaginated,
+  } = useQuery<ApiResponse<PaginatedResponse<IEvent>>>({
     queryKey: ["allEvents", params],
-    queryFn: async () => eventsApi.getAllEvents(params),
+    queryFn: () => eventsApi.getAllEvents(params),
   });
 
-  const { events, totalEvents, totalPages } = useMemo(() => {
-    if (!data || isPending || isError)
-      return { event: [], totalEvents: 0, totalPages: 0 };
+  const paginated = useMemo(() => {
+    if (!paginatedData || isPaginatedPending || isPaginatedError) {
+      return {
+        events: [],
+        totalEvents: 0,
+        totalPages: 0,
+      };
+    }
 
     return {
-      events: data.data.data || [],
-      totalEvents: data.data.pagination.totalItems || 0,
-      totalPages: data.data.pagination.totalPages || 0,
+      events: paginatedData.data.data ?? [],
+      totalEvents: paginatedData.data.pagination.totalItems ?? 0,
+      totalPages: paginatedData.data.pagination.totalPages ?? 0,
     };
-  }, [data, isPending, isError]);
+  }, [paginatedData, isPaginatedPending, isPaginatedError]);
+
+  /* -------------------------------------------------------------------------- */
+  /*                               INFINITE QUERY                               */
+  /* -------------------------------------------------------------------------- */
+
+  const {
+    data: infiniteData,
+    isPending: isInfinitePending,
+    isError: isInfiniteError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch: refetchInfinite,
+  } = useInfiniteQuery<ApiResponse<PaginatedResponse<IEvent>>>({
+    queryKey: ["infinite-events", params],
+    initialPageParam: 1,
+    queryFn: ({ pageParam }) =>
+      eventsApi.getAllEvents({
+        ...params,
+        page: pageParam as number,
+      }),
+    getNextPageParam: (lastPage) => {
+      const { page, totalPages } = lastPage.data.pagination;
+      return page < totalPages ? page + 1 : undefined;
+    },
+  });
+
+  const infiniteEvents = infiniteData?.pages.flatMap((p) => p.data.data) ?? [];
+
+  const infiniteTotalEvents =
+    infiniteData?.pages[0]?.data.pagination.totalItems ?? 0;
+
+  /* -------------------------------------------------------------------------- */
+  /*                                   RETURN                                   */
+  /* -------------------------------------------------------------------------- */
 
   return {
-    events,
-    totalEvents,
-    totalPages,
-    isPending,
-    isError,
-    refetch,
+    /* paginated */
+    events: paginated.events,
+    totalEvents: paginated.totalEvents,
+    totalPages: paginated.totalPages,
+    isPending: isPaginatedPending,
+    isError: isPaginatedError,
+    refetch: refetchPaginated,
+
+    /* infinite */
+    infiniteEvents,
+    infiniteTotalEvents,
+    isInfinitePending,
+    isInfiniteError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetchInfinite,
   };
 };
 
