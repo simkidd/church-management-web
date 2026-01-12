@@ -13,6 +13,7 @@ export interface IEvent {
   registeredUsers: IUser[];
   image?: IMedia | null;
   isPublished: boolean;
+  isFeatured: boolean;
   createdBy: IUser;
   isMultiDay: boolean;
   createdAt: string;
@@ -34,4 +35,11 @@ export interface ListEventsParams {
   endDate?: string;
   isPublished?: boolean;
   requiresRegistration?: boolean;
+}
+
+export interface IWeeklyHighlight {
+  id: string;
+  day: string;   // "M", "T", "W", etc
+  title: string;
+  time: string;  // "6:00 AM • Dining Hall"
 }
