@@ -38,18 +38,18 @@ const FeaturedEvents = () => {
                       Featured Event
                     </div>
                     <h1 className="text-white text-3xl md:text-6xl font-black leading-tight mb-4 drop-shadow-md tracking-tight">
-                      Easter Sunday Celebration
+                      {event.title}
                     </h1>
-                    <p className="text-slate-100 text-lg md:text-xl font-medium max-w-2xl mb-8 drop-shadow-sm leading-relaxed text-opacity-90">
-                      Join us in fellowship and growth as we celebrate the
-                      resurrection together. Everyone is welcome to experience
-                      the joy.
+                    <p className="text-slate-100 text-lg md:text-xl font-medium max-w-2xl mb-8 drop-shadow-sm leading-relaxed text-opacity-90 line-clamp-3">
+                      {event.description}
                     </p>
                     <div className="flex flex-wrap gap-4">
-                      <button className="h-12 px-8 bg-white text-primary font-bold rounded-full text-base shadow-lg hover:bg-slate-50 transition-all transform hover:-translate-y-0.5 flex items-center gap-2 cursor-pointer">
-                        Register Now
-                        <ArrowRight size={16} />
-                      </button>
+                      {event.requiresRegistration && (
+                        <button className="h-12 px-8 bg-white text-primary font-bold rounded-full text-base shadow-lg hover:bg-slate-50 transition-all transform hover:-translate-y-0.5 flex items-center gap-2 cursor-pointer">
+                          Register Now
+                          <ArrowRight size={16} />
+                        </button>
+                      )}
                       <button className="h-12 px-8 bg-primary/40 hover:bg-primary/50 backdrop-blur-md text-white border border-white/30 rounded-full text-base font-bold transition-all cursor-pointer">
                         Learn More
                       </button>
