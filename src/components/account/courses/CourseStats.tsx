@@ -74,7 +74,7 @@ const CourseStats = () => {
             label={item.label}
             value={item.value}
             loading={isPending}
-            color={item.color}
+            color={item.color as "blue" | "green" | "amber" | "orange" | "purple"}
             trend={item.trend}
           />
         </motion.div>

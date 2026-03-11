@@ -7,14 +7,14 @@ import EnrolledCourseCard from "./EnrolledCourseCard";
 import CourseCardSkeleton from "./CourseCardSkeleton";
 import { ICourse } from "@/interfaces/course.interface";
 import { IProgressStats } from "@/interfaces/progress.interface";
-import { 
-  BookOpen, 
-  CheckCircle2, 
-  Clock, 
-  Filter, 
+import {
+  BookOpen,
+  CheckCircle2,
+  Clock,
+  Filter,
   GraduationCap,
   Search,
-  Sparkles 
+  Sparkles,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
@@ -27,14 +27,18 @@ const EnrolledCourses = () => {
 
   const { data, isLoading } = useQuery({
     queryKey: ["my-courses", status],
-    queryFn: () => usersApi.getMyCourses({ status: status === "all" ? undefined : status }),
+    queryFn: () =>
+      usersApi.getMyCourses(status === "all" ? undefined : { status }),
   });
 
   const courses = data?.data ?? [];
 
-  const filteredCourses = courses.filter((course: ICourse) =>
-    course.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    course.instructor?.firstName?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredCourses = courses.filter(
+    (course: ICourse) =>
+      course.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      course.instructor?.firstName
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()),
   );
 
   const tabs = [
@@ -60,7 +64,10 @@ const EnrolledCourses = () => {
         <div className="flex flex-col sm:flex-row gap-3">
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              size={16}
+            />
             <Input
               placeholder="Search courses..."
               value={searchQuery}
@@ -79,7 +86,7 @@ const EnrolledCourses = () => {
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200",
                   status === tab.id
                     ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
-                    : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                    : "text-slate-500 hover:text-slate-900 dark:hover:text-white",
                 )}
               >
                 <tab.icon size={14} />
@@ -109,16 +116,18 @@ const EnrolledCourses = () => {
             <EmptyState status={status} searchQuery={searchQuery} />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {filteredCourses.map((course: ICourse & IProgressStats, index) => (
-                <motion.div
-                  key={course._id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <EnrolledCourseCard course={course} />
-                </motion.div>
-              ))}
+              {filteredCourses.map(
+                (course: ICourse & IProgressStats, index) => (
+                  <motion.div
+                    key={course._id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    <EnrolledCourseCard course={course} />
+                  </motion.div>
+                ),
+              )}
             </div>
           )}
         </motion.div>
@@ -128,12 +137,12 @@ const EnrolledCourses = () => {
 };
 
 // Empty State Component
-const EmptyState = ({ 
-  status, 
-  searchQuery 
-}: { 
-  status: CourseStatus; 
-  searchQuery: string 
+const EmptyState = ({
+  status,
+  searchQuery,
+}: {
+  status: CourseStatus;
+  searchQuery: string;
 }) => {
   if (searchQuery) {
     return (
@@ -145,7 +154,8 @@ const EmptyState = ({
           No courses found
         </h3>
         <p className="text-slate-500 max-w-sm mx-auto">
-          We couldn't find any courses matching "{searchQuery}". Try adjusting your search terms.
+          We couldn&apos;t find any courses matching &apos;{searchQuery}&apos;.
+          Try adjusting your search terms.
         </p>
       </div>
     );
@@ -161,8 +171,8 @@ const EmptyState = ({
         )}
       </div>
       <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-        {status === "completed" 
-          ? "No completed courses yet" 
+        {status === "completed"
+          ? "No completed courses yet"
           : "No active courses"}
       </h3>
       <p className="text-slate-500 max-w-sm mx-auto mb-6">

@@ -6,7 +6,7 @@ export default async function QuizLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ courseId: string; quizId: string }>;
+  params: Promise<{ courseId: string }>;
 }) {
   const { courseId } = await params;
 
