@@ -1,15 +1,26 @@
 import { ICourse } from "./course.interface";
 import { ILessonWithState } from "./lesson.interface";
-import { IQuiz } from "./quiz.interface";
+import { IQuizSummary } from "./quiz.interface";
 
 export interface IModule {
   _id: string;
   course: ICourse;
   title: string;
+  description?: string;
   order: number;
-  quiz?: IQuiz;
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface IModuleWithLessons extends IModule {
-  lessons?: ILessonWithState[];
+export interface IModuleWithState extends IModule {
+  isCompleted: boolean;
+  isLockedForUser: boolean;
+  progress?: {
+    lessonsCompleted: boolean;
+    quizPassed: boolean;
+    completedAt: string | null;
+  };
+  lessons: ILessonWithState[];
+  quiz: IQuizSummary | null;
 }

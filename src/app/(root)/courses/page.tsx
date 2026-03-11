@@ -7,10 +7,11 @@ const CoursesPage = () => {
   return (
     <div className="space-y-10">
       <TitleAndFilter />
-      <FeaturedCourse />
+      {/* <FeaturedCourse /> */}
       <CoursesGrid />
     </div>
   );
 };
 
 export default CoursesPage;
+

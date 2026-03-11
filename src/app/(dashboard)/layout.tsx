@@ -8,14 +8,14 @@ export default async function AccountLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="w-full">
+    <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-950">
       <DashboardHeader />
       <div className="container px-4 mx-auto lg:pt-8 pb-24 lg:pb-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative">
           <aside className="lg:col-span-3 relative">
             <DashboardSidebar />
           </aside>
-          <div className="lg:col-span-9">{children}</div>
+          <main className="lg:col-span-9">{children}</main>
         </div>
       </div>
       <MobileTabbar />

@@ -63,6 +63,7 @@ const VideoPlayer2: React.FC<VideoPlayerProps> = ({
   onTimeUpdate,
   onError,
 }) => {
+  console.log(media)
   const [isPlaying, setIsPlaying] = useState(autoPlay);
   const [isMuted, setIsMuted] = useState(muted);
   const [volume, setVolume] = useState(0.8);

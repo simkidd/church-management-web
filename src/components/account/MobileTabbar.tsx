@@ -1,118 +1,37 @@
 "use client";
-import { cn } from "@/lib/utils";
-import { useSidebarStore } from "@/stores/sidebar.store";
-import {
-  GraduationCap,
-  Home,
-  List,
-  PlayCircle,
-  User
-} from "lucide-react";
+import { LayoutDashboard, GraduationCap, PlayCircle, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 const MobileTabbar = () => {
   const pathname = usePathname();
-  const { open } = useSidebarStore();
 
   const tabs = [
-    {
-      label: "Dashboard",
-      href: "/account",
-      icon: Home,
-      active: pathname === "/account",
-    },
-    {
-      label: "Courses",
-      href: "/account/my-courses",
-      icon: GraduationCap,
-      active: pathname.startsWith("/account/my-courses"),
-    },
-    {
-      label: "Media",
-      href: "/account/sermons",
-      icon: PlayCircle,
-      active: pathname.startsWith("/account/sermons"),
-    },
-    {
-      label: "Account",
-      href: "/account/settings",
-      icon: User,
-      active: pathname.startsWith("/account/settings"),
-    },
-    {
-      label: "Menu",
-      href: "#",
-      icon: List,
-      isMenu: true,
-    },
+    { icon: LayoutDashboard, label: "Home", href: "/account" },
+    { icon: GraduationCap, label: "Courses", href: "/account/my-courses" },
+    { icon: PlayCircle, label: "Sermons", href: "/account/sermons" },
+    { icon: User, label: "Profile", href: "/account/settings" },
   ];
 
-  const handleMenuClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    open(); // Use Zustand store to open sidebar
-  };
-
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-surface-dark border-t border-slate-200 dark:border-slate-800 shadow-lg safe-area-bottom">
-      <div className="flex items-center justify-around h-16 px-2">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 pb-safe z-40">
+      <div className="flex items-center justify-around h-16">
         {tabs.map((tab) => {
-          const Icon = tab.icon;
-          
-          if (tab.isMenu) {
-            return (
-              <button
-                key={tab.label}
-                onClick={handleMenuClick}
-                className="flex flex-col items-center justify-center w-16 h-full p-2 group cursor-pointer active:scale-95 transition-transform"
-                aria-label="Open menu"
-              >
-                <div className="relative">
-                  <Icon
-                    size={22}
-                    className={cn(
-                      "text-slate-500 dark:text-slate-400 group-hover:text-primary transition-colors"
-                    )}
-                  />
-                </div>
-                <span className="text-xs mt-1 text-slate-500 dark:text-slate-400 group-hover:text-primary transition-colors">
-                  {tab.label}
-                </span>
-              </button>
-            );
-          }
-
+          const isActive = pathname === tab.href || pathname.startsWith(`${tab.href}/`);
           return (
             <Link
-              key={tab.label}
+              key={tab.href}
               href={tab.href}
               className={cn(
-                "flex flex-col items-center justify-center w-16 h-full p-2 transition-all",
-                "active:scale-95"
+                "flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors",
+                isActive
+                  ? "text-primary"
+                  : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
               )}
             >
-              <div className="relative">
-                <Icon
-                  size={22}
-                  className={cn(
-                    "transition-colors",
-                    tab.active
-                      ? "text-primary dark:text-primary-light"
-                      : "text-slate-500 dark:text-slate-400"
-                  )}
-                />
-                
-              </div>
-              <span
-                className={cn(
-                  "text-xs mt-1 transition-colors",
-                  tab.active
-                    ? "text-primary dark:text-primary-light font-medium"
-                    : "text-slate-500 dark:text-slate-400"
-                )}
-              >
-                {tab.label}
-              </span>
+              <tab.icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+              <span className="text-xs font-medium">{tab.label}</span>
             </Link>
           );
         })}

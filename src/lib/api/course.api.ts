@@ -1,17 +1,16 @@
 import { ICourse, ListCourseParams } from "@/interfaces/course.interface";
-import { IModuleWithLessons } from "@/interfaces/module.interface";
+import { IModuleWithState } from "@/interfaces/module.interface";
+import { IProgressStats } from "@/interfaces/progress.interface";
 import {
   ApiResponse,
   PaginatedResponse,
 } from "@/interfaces/response.interface";
 import api from "../axios";
-import { IProgressStats } from "@/interfaces/progress.interface";
-import { IMarkLessonCompleteResponse } from "@/interfaces/lesson.interface";
 
 export const courseApi = {
   //  GET all courses
   getAllCourses: async (
-    params?: ListCourseParams
+    params?: ListCourseParams,
   ): Promise<ApiResponse<PaginatedResponse<ICourse>>> => {
     const response = await api.get("/courses", { params });
     return response.data;
@@ -31,7 +30,7 @@ export const courseApi = {
 
   //enroll in course
   enrollInCourse: async (
-    id: string
+    id: string,
   ): Promise<
     ApiResponse<{
       enrollmentId: string;
@@ -42,23 +41,15 @@ export const courseApi = {
     return response.data;
   },
 
-  // mark as complete
-  markLessonComplete: async (
-    lessonId: string
-  ): Promise<ApiResponse<IMarkLessonCompleteResponse>> => {
-    const response = await api.post(`/lessons/${lessonId}/complete`);
-    return response.data;
-  },
-
   // get course modules
   getCourseModules: async (
-    courseId: string
+    courseId: string,
   ): Promise<
     ApiResponse<{
       course: ICourse;
-      enrolled: {isEnrolled: boolean};
+      enrolled: { isEnrolled: boolean; status: string | null };
       progress: IProgressStats;
-      modules: IModuleWithLessons[];
+      modules: IModuleWithState[];
     }>
   > => {
     const response = await api.get(`/courses/${courseId}/modules`);

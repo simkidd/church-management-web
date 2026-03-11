@@ -1,11 +1,14 @@
-import QuizLayout from "@/components/courses/quiz/QuizLayout";
+import QuizPageContent from "@/components/courses/quiz/QuizPageContent";
+import React from "react";
 
-export default async function QuizPage({
+const QuizPage = async({
   params,
 }: {
-  params: Promise<{ quizId: string }>;
-}) {
-  const { quizId } = await params;
+  params: Promise<{ courseId: string; quizId: string }>;
+}) => {
+  const { courseId, quizId } = await params;
 
-  return <QuizLayout quizId={quizId} />;
-}
+  return <QuizPageContent courseId={courseId} quizId={quizId} />;
+};
+
+export default QuizPage;
