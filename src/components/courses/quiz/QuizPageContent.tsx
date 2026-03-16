@@ -17,6 +17,7 @@ import {
 import { ApiErrorResponse, ApiResponse } from "@/interfaces/response.interface";
 
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog"; // Assuming you have shadcn dialog
 import QuizIntroCard from "./QuizIntroCard";
 import QuizHeader from "./QuizHeader";
 import QuizQuestionNavigator from "./QuizQuestionNavigator";
@@ -25,6 +26,7 @@ import QuizFooterActions from "./QuizFooterActions";
 import QuizSubmitDialog from "./QuizSubmitDialog";
 import QuizLeaveDialog from "./QuizLeaveDialog";
 import QuizTimeUpDialog from "./QuizTimeUpDialog";
+import { cn } from "@/lib/utils";
 
 type QuizPageContentProps = {
   courseId: string;
@@ -44,6 +46,7 @@ const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
   const [timeUpDialogOpen, setTimeUpDialogOpen] = useState(false);
+  const [isSubmittingDialogOpen, setIsSubmittingDialogOpen] = useState(false); // New loading dialog
 
   const { data, isPending, isError, error } = useQuery<ApiResponse<IQuiz>>({
     queryKey: ["quiz", quizId],
@@ -78,11 +81,17 @@ const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
     mutationFn: () =>
       quizApi.attemptQuiz({
         quizId,
-        answers: Object.entries(answers).map(([questionId, selectedOptions]) => ({
-          questionId,
-          selectedOptions,
-        })),
+        answers: Object.entries(answers).map(
+          ([questionId, selectedOptions]) => ({
+            questionId,
+            selectedOptions,
+          }),
+        ),
       }),
+    onMutate: () => {
+      // Show loading dialog immediately when submission starts
+      setIsSubmittingDialogOpen(true);
+    },
     onSuccess: async (response) => {
       toast.success("Quiz submitted successfully");
 
@@ -95,14 +104,20 @@ const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
 
       const attemptId = response.data.attemptId;
 
-      if (attemptId) {
-        router.push(`/courses/${courseId}/quiz/${quizId}/attempt/${attemptId}`);
-        return;
-      }
-
-      router.push(`/courses/${courseId}/learn`);
+      // Small delay to ensure dialog is seen before navigation
+      setTimeout(() => {
+        if (attemptId) {
+          router.replace(
+            `/courses/${courseId}/quiz/${quizId}/attempt/${attemptId}`,
+          );
+          return;
+        }
+        router.replace(`/courses/${courseId}/learn`);
+      }, 500);
     },
     onError: (err) => {
+      // Close loading dialog on error so user can retry
+      setIsSubmittingDialogOpen(false);
       toast.error(err.response?.data?.message ?? "Failed to submit quiz");
     },
   });
@@ -133,10 +148,7 @@ const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
     });
   };
 
-  const handleOptionSelect = (
-    question: IQuizQuestion,
-    optionId: string,
-  ) => {
+  const handleOptionSelect = (question: IQuizQuestion, optionId: string) => {
     const isSingleType =
       question.type === "single-choice" || question.type === "true-false";
 
@@ -216,54 +228,88 @@ const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
 
   return (
     <>
-      <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="order-2 lg:order-1">
-          <div className="sticky top-20 space-y-4">
-            <QuizHeader
-              title={quiz.title}
-              currentQuestion={currentIndex + 1}
-              totalQuestions={totalQuestions}
-              answeredCount={answeredCount}
-              progressValue={progressValue}
-              durationMinutes={quiz.durationMinutes}
-              onTimeUp={() => setTimeUpDialogOpen(true)}
-            />
+      {/* Main quiz content - blurred when submitting */}
+      <div
+        className={cn(
+          "transition-all duration-300",
+          isSubmittingDialogOpen && "blur-sm pointer-events-none",
+        )}
+      >
+        <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+          <aside className="order-2 lg:order-1">
+            <div className="sticky top-20 space-y-4">
+              <QuizHeader
+                title={quiz.title}
+                currentQuestion={currentIndex + 1}
+                totalQuestions={totalQuestions}
+                answeredCount={answeredCount}
+                progressValue={progressValue}
+                durationMinutes={quiz.durationMinutes}
+                onTimeUp={() => setTimeUpDialogOpen(true)}
+              />
 
-            <QuizQuestionNavigator
-              totalQuestions={totalQuestions}
+              <QuizQuestionNavigator
+                totalQuestions={totalQuestions}
+                currentIndex={currentIndex}
+                answers={answers}
+                questions={quiz.questions}
+                onGoToQuestion={handleGoToQuestion}
+              />
+            </div>
+          </aside>
+
+          <section className="order-1 lg:order-2 min-w-0 space-y-4">
+            {currentQuestion ? (
+              <QuizQuestionCard
+                question={currentQuestion}
+                questionNumber={currentIndex + 1}
+                selectedOptions={answers[currentQuestion._id] ?? []}
+                onSelectOption={(optionId) =>
+                  handleOptionSelect(currentQuestion, optionId)
+                }
+              />
+            ) : null}
+
+            <QuizFooterActions
               currentIndex={currentIndex}
-              answers={answers}
-              questions={quiz.questions}
-              onGoToQuestion={handleGoToQuestion}
+              totalQuestions={totalQuestions}
+              remainingQuestions={remainingQuestions}
+              isSubmitting={submitMutation.isPending}
+              onPrevious={handlePreviousQuestion}
+              onNext={handleNextQuestion}
+              onOpenSubmitDialog={() => setSubmitDialogOpen(true)}
+              onOpenLeaveDialog={() => setLeaveDialogOpen(true)}
             />
-          </div>
-        </aside>
-
-        <section className="order-1 lg:order-2 min-w-0 space-y-4">
-          {currentQuestion ? (
-            <QuizQuestionCard
-              question={currentQuestion}
-              questionNumber={currentIndex + 1}
-              selectedOptions={answers[currentQuestion._id] ?? []}
-              onSelectOption={(optionId) =>
-                handleOptionSelect(currentQuestion, optionId)
-              }
-            />
-          ) : null}
-
-          <QuizFooterActions
-            currentIndex={currentIndex}
-            totalQuestions={totalQuestions}
-            remainingQuestions={remainingQuestions}
-            isSubmitting={submitMutation.isPending}
-            onPrevious={handlePreviousQuestion}
-            onNext={handleNextQuestion}
-            onOpenSubmitDialog={() => setSubmitDialogOpen(true)}
-            onOpenLeaveDialog={() => setLeaveDialogOpen(true)}
-          />
-        </section>
+          </section>
+        </div>
       </div>
 
+      {/* Loading Dialog - Shows during submission */}
+      <Dialog open={isSubmittingDialogOpen} modal>
+        <DialogContent
+          className="sm:max-w-md "
+          onInteractOutside={(e) => e.preventDefault()} // Prevent closing
+          onEscapeKeyDown={(e) => e.preventDefault()} // Prevent closing with ESC
+          showCloseButton={false} // Hide close button
+        >
+          <div className="flex flex-col items-center justify-center py-8 space-y-4">
+            <div className="relative">
+              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+              <div className="absolute inset-0 h-12 w-12 rounded-full border-4 border-primary/20" />
+            </div>
+            <div className="text-center space-y-2">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                Submitting Quiz...
+              </h3>
+              <p className="text-sm text-slate-500">
+                Please wait while we grade your answers
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Existing Dialogs */}
       <QuizSubmitDialog
         open={submitDialogOpen}
         onOpenChange={setSubmitDialogOpen}

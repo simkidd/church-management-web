@@ -30,7 +30,12 @@ const QuizSubmitDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent
+        className="sm:max-w-md"
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+        showCloseButton={false}
+      >
         <DialogHeader>
           <DialogTitle>Submit quiz?</DialogTitle>
           <DialogDescription>
@@ -44,10 +49,14 @@ const QuizSubmitDialog = ({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={onConfirm} disabled={!allAnswered || isSubmitting}>
+          <Button
+            onClick={onConfirm}
+            disabled={!allAnswered || isSubmitting}
+            className="text-white"
+          >
             {isSubmitting ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
                 Submitting...
               </>
             ) : (

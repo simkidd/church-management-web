@@ -1,4 +1,4 @@
-import CourseLearning from "@/components/courses/CourseLearning";
+import CourseLearning from "@/components/courses/learning/CourseLearning";
 import courseApi from "@/lib/api/course.api";
 import { notFound, redirect } from "next/navigation";
 

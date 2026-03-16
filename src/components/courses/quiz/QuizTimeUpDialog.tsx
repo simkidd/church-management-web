@@ -27,6 +27,8 @@ const QuizTimeUpDialog = ({
       <DialogContent
         className="sm:max-w-md"
         onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+        showCloseButton={false}
       >
         <DialogHeader>
           <DialogTitle>Time is up</DialogTitle>
@@ -36,10 +38,14 @@ const QuizTimeUpDialog = ({
         </DialogHeader>
 
         <DialogFooter>
-          <Button onClick={onConfirm} disabled={isSubmitting}>
+          <Button
+            onClick={onConfirm}
+            disabled={isSubmitting}
+            className="text-white"
+          >
             {isSubmitting ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className=" h-4 w-4 animate-spin" />
                 Submitting...
               </>
             ) : (
