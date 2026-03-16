@@ -32,10 +32,12 @@ const SermonDetails = ({ sermon }: { sermon: ISermon }) => {
     id: sermon._id,
     title: sermon.title,
     description: sermon.description,
-    video: {
-      url: sermon.video?.url,
-      type: sermon.video.type,
-    },
+    video: sermon.video?.url
+      ? {
+          url: sermon.video.url,
+          type: sermon.video.type,
+        }
+      : undefined,
     audioUrl: sermon.audioUrl,
     thumbnail: {
       url: sermon.thumbnail?.url,
@@ -95,11 +97,9 @@ const SermonDetails = ({ sermon }: { sermon: ISermon }) => {
           <VideoPlayer
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             media={mediaItem as any}
-            type="sermon"
+            type="video"
             showTitle={true}
-            autoPlay={false}
-            onPlay={() => console.log("Sermon started playing")}
-            onEnded={() => console.log("Sermon ended")}
+            autoplay={false}
           />
 
           <div className="flex flex-wrap items-center gap-4 pb-6 border-b border-gray-100 dark:border-white/10">

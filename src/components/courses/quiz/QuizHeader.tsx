@@ -1,132 +1,109 @@
 "use client";
-import Logo from "@/components/shared/Logo";
-import { ThemeToggler } from "@/components/shared/ThemeToggler";
-import { useQuiz } from "@/hooks/use-quiz";
-import { IQuiz } from "@/interfaces/quiz.interface";
-import { useQuizStore } from "@/stores/quiz.store";
-import { Timer } from "lucide-react";
-import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
 
-export default function QuizHeader({ quiz }: { quiz: IQuiz }) {
-  const {
-    duration,
-    startedAt,
-    startQuiz,
-    markTimeExpired,
-    markSubmitted,
-    setAttempt,
-    timeExpired,
-    submitted,
-  } = useQuizStore();
-  const { submitQuiz, isSubmitting } = useQuiz(quiz._id);
-  const [timeLeft, setTimeLeft] = useState(0);
-  const isSubmittingRef = useRef(false);
+import { useEffect, useMemo, useState } from "react";
+import { Clock3 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+
+const QuizHeader = ({
+  title,
+  currentQuestion,
+  totalQuestions,
+  answeredCount,
+  progressValue,
+  durationMinutes,
+  onTimeUp,
+}: {
+  title: string;
+  currentQuestion: number;
+  totalQuestions: number;
+  answeredCount: number;
+  progressValue: number;
+  durationMinutes: number;
+  onTimeUp: () => void;
+}) => {
+  const [remainingSeconds, setRemainingSeconds] = useState(
+    durationMinutes > 0 ? durationMinutes * 60 : 0,
+  );
 
   useEffect(() => {
-    if (!startedAt && !submitted && !timeExpired) {
-      startQuiz(15); // default to 15 minutes
-    }
-  }, [startedAt, startQuiz, timeExpired, submitted]);
+    if (!durationMinutes || durationMinutes <= 0) return;
+    if (remainingSeconds <= 0) return;
 
-  const handleSubmit = (expired = false) => {
-    if (submitted || timeExpired || isSubmittingRef.current) return;
+    const interval = setInterval(() => {
+      setRemainingSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          onTimeUp();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
 
-    isSubmittingRef.current = true;
-
-    const currentAnswers = useQuizStore.getState().answers;
-
-    submitQuiz(
-      { quizId: quiz._id, answers: currentAnswers },
-      {
-        onSuccess: (res) => {
-          const attemptId = res.data.attempt;
-          setAttempt(attemptId);
-
-          setTimeout(() => {
-            if (expired) {
-              markTimeExpired();
-            } else {
-              markSubmitted();
-            }
-            isSubmittingRef.current = false;
-          }, 100);
-        },
-        onError: () => {
-          isSubmittingRef.current = false;
-        },
-      }
-    );
-  };
-
-  // Timer effect
-  useEffect(() => {
-    if (!startedAt || submitted || timeExpired) return;
-
-    const updateTimeLeft = () => {
-      const secondsLeft = Math.max(
-        0,
-        duration - Math.floor((Date.now() - startedAt) / 1000)
-      );
-      setTimeLeft(secondsLeft);
-
-      if (secondsLeft === 0 && !isSubmittingRef.current) {
-        handleSubmit(true);
-      }
-    };
-
-    // Update immediately without causing double render
-    updateTimeLeft();
-
-    const interval = setInterval(updateTimeLeft, 1000);
     return () => clearInterval(interval);
-  }, [startedAt, duration, submitted, timeExpired]);
+  }, [durationMinutes, remainingSeconds, onTimeUp]);
+
+  const formattedTime = useMemo(() => {
+    if (!durationMinutes || durationMinutes <= 0) return "No timer";
+
+    const minutes = Math.floor(remainingSeconds / 60);
+    const seconds = remainingSeconds % 60;
+
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }, [durationMinutes, remainingSeconds]);
+
+  const isDanger = durationMinutes > 0 && remainingSeconds <= 60;
 
   return (
-    <header className="sticky top-0 z-30 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md shadow-soft px-4 sm:px-6 py-3 md:py-4 transition-colors">
-      <div className="max-w-7xl mx-auto w-full flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-0">
-        {/* Left: Logo + Course info */}
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4 w-full md:w-auto">
-          <Link href="/">
-            <div className="flex items-center justify-center size-10 rounded-full bg-primary/10 text-primary shrink-0">
-              <Logo className="h-7 w-7" />
-            </div>
-          </Link>
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <p className="line-clamp-2 text-base font-semibold text-slate-900 dark:text-white">
+        {title}
+      </p>
 
-          <div className="flex flex-col">
-            <h2 className="text-base sm:text-lg font-bold leading-tight tracking-tight">
-              {quiz.module.course.title}
-            </h2>
-            <span className="text-xs text-text-muted dark:text-gray-400 font-medium">
-              Module {quiz.module.order}: {quiz.module.title}
-            </span>
-          </div>
+      <div className="mt-4 rounded-2xl bg-slate-50 p-4 dark:bg-slate-950/50">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-slate-500">Current question</span>
+          <span className="font-semibold text-slate-900 dark:text-white">
+            {currentQuestion}/{totalQuestions}
+          </span>
         </div>
 
-        {/* Right: Timer + Theme + Submit */}
-        <div className="flex items-center gap-2 sm:gap-4 w-full md:w-auto flex-wrap justify-start md:justify-end">
-          <ThemeToggler />
+        <div className="mt-3 flex items-center justify-between text-sm">
+          <span className="text-slate-500">Answered</span>
+          <span className="font-semibold text-slate-900 dark:text-white">
+            {answeredCount}/{totalQuestions}
+          </span>
+        </div>
 
-          {/* Timer: always visible, responsive sizing */}
-          {startedAt && (
-            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 bg-white dark:bg-slate-800/50 px-2 sm:px-3 py-1 rounded-full border text-sm sm:text-base font-medium">
-              <Timer size={16} className="text-accent-warm-2" />
-              <span className="tabular-nums">
-                {Math.floor(timeLeft / 60)}:
-                {String(timeLeft % 60).padStart(2, "0")}
-              </span>
-            </div>
-          )}
-
-          <button
-            onClick={() => handleSubmit(false)}
-            disabled={isSubmitting || submitted}
-            className="flex items-center gap-2 h-8 sm:h-10 px-3 sm:px-5 rounded-xl border bg-primary dark:bg-primary-white text-white transition-colors text-sm sm:text-base font-bold cursor-pointer"
-          >
-            Submit Quiz
-          </button>
+        <div className="mt-4">
+          <Progress value={progressValue} className="h-2.5" />
         </div>
       </div>
-    </header>
+
+      <div
+        className={`mt-4 rounded-2xl border px-4 py-3 ${
+          isDanger
+            ? "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30"
+            : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
+        }`}
+      >
+        <div className="flex items-center gap-2">
+          <Clock3
+            className={`h-4 w-4 ${isDanger ? "text-red-500" : "text-slate-500"}`}
+          />
+          <span className="text-sm text-slate-500">Time left</span>
+        </div>
+
+        <p
+          className={`mt-2 text-xl font-bold ${
+            isDanger ? "text-red-600 dark:text-red-400" : "text-slate-900 dark:text-white"
+          }`}
+        >
+          {formattedTime}
+        </p>
+      </div>
+    </div>
   );
-}
+};
+
+export default QuizHeader;

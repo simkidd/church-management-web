@@ -1,24 +1,31 @@
+// components/courses/CoursesGrid.tsx
 "use client";
 import useCourses from "@/hooks/use-courses";
-import { ListCourseParams } from "@/interfaces/course.interface";
-import { ArrowRight, ChevronDown, Loader2, User, User2 } from "lucide-react";
-import Link from "next/link";
-import React, { useState } from "react";
-import { Card, CardContent, CardFooter } from "../ui/card";
-import { Skeleton } from "../ui/skeleton";
-import { cn } from "@/lib/utils";
+import { useCoursesStore } from "@/stores/courses.store";
+import { ChevronDown, Loader2 } from "lucide-react";
+import React from "react";
 import CourseCard from "./CourseCard";
+import { Skeleton } from "../ui/skeleton";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 
 const CoursesGrid = () => {
-  const [filters, setFilters] = useState<ListCourseParams>({
-    page: 1,
-    limit: 10,
-  });
+  const { filters } = useCoursesStore();
+
   const {
-    infiniteQuery: { courses, isLoadingInfinite, isFetchingNextPage },
-    hasMore,
-    loadMore,
+    infiniteQuery: { 
+      courses, 
+      isLoadingInfinite, 
+      isFetchingNextPage,
+      hasNextPage,
+      fetchNextPage,
+    },
   } = useCourses(filters);
+
+  const loadMoreRef = useInfiniteScroll({
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  });
 
   if (isLoadingInfinite && courses.length === 0) {
     return <CoursesGridSkeleton />;
@@ -26,21 +33,6 @@ const CoursesGrid = () => {
 
   return (
     <div className="container px-4 mx-auto space-y-10">
-      {/* <section className="flex overflow-x-auto pb-4 gap-3 no-scrollbar">
-        {categories.map((category) => (
-          <button
-            key={category.name}
-            className={`whitespace-nowrap px-5 py-2 rounded-full text-sm font-medium transition-all ${
-              category.isActive
-                ? "bg-primary text-white font-semibold shadow-md shadow-primary/20"
-                : "bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-primary hover:text-primary"
-            }`}
-          >
-            {category.name}
-          </button>
-        ))}
-      </section> */}
-
       {isLoadingInfinite && courses.length > 0 && (
         <div className="flex justify-center py-4">
           <div className="flex items-center gap-2">
@@ -53,9 +45,9 @@ const CoursesGrid = () => {
       )}
 
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {courses.map((course) => {
-          return <CourseCard key={course._id} course={course} />;
-        })}
+        {courses.map((course) => (
+          <CourseCard key={course._id} course={course} />
+        ))}
 
         {/* Show skeleton cards while fetching next page */}
         {isFetchingNextPage && (
@@ -67,19 +59,38 @@ const CoursesGrid = () => {
         )}
       </section>
 
-      {hasMore && !isFetchingNextPage && (
-        <div className="flex justify-center mt-4">
+      {/* Infinite scroll trigger */}
+      {hasNextPage && !isLoadingInfinite && (
+        <div 
+          ref={loadMoreRef}
+          className="flex justify-center py-8"
+        >
           <button
-            onClick={() => loadMore()}
-            className="group flex items-center gap-2 px-6 py-3 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark text-slate-600 dark:text-slate-300 font-semibold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            disabled={isFetchingNextPage}
+            className="group flex items-center gap-2 px-6 py-3 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark text-slate-600 dark:text-slate-300 font-semibold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-50"
           >
-            Load More Courses
-            <ChevronDown
-              size={18}
-              className="group-hover:translate-y-0.5 transition-transform"
-            />
+            {isFetchingNextPage ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading...
+              </>
+            ) : (
+              <>
+                Load More Courses
+                <ChevronDown
+                  size={18}
+                  className="group-hover:translate-y-0.5 transition-transform"
+                />
+              </>
+            )}
           </button>
         </div>
+      )}
+
+      {!hasNextPage && courses.length > 0 && (
+        <p className="text-center text-slate-500 py-8 text-sm">
+          You&apos;ve reached the end
+        </p>
       )}
 
       {courses.length === 0 && !isLoadingInfinite && (
@@ -89,8 +100,7 @@ const CoursesGrid = () => {
               No courses found
             </h3>
             <p className="text-muted-foreground">
-              There are no courses available at the moment. Please check back
-              later.
+              Try adjusting your search or check back later for new courses.
             </p>
           </div>
         </div>
@@ -101,66 +111,34 @@ const CoursesGrid = () => {
 
 export default CoursesGrid;
 
+// Skeleton components...
 const CourseCardSkeleton = () => {
   return (
-    <Card className="py-0 flex flex-col overflow-hidden h-full animate-pulse rounded-2xl">
-      {/* Image Skeleton */}
-      <div className="relative h-48 overflow-hidden bg-muted">
+    <div className="bg-white dark:bg-surface-dark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 shadow-soft h-full animate-pulse">
+      <div className="relative h-48 bg-muted">
         <Skeleton className="absolute inset-0 h-full w-full" />
       </div>
-
-      <CardContent className="flex flex-col flex-1 gap-4">
-        <div className="flex-1 space-y-3">
-          {/* Title Skeleton */}
-          <div className="space-y-2">
-            <Skeleton className="h-5 w-full" />
-          </div>
-
-          {/* Description Skeleton */}
-          <div className="space-y-2">
-            <Skeleton className="h-3 w-full" />
-            <Skeleton className="h-3 w-5/6" />
-            <Skeleton className="h-3 w-4/6" />
-          </div>
+      <div className="p-6 space-y-4">
+        <Skeleton className="h-5 w-3/4" />
+        <Skeleton className="h-3 w-full" />
+        <Skeleton className="h-3 w-5/6" />
+        <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+          <Skeleton className="h-4 w-32" />
         </div>
-
-        <div className="pt-4 border-t border-border">
-          <div className="flex items-center gap-1.5">
-            <Skeleton className="h-5 w-5 rounded-full" />
-            <Skeleton className="h-4 w-32" />
-          </div>
-        </div>
-      </CardContent>
-
-      <CardFooter className="px-6 pb-6 mt-auto flex gap-3">
-        <Skeleton className="flex-1 h-11 rounded-xl" />
-        <Skeleton className="flex-1 h-11 rounded-xl" />
-      </CardFooter>
-    </Card>
+        <Skeleton className="h-11 w-full rounded-xl" />
+      </div>
+    </div>
   );
 };
 
 const CoursesGridSkeleton = () => {
   return (
     <div className="container px-4 mx-auto space-y-10">
-      {/* Categories Skeleton */}
-      {/* <section className="flex overflow-x-auto pb-4 gap-3 no-scrollbar">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <Skeleton key={i} className="h-9 w-24 rounded-full" />
-        ))}
-      </section> */}
-
-      {/* Course Cards Grid Skeleton */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {[1, 2, 3, 4, 5, 6].map((i) => (
           <CourseCardSkeleton key={i} />
         ))}
       </section>
-
-      {/* Load More Skeleton */}
-      <div className="flex justify-center mt-4">
-        <Skeleton className="h-12 w-40 rounded-full" />
-      </div>
     </div>
   );
 };

@@ -1,91 +1,216 @@
 "use client";
+
 import { ICourse } from "@/interfaces/course.interface";
 import { cn } from "@/lib/utils";
-import { User2, ArrowRight } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpen,
+  CheckCircle2,
+  Clock3,
+  FolderKanban,
+  PlayCircle,
+} from "lucide-react";
 import Link from "next/link";
-import React from "react";
+import { motion } from "framer-motion";
 
-const CourseCard = ({ course }: { course: ICourse }) => {
-  const isEnrolled = course.enrollment?.isEnrolled === true;
-  const progress = course.progress?.percentage ?? 0;
-  const hasStarted = isEnrolled && progress > 0;
+interface CourseCardProps {
+  course: ICourse;
+  index?: number;
+}
+
+const CourseCard = ({ course, index = 0 }: CourseCardProps) => {
+  const isEnrolled = !!course.enrollment?.isEnrolled;
+  const progress = Math.max(0, Math.min(100, course.progress?.percentage ?? 0));
+  const enrollmentStatus = course.enrollment?.status ?? null;
+
+  const isCompleted =
+    enrollmentStatus === "completed" || (isEnrolled && progress >= 100);
+
+  const href = isEnrolled
+    ? `/courses/${course._id}`
+    : `/courses/${course._id}`;
+
+  const thumbnailUrl =
+    course.thumbnail?.url ||
+    "https://placehold.co/1200x800/e2e8f0/64748b?text=Course";
+
+  const instructorFirstName = course.instructor?.firstName ?? "";
+  const instructorLastName = course.instructor?.lastName ?? "";
+  const instructorName =
+    `${instructorFirstName} ${instructorLastName}`.trim() || "Instructor";
+
+  const initials =
+    `${instructorFirstName.charAt(0)}${instructorLastName.charAt(0)}`.trim() ||
+    "I";
 
   return (
-    <div className="group flex flex-col bg-white dark:bg-surface-dark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 shadow-soft hover:shadow-xl transition-all duration-300 h-full">
-      <div className="relative h-48 overflow-hidden">
+    <motion.article
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05, duration: 0.35 }}
+      whileHover={{ y: -6 }}
+      className="group flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition-all duration-300 hover:shadow-[0_18px_50px_rgba(15,23,42,0.12)] dark:border-slate-800 dark:bg-surface-dark"
+    >
+      <div className="relative h-52 overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-          style={{
-            backgroundImage: `url('${course.thumbnail?.url}')`,
-          }}
-        ></div>
-        <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent"></div>
-        {/* Level badge removed from here */}
-      </div>
-      <div className="p-6 flex flex-col flex-1 gap-4">
-        <div className="flex-1">
-          {/* <div className="flex items-center gap-2 text-xs font-semibold text-primary dark:text-primary-light mb-2">
-                  {course.category}
-                </div> */}
-          <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 leading-tight group-hover:text-primary transition-colors">
-            {course.title}
-          </h3>
+          style={{ backgroundImage: `url("${thumbnailUrl}")` }}
+        />
+        <div className="absolute inset-0 bg-linear-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
 
-          {isEnrolled && (
-            <div className="my-4">
-              <div className="flex justify-between text-xs text-slate-500 mb-1">
-                <span>Progress</span>
-                <span>{progress}%</span>
-              </div>
-              <div className="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-900 overflow-hidden">
-                <div
-                  className="h-full bg-primary dark:bg-primary-light transition-all"
-                  style={{ width: `${progress}%` }}
-                />
+        <div className="absolute left-4 top-4">
+          {isCompleted ? (
+            <StatusChip
+              icon={<CheckCircle2 className="h-3.5 w-3.5" />}
+              label="Completed"
+              className="bg-emerald-500 text-white"
+            />
+          ) : isEnrolled ? (
+            <StatusChip
+              icon={<PlayCircle className="h-3.5 w-3.5" />}
+              label="In Progress"
+              className="bg-primary text-white"
+            />
+          ) : (
+            <StatusChip
+              icon={<BookOpen className="h-3.5 w-3.5" />}
+              label="Available"
+              className="bg-white/90 text-slate-700"
+            />
+          )}
+        </div>
+
+        <div className="absolute inset-x-4 bottom-4">
+          <div className="flex items-end justify-between gap-3">
+            <div className="min-w-0 rounded-2xl bg-black/45 px-3 py-2 backdrop-blur-md">
+              <div className="flex items-center gap-2">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-[10px] font-bold text-slate-700">
+                  {initials.toUpperCase()}
+                </div>
+                <span className="truncate text-xs font-semibold text-white">
+                  {instructorName}
+                </span>
               </div>
             </div>
-          )}
 
-          <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
-            {course.description}
-          </p>
-        </div>
-        <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
-          <div className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
-            <User2 size={18} />
-            <span>
-              {course.instructor?.firstName + " " + course.instructor?.lastName}
-            </span>
+            {course.duration ? (
+              <div className="shrink-0 rounded-2xl bg-black/45 px-3 py-2 backdrop-blur-md">
+                <div className="flex items-center gap-1.5 text-white">
+                  <Clock3 className="h-3.5 w-3.5 text-white/80" />
+                  <span className="text-xs font-medium">{course.duration}</span>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
-      <div className="px-6 pb-6 mt-auto flex gap-3">
-        {!isEnrolled && (
-          <Link href={`/courses/${course._id}`} className="flex-1">
-            <button className="py-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 cursor-pointer w-full">
-              View Details
-            </button>
-          </Link>
-        )}
 
-        {isEnrolled && (
-          <Link href={`/courses/${course._id}`} className="flex-1">
-            <button
-              className={cn(
-                "w-full py-3 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2 cursor-pointer",
-                !hasStarted
-                  ? "bg-slate-800 dark:bg-slate-900 text-white dark:text-slate-400"
-                  : "bg-primary dark:bg-primary-light text-white"
-              )}
-            >
-              {!hasStarted ? "Start Course" : "Continue Course"}
+      <div className="flex flex-1 flex-col p-5">
+        <div className="flex-1">
+          <h3 className="line-clamp-2 text-lg font-bold leading-7 text-slate-900 transition-colors group-hover:text-primary dark:text-white">
+            {course.title}
+          </h3>
 
-              <ArrowRight size={18} />
-            </button>
+          {isEnrolled ? (
+            <div className="mt-5 rounded-2xl bg-slate-50 p-4 dark:bg-slate-950/60">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-xs font-medium text-slate-500">
+                  {isCompleted ? "Completed" : "Progress"}
+                </span>
+                <span
+                  className={cn(
+                    "text-xs font-semibold",
+                    isCompleted
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-slate-700 dark:text-slate-200",
+                  )}
+                >
+                  {progress}%
+                </span>
+              </div>
+
+              <div className="h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress}%` }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  className={cn(
+                    "h-full rounded-full",
+                    isCompleted ? "bg-emerald-500" : "bg-primary",
+                  )}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="mt-5 rounded-2xl border border-dashed border-slate-200 p-4 dark:border-slate-700">
+              <p className="text-sm text-slate-500">
+                Enroll to start learning and track your progress.
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-5">
+          <Link
+            href={href}
+            className={cn(
+              "flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition-all",
+              isCompleted
+                ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
+                : isEnrolled
+                  ? "bg-primary text-white hover:bg-primary/90"
+                  : "bg-slate-100 text-slate-800 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600",
+            )}
+          >
+            <span>
+              {isCompleted
+                ? "Review Course"
+                : isEnrolled
+                  ? "Continue Learning"
+                  : "View Course"}
+            </span>
+            <ArrowRight className="h-4 w-4" />
           </Link>
-        )}
+        </div>
       </div>
-    </div>
+    </motion.article>
+  );
+};
+
+const StatusChip = ({
+  icon,
+  label,
+  className,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  className?: string;
+}) => {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold shadow-sm",
+        className,
+      )}
+    >
+      {icon}
+      {label}
+    </span>
+  );
+};
+
+const MetaBadge = ({
+  icon,
+  label,
+}: {
+  icon: React.ReactNode;
+  label: string;
+}) => {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+      {icon}
+      {label}
+    </span>
   );
 };
 

@@ -7,7 +7,7 @@ const HomePage = () => {
   return (
     <div className="space-y-12">
       <Hero />
-      <QuickAccess />,
+      <QuickAccess />
       <VOTD />
       {/* <FeaturedSermons /> */}
       <WelcomeMessage />

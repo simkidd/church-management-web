@@ -1,7 +1,5 @@
 import CourseDetails from "@/components/courses/CourseDetails";
-import courseApi from "@/lib/api/course.api";
 import { notFound } from "next/navigation";
-import React from "react";
 
 const CoursePage = async ({
   params,
@@ -9,15 +7,14 @@ const CoursePage = async ({
   params: Promise<{ courseId: string }>;
 }) => {
   const { courseId } = await params;
-  const { data: course } = await courseApi.getCourseById(courseId);
 
-  if (!course) {
+  if (!courseId) {
     notFound();
   }
 
   return (
     <div>
-      <CourseDetails course={course} />
+      <CourseDetails courseId={courseId} />
     </div>
   );
 };

@@ -14,7 +14,7 @@ export const usersApi = {
 
   // Update profile
   updateProfile: async (
-    data: UserFormData
+    data: UserFormData,
   ): Promise<
     ApiResponse<{
       user: IUser;
@@ -27,7 +27,7 @@ export const usersApi = {
   // Update user avatar
   updateUserAvatar: async (
     id: string,
-    avatarFile: File
+    avatarFile: File,
   ): Promise<
     ApiResponse<{
       user: IUser;
@@ -46,7 +46,7 @@ export const usersApi = {
 
   // Delete user avatar
   deleteUserAvatar: async (
-    id: string
+    id: string,
   ): Promise<
     ApiResponse<{
       user: IUser;
@@ -71,9 +71,7 @@ export const usersApi = {
   // get user enrolled courses
   getMyCourses: async (params?: {
     status: string;
-  }): Promise<
-    ApiResponse<(ICourse & IProgressStats)[]>
-  > => {
+  }): Promise<ApiResponse<(ICourse & IProgressStats)[]>> => {
     const response = await api.get(`/users/my-courses/enrolled`, { params });
     return response.data;
   },

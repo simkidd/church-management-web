@@ -1,109 +1,108 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { ICourse } from "@/interfaces/course.interface";
-import { ILessonWithState } from "@/interfaces/lesson.interface";
-import { IModuleWithLessons } from "@/interfaces/module.interface";
-import { IProgressStats } from "@/interfaces/progress.interface";
-import { ApiErrorResponse, ApiResponse } from "@/interfaces/response.interface";
-import courseApi from "@/lib/api/course.api";
-import { cn } from "@/lib/utils";
-import { formatDuration } from "@/utils/helpers/time";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AxiosError } from "axios";
+
+import { useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import {
-  CheckCheck,
-  CheckCircle,
-  CheckCircle2,
+  BookOpen,
   ChevronDown,
-  ChevronRight,
   ChevronUp,
+  Clock,
   List,
   Lock,
   PlayCircle,
+  FileText,
+  HelpCircle,
+  CheckCircle2,
 } from "lucide-react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
+
+import { ICourse } from "@/interfaces/course.interface";
+import { ApiResponse } from "@/interfaces/response.interface";
+import { ILessonWithState } from "@/interfaces/lesson.interface";
+import { IModuleWithState } from "@/interfaces/module.interface";
+import { IProgressStats } from "@/interfaces/progress.interface";
+
+import courseApi from "@/lib/api/course.api";
+import { useCourse } from "@/hooks/use-courses";
+import { useQuery } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
+import { formatDuration } from "@/utils/helpers/time";
+
 import VideoPlayer2 from "../sermons/VideoPlayer";
 import CourseDetailSkeleton from "./CourseDetailSkeleton";
 import EnrollmentCTA from "./EnrollmentCTA";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 
-const CourseDetails = ({ course }: { course: ICourse }) => {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const queryClient = useQueryClient();
+type DetailTab = "overview" | "materials";
 
-  const lessonId = searchParams.get("lesson") as string | undefined;
-  /** UI state: expanded modules */
+const CourseDetails = ({ courseId }: { courseId: string }) => {
+  const [activeTab, setActiveTab] = useState<DetailTab>("overview");
   const [openModules, setOpenModules] = useState<Record<string, boolean>>({});
 
-  /** Fetch modules + lessons */
-  const { data, isPending } = useQuery<
+  const { data: courseData, isPending: isCourseLoading } = useCourse(courseId);
+  const course = courseData?.data as ICourse;
+
+  const { data, isPending: isCourseModulesLoading } = useQuery<
     ApiResponse<{
       course: ICourse;
       enrolled: { isEnrolled: boolean };
       progress: IProgressStats;
-      modules: IModuleWithLessons[];
+      modules: IModuleWithState[];
     }>
   >({
-    queryKey: ["course-modules", course._id],
-    queryFn: () => courseApi.getCourseModules(course._id),
-    enabled: !!course._id,
+    queryKey: ["course-modules", courseId],
+    queryFn: () => courseApi.getCourseModules(courseId),
+    enabled: !!courseId,
   });
 
-  const modules = useMemo<IModuleWithLessons[]>(() => {
-    return data?.data?.modules ?? [];
-  }, [data]);
-
+  const modules = data?.data?.modules ?? [];
+  const isEnrolled = data?.data?.enrolled?.isEnrolled ?? false;
   const progress = data?.data?.progress;
 
-  /** Flatten lessons (ordered) */
-  const flatLessons = useMemo(() => {
-    return modules.flatMap((m) => m.lessons ?? []);
+  const progressPercentage = progress?.percentage ?? 0;
+  const completedLessons = progress?.completedLessons ?? 0;
+
+  const totalLessons = useMemo(
+    () =>
+      modules.reduce((acc, module) => acc + (module.lessons?.length || 0), 0),
+    [modules],
+  );
+
+  const totalDuration = useMemo(() => {
+    const totalSeconds = modules.reduce((acc, module) => {
+      const moduleDuration =
+        module.lessons?.reduce((sum, lesson) => {
+          if (typeof lesson.durationSeconds === "number") {
+            return sum + lesson.durationSeconds;
+          }
+
+          if (typeof lesson.durationSeconds === "string") {
+            return sum + (parseInt(lesson.durationSeconds, 10) || 0);
+          }
+
+          return sum;
+        }, 0) || 0;
+
+      return acc + moduleDuration;
+    }, 0);
+
+    return totalSeconds;
   }, [modules]);
 
-  /** Find selected lesson */
-  const activeLesson = useMemo<ILessonWithState | null>(() => {
-    if (!lessonId) return null;
+  const totalQuizzes = useMemo(() => {
+    let count = 0;
 
-    return flatLessons.find((lesson) => lesson._id === lessonId) || null;
-  }, [flatLessons, lessonId]);
+    modules.forEach((module) => {
+      if (module.quiz) count += 1;
 
-  /** Auto-select first unlocked lesson */
-  useEffect(() => {
-    if (!lessonId && flatLessons.length) {
-      const firstUnlocked = flatLessons.find((l: any) => !l.isLockedForUser);
-
-      if (firstUnlocked) {
-        router.replace(`/courses/${course._id}?lesson=${firstUnlocked._id}`);
-      }
-    }
-  }, [lessonId, flatLessons, router, course._id]);
-
-  const markCompleteMutation = useMutation({
-    mutationFn: () => courseApi.markLessonComplete(activeLesson?._id as string),
-
-    onSuccess: (res) => {
-      toast.success("Lesson completed");
-
-      queryClient.invalidateQueries({
-        queryKey: ["course-modules", course._id],
+      module.lessons?.forEach((lesson) => {
+        if ((lesson as ILessonWithState).quiz) count += 1;
       });
+    });
 
-      if (res.data.nextLessonId) {
-        router.push(`/courses/${course._id}?lesson=${res.data.nextLessonId}`, {
-          scroll: false,
-        });
-      }
-    },
-
-    onError: (err: AxiosError<ApiErrorResponse>) => {
-      toast.error(
-        err?.response?.data?.message ?? "Failed to mark lesson complete"
-      );
-    },
-  });
+    return count;
+  }, [modules]);
 
   const toggleModule = (moduleId: string) => {
     setOpenModules((prev) => ({
@@ -112,449 +111,490 @@ const CourseDetails = ({ course }: { course: ICourse }) => {
     }));
   };
 
-  /** Next lesson / quiz helper */
-  const nextPlayable = (() => {
-    if (!activeLesson) return null;
+  if (isCourseLoading || isCourseModulesLoading) {
+    return <CourseDetailSkeleton />;
+  }
 
-    const currentIndex = flatLessons.findIndex(
-      (l) => l._id === activeLesson._id
-    );
-
-    // Next unlocked lesson
-    for (let i = currentIndex + 1; i < flatLessons.length; i++) {
-      if (!(flatLessons[i] as any).isLockedForUser) {
-        return { type: "lesson", id: flatLessons[i]._id };
+  const introMedia = course?.introVideo?.url
+    ? {
+        id: course._id,
+        title: course.title,
+        description: course.description,
+        video: {
+          url: course.introVideo.url,
+          type: "video/mp4",
+        },
+        thumbnail: {
+          url: course?.thumbnail?.url,
+          alt: course.title,
+        },
+        createdAt: course.createdAt,
       }
-    }
-
-    // Check module quiz
-    const currentModule = modules.find((m) =>
-      m.lessons?.some((l) => l._id === activeLesson._id)
-    );
-
-    if (currentModule?.quiz && !(currentModule.quiz as any).isLockedForUser) {
-      return { type: "quiz", id: currentModule.quiz._id };
-    }
-
-    return null;
-  })();
-
-  const currentModule = modules.find((m) =>
-    m.lessons?.some((l) => l._id === activeLesson?._id)
-  );
-
-  const lessonIndex =
-    currentModule?.lessons?.findIndex((l) => l._id === activeLesson?._id) ?? 0;
-
-  if (isPending) return <CourseDetailSkeleton />;
-
-  const mediaItem = {
-    id: activeLesson?._id,
-    title: activeLesson?.title,
-    description: activeLesson?.content,
-    video: {
-      url: activeLesson?.video?.url,
-      type: activeLesson?.video?.type,
-    },
-    thumbnail: {
-      url: course.thumbnail?.url,
-      alt: activeLesson?.title,
-    },
-    duration: activeLesson?.duration,
-    createdAt: activeLesson?.createdAt,
-  };
-
-  const isLessonLocked = !!activeLesson?.isLockedForUser;
-  const canPlayLesson = activeLesson && !isLessonLocked;
-
-  const isEnrolled = data?.data.enrolled?.isEnrolled === true;
-  const progressPercentage = canPlayLesson ? progress?.percentage ?? 0 : 0;
+    : null;
 
   return (
-    <div className="container px-4 mx-auto py-5">
-      <nav className="flex flex-wrap items-center gap-2 mb-6 text-sm">
+    <div className="container mx-auto px-4 py-5">
+      <nav className="mb-6 flex flex-wrap items-center gap-2 text-sm">
         <Link
-          className="text-[#637288] hover:text-primary transition-colors"
           href="/"
+          className="text-slate-500 transition-colors hover:text-primary"
         >
           Home
         </Link>
-        <span className="text-[#637288]">/</span>
+        <span className="text-slate-500">/</span>
         <Link
-          className="text-[#637288] hover:text-primary transition-colors"
-          href={`/courses`}
+          href="/courses"
+          className="text-slate-500 transition-colors hover:text-primary"
         >
           Courses
         </Link>
-        <span className="text-[#637288]">/</span>
-        <span className="text-primary dark:text-primary-light font-medium truncate max-w-50 sm:max-w-none capitalize">
-          {course.title}
+        <span className="text-slate-500">/</span>
+        <span className="max-w-xs truncate font-medium text-primary">
+          {course?.title}
         </span>
       </nav>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
-        <div className="lg:col-span-8 flex flex-col gap-8">
-          <div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black leading-tight tracking-[-0.033em] text-text-main dark:text-white mb-3 capitalize">
-              {course.title}
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
+        <div className="flex flex-col gap-8 lg:col-span-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <h1 className="mb-3 text-3xl font-black text-slate-900 dark:text-white sm:text-4xl md:text-5xl">
+              {course?.title}
             </h1>
-          </div>
+          </motion.div>
 
-          {/* video player */}
-          <div>
-            {isEnrolled ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1 }}
+            className="overflow-hidden rounded-2xl bg-black shadow-2xl"
+          >
+            {introMedia ? (
               <VideoPlayer2
-                media={mediaItem as any}
-                type="lesson"
-                showTitle={true}
-                autoPlay={false}
-                onPlay={() => console.log("Lesson started playing")}
-                onEnded={() => console.log("Lesson ended")}
+                media={introMedia}
+                type="video"
+                showTitle={false}
+                autoplay={false}
               />
             ) : (
-              <div className="bg-black rounded-3xl overflow-hidden shadow-2xl relative aspect-video group cursor-default">
-                <div
-                  className="absolute inset-0 bg-cover bg-center opacity-60 blur-sm scale-105"
-                  style={{
-                    backgroundImage:
-                      "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAUcCzS24_-eDl9_5i9IbsYtana9dkaYhjLLYF8gh6Ux0q0jPD7R_Gx21nt2f6cRb9xtU081d8jLDDXM-RODGcBcfIIy_NYDkGRrfKIbsX-LNha3P5IHM1qxcuzSGqd-ZjCX5naOCBcMALrdoGpEupV09HSeOpraujDfDE3V901mrcQRZEs409hBFWBmQHGnRheRkslHz2FqTJf7EIm2DjyhOSnm-c7aAL9qrfE0IBMF3mchRd2tlZ-yfQbqq6MYIAlGSs8dpLY0FzJ')",
-                  }}
-                ></div>
-                <div className="absolute inset-0 bg-linear-to-t from-slate-900 via-slate-900/60 to-slate-900/40"></div>
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-10">
-                  <div className="size-14 lg:size-20 shrink-0 bg-slate-800/50 backdrop-blur-md rounded-full flex items-center justify-center border border-slate-700/50 mb-3 lg:mb-6 shadow-xl">
-                    <Lock className="text-slate-200 size-6 lg:size-10" />
-                  </div>
-                  <h2 className="text-xl lg:text-3xl font-bold text-white mb-3">
-                    Content Locked
-                  </h2>
-                  <p className="text-slate-300 max-w-md text-sm sm:text-base mb-8 leading-relaxed">
-                    This lesson and video content are part of the full
-                    curriculum. Enroll in the course to unlock all lessons,
-                    quizzes, and resources.
-                  </p>
-                </div>
+              <div className="flex aspect-video items-center justify-center bg-slate-950 text-slate-400">
+                No intro video available
               </div>
             )}
-          </div>
-          {/* lesson title and nav buttons */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-1">
-                {activeLesson?.title}
-              </h1>
+          </motion.div>
 
-              {activeLesson && (
-                <p className="text-slate-500 dark:text-slate-400 text-sm flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-xs font-semibold">
-                    Module {currentModule?.order}
-                  </span>
-                  <span>•</span>
-                  <span>
-                    Lesson {lessonIndex + 1} of {currentModule?.lessons?.length}
-                  </span>
-                </p>
-              )}
-            </div>
+          {!isEnrolled && <EnrollmentCTA courseId={course?._id} />}
 
-            {isEnrolled && (
-              <div className="flex items-center gap-3">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
+          >
+            <div className="border-b border-slate-200 px-4 dark:border-slate-800 sm:px-6">
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={() => markCompleteMutation.mutate()}
-                  disabled={
-                    activeLesson?.isLockedForUser ||
-                    activeLesson?.isCompleted ||
-                    markCompleteMutation.isPending
-                  }
+                  onClick={() => setActiveTab("overview")}
                   className={cn(
-                    "px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer",
-                    activeLesson?.isCompleted
-                      ? "bg-green-100 text-green-700 cursor-not-allowed"
-                      : activeLesson?.isLockedForUser
-                      ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-                      : "bg-primary text-white hover:bg-primary/90 shadow"
+                    "border-b-2 px-4 py-4 text-sm font-semibold transition-colors",
+                    activeTab === "overview"
+                      ? "border-primary bg-primary/5 text-primary"
+                      : "border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white",
                   )}
                 >
-                  <CheckCircle2 size={18} />
-                  {activeLesson?.isCompleted
-                    ? "Completed"
-                    : markCompleteMutation.isPending
-                    ? "Saving..."
-                    : "Mark as Complete"}
-                </button>
-
-                <button
-                  className={cn(
-                    "px-5 py-2.5 rounded-xl shadow-lg shadow-primary/25 text-sm font-semibold transition-all transform flex items-center gap-2 cursor-pointer",
-                    nextPlayable
-                      ? "bg-primary text-white hover:bg-primary/90"
-                      : "bg-slate-200 text-slate-400 cursor-not-allowed"
-                  )}
-                  disabled={!nextPlayable}
-                  onClick={() => {
-                    if (!nextPlayable) return;
-                    router.push(
-                      `${
-                        nextPlayable.type === "lesson"
-                          ? `/courses/${course._id}?lesson=${nextPlayable.id}`
-                          : `/courses/${course._id}/quiz/${nextPlayable.id}`
-                      }`,
-                      { scroll: false }
-                    );
-                  }}
-                >
-                  {nextPlayable?.type === "quiz" ? "Take Quiz" : "Next Lesson"}
-                  <ChevronRight size={20} />
-                </button>
-              </div>
-            )}
-          </div>
-
-          {!isEnrolled && <EnrollmentCTA courseId={course._id} />}
-
-          {isEnrolled && canPlayLesson && (
-            <div className="bg-card-light dark:bg-card-dark rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
-              <div className="flex border-b border-slate-100 dark:border-slate-800">
-                <button className="px-6 py-4 text-sm font-semibold text-primary dark:text-primary-light border-b-2 border-primary bg-primary/5">
                   Overview
                 </button>
-                {/* <button className="px-6 py-4 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
-                Resources
-              </button>
-              <button className="px-6 py-4 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
-                Discussion
-                <span className="ml-1 text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-full">
-                  12
-                </span>
-              </button>
-              <button className="px-6 py-4 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
-                Notes
-              </button> */}
-              </div>
-              <div className="p-6 sm:p-8">
-                <div className="prose prose-slate dark:prose-invert max-w-none">
-                  {/* <p className="lead text-lg text-slate-600 dark:text-slate-300">
-                  In this lesson, we dive deep into Galatians 5:22-23 to
-                  understand what it truly means to bear fruit in our walk with
-                  God.
-                </p> */}
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: activeLesson?.content as string,
-                    }}
-                  />
 
-                  <h4 className="text-slate-900 dark:text-white font-bold mt-6 mb-3">
-                    Key Takeaways
-                  </h4>
-                  <ul className="space-y-2 list-none pl-0">
-                    <li className="flex items-start gap-3">
-                      <CheckCircle className="text-green-500 mt-1" />
-                      <span>
-                        Differentiation between Gifts and Fruits of the Spirit.
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <CheckCircle className="text-green-500 mt-1" />
-                      <span>
-                        Practical steps to cultivating patience in a fast-paced
-                        world.
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <CheckCircle className="text-green-500 mt-1" />
-                      <span>Self-reflection exercise on Gentleness.</span>
-                    </li>
-                  </ul>
-                </div>
+                <button
+                  onClick={() => setActiveTab("materials")}
+                  className={cn(
+                    "border-b-2 px-4 py-4 text-sm font-semibold transition-colors",
+                    activeTab === "materials"
+                      ? "border-primary bg-primary/5 text-primary"
+                      : "border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white",
+                  )}
+                >
+                  Learning Materials
+                </button>
               </div>
             </div>
-          )}
+
+            <div className="p-6 sm:p-8">
+              {activeTab === "overview" && (
+                <div className="space-y-8">
+                  <div>
+                    <h3 className="mb-3 text-lg font-bold text-slate-900 dark:text-white">
+                      About this course
+                    </h3>
+                    <div
+                      className="prose max-w-none dark:prose-invert"
+                      dangerouslySetInnerHTML={{
+                        __html: course?.description || "",
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <dl className="grid grid-cols-[140px_1fr] gap-x-6 gap-y-3 text-sm">
+                      <dt className="text-slate-500">Modules</dt>
+                      <dd className="font-medium text-slate-900 dark:text-white">
+                        {modules.length}
+                      </dd>
+
+                      <dt className="text-slate-500">Lessons</dt>
+                      <dd className="font-medium text-slate-900 dark:text-white">
+                        {totalLessons}
+                      </dd>
+
+                      <dt className="text-slate-500">Duration</dt>
+                      <dd className="font-medium text-slate-900 dark:text-white">
+                        {totalDuration > 0
+                          ? formatDuration(totalDuration)
+                          : course?.duration}
+                      </dd>
+
+                      <dt className="text-slate-500">Quizzes</dt>
+                      <dd className="font-medium text-slate-900 dark:text-white">
+                        {totalQuizzes}
+                      </dd>
+
+                      <dt className="text-slate-500">Learning mode</dt>
+                      <dd className="font-medium text-slate-900 dark:text-white">
+                        {course?.progressionMode === "sequential"
+                          ? "Sequential learning"
+                          : "Free learning"}
+                      </dd>
+                    </dl>
+                  </div>
+
+                  {!!course?.learningObjectives?.length && (
+                    <div>
+                      <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
+                        <BookOpen size={20} className="text-primary" />
+                        What You&apos;ll Learn
+                      </h3>
+
+                      <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                        {course.learningObjectives.map((objective, idx) => (
+                          <li key={idx} className="flex items-start gap-3">
+                            <CheckCircle2
+                              className="mt-0.5 shrink-0 text-green-500"
+                              size={18}
+                            />
+                            <span className="text-sm leading-6 text-slate-700 dark:text-slate-300">
+                              {objective}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === "materials" && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-800/40">
+                      <p className="text-sm text-slate-500">Modules</p>
+                      <h3 className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
+                        {modules.length}
+                      </h3>
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-800/40">
+                      <p className="text-sm text-slate-500">Lessons</p>
+                      <h3 className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
+                        {totalLessons}
+                      </h3>
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-800/40">
+                      <p className="text-sm text-slate-500">Quizzes</p>
+                      <h3 className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
+                        {totalQuizzes}
+                      </h3>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-dashed border-slate-300 p-5 dark:border-slate-700">
+                    <h4 className="mb-2 font-semibold text-slate-900 dark:text-white">
+                      About the learning materials
+                    </h4>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                      This course contains videos, articles, and quizzes
+                      organized by module. Click any lesson in the curriculum to
+                      start learning.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
         </div>
 
-        <div className="lg:col-span-4 flex flex-col gap-6 relative">
-          <div className="bg-white dark:bg-surface-dark rounded-3xl p-5 shadow-sm border border-slate-100 dark:border-slate-800">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
+        <div className="flex flex-col gap-6 lg:col-span-4">
+          {isEnrolled && (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+            >
+              <div className="mb-2 flex items-center justify-between text-sm">
+                <span className="text-slate-600 dark:text-slate-400">
+                  Your Progress
+                </span>
+                <span className="font-semibold text-slate-900 dark:text-white">
+                  {progressPercentage}%
+                </span>
+              </div>
+
+              <Progress value={progressPercentage} className="h-2" />
+
+              <p className="mt-2 text-xs text-slate-500">
+                {completedLessons} of {totalLessons} lessons completed
+              </p>
+            </motion.div>
+          )}
+
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.25 }}
+            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+          >
+            <h4 className="mb-4 text-xs font-bold uppercase tracking-wider text-slate-400">
               Instructor
             </h4>
+
             <div className="flex items-center gap-3">
-              <div className="size-10 rounded-full bg-linear-to-br from-primary to-blue-800 text-white flex items-center justify-center text-xs font-bold shadow-md">
-                SO
+              <div className="flex size-12 items-center justify-center rounded-full bg-primary text-lg font-bold text-white">
+                {course?.instructor?.firstName?.[0]}
+                {course?.instructor?.lastName?.[0]}
               </div>
+
               <div>
-                <h5 className="text-sm font-bold text-slate-900 dark:text-white">
-                  {course.instructor?.firstName +
-                    " " +
-                    course.instructor?.lastName}
+                <h5 className="font-bold text-slate-900 dark:text-white">
+                  {course?.instructor?.firstName} {course?.instructor?.lastName}
                 </h5>
+                <p className="text-sm text-slate-500">
+                  {course?.instructor?.email}
+                </p>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-white dark:bg-surface-dark rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col max-h-[calc(100vh-8rem)] sticky top-24">
-            <div className="p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
-              <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <List className="text-primary dark:text-primary-light" />
-                Course Content
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            className="sticky top-24 flex max-h-[calc(100vh-8rem)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
+          >
+            <div className="border-b border-slate-200 bg-slate-50/50 p-5 dark:border-slate-800 dark:bg-slate-900/50">
+              <h3 className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
+                <List className="text-primary" size={20} />
+                Course Curriculum
               </h3>
-              <span className="text-xs font-semibold text-slate-500">
-                {isEnrolled ? `${progressPercentage}% Complete` : "Preview"}
-              </span>
             </div>
 
-            <div className="overflow-y-auto custom-scrollbar grow p-3 space-y-3">
-              {modules.map((module) => {
-                const isOpen = openModules[module._id] ?? false;
-
-                return (
-                  <div
+            <div className="custom-scrollbar flex-1 space-y-3 overflow-y-auto p-3">
+              {modules.length > 0 ? (
+                modules.map((module) => (
+                  <CurriculumModuleAccordion
                     key={module._id}
-                    className={cn(
-                      "rounded-xl bg-slate-50 border dark:bg-slate-900/30 overflow-hidden",
-                      isOpen
-                        ? "border-primary/20 dark:border-primary-light shadow-sm"
-                        : "border-slate-100 dark:border-slate-800"
-                    )}
-                  >
-                    <button
-                      className={cn(
-                        "w-full flex items-center justify-between p-3 text-left bg-white dark:bg-slate-800  transition-colors cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50",
-                        isOpen
-                          ? "border-b border-slate-100 dark:border-slate-700"
-                          : ""
-                      )}
-                      onClick={() => toggleModule(module._id)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="size-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center shrink-0">
-                          <CheckCheck size={14} />
-                        </div>
-                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                          Module {module.order}: {module.title}
-                        </span>
-                      </div>
-
-                      {isOpen ? (
-                        <ChevronUp size={18} className="text-slate-400" />
-                      ) : (
-                        <ChevronDown size={18} className="text-slate-400" />
-                      )}
-                    </button>
-
-                    {isOpen && (
-                      <div className="p-2 space-y-1">
-                        {module.lessons?.map((lesson) => {
-                          const isActive = lesson._id === activeLesson?._id;
-
-                          const isLocked = (lesson as any).isLockedForUser;
-
-                          return (
-                            <button
-                              key={lesson._id}
-                              onClick={() =>
-                                router.push(
-                                  `/courses/${course._id}?lesson=${lesson._id}`,
-                                  { scroll: true }
-                                )
-                              }
-                              disabled={isLocked}
-                              className={cn(
-                                "flex items-center gap-3 p-2 rounded-lg transition-colors cursor-pointer w-full text-left",
-                                isActive
-                                  ? "bg-white dark:bg-slate-700 border-l-4 border-primary shadow-sm"
-                                  : "hover:bg-slate-100 dark:hover:bg-slate-700/50",
-                                isLocked &&
-                                  "opacity-70 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors group cursor-not-allowed"
-                              )}
-                            >
-                              <div className="relative flex items-center justify-center size-5 shrink-0">
-                                {isLocked ? (
-                                  <Lock size={18} className="text-slate-300" />
-                                ) : isActive ? (
-                                  <PlayCircle
-                                    size={18}
-                                    className="text-primary dark:text-primary-light animate-pulse"
-                                  />
-                                ) : (
-                                  <CheckCircle2
-                                    size={18}
-                                    className="text-green-500"
-                                  />
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p
-                                  className={cn(
-                                    "text-xs font-bold text-slate-900 dark:text-white truncate",
-                                    isLocked
-                                      ? "text-slate-600 dark:text-slate-400"
-                                      : ""
-                                  )}
-                                >
-                                  {module.order}.{lesson.order} {lesson.title}
-                                </p>
-
-                                {isActive ? (
-                                  <p className="text-[10px] text-primary dark:text-primary-light font-medium">
-                                    Playing Now
-                                  </p>
-                                ) : (
-                                  lesson.duration && (
-                                    <p className="text-[10px] text-slate-400">
-                                      {formatDuration(lesson.duration)}
-                                    </p>
-                                  )
-                                )}
-                              </div>
-                            </button>
-                          );
-                        })}
-
-                        {/* Quiz */}
-                        {module.quiz && (
-                          <button
-                            disabled={(module.quiz as any).isLockedForUser}
-                            onClick={() =>
-                              router.push(
-                                `/courses/${course._id}/quiz/${module.quiz?._id}`
-                              )
-                            }
-                            className={cn(
-                              "w-full flex items-center gap-3 p-2 rounded-lg text-left mt-1 cursor-pointer",
-                              (module.quiz as any).isLockedForUser
-                                ? "opacity-70 cursor-not-allowed"
-                                : "hover:bg-slate-100 dark:hover:bg-slate-700/50"
-                            )}
-                          >
-                            <div className="relative flex items-center justify-center size-5 shrink-0">
-                              {(module.quiz as any).isLockedForUser ? (
-                                <Lock size={18} className="text-slate-300" />
-                              ) : (
-                                <CheckCheck size={18} />
-                              )}
-                            </div>
-                            <span
-                              className={cn(
-                                "text-xs font-bold",
-                                (module.quiz as any).isLockedForUser
-                                  ? "text-slate-600 dark:text-slate-400"
-                                  : "text-slate-900 dark:text-white"
-                              )}
-                            >
-                              Module Quiz
-                            </span>
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                    courseId={courseId}
+                    module={module}
+                    isOpen={!!openModules[module._id]}
+                    onToggle={() => toggleModule(module._id)}
+                    isEnrolled={isEnrolled}
+                  />
+                ))
+              ) : (
+                <div className="flex h-full flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 p-5 text-center dark:border-slate-700 dark:bg-slate-800/50">
+                  <p className="text-slate-500 text-sm">
+                    No modules available.
+                  </p>
+                </div>
+              )}
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>
+  );
+};
+
+const CurriculumModuleAccordion = ({
+  courseId,
+  module,
+  isOpen,
+  onToggle,
+  isEnrolled,
+}: {
+  courseId: string;
+  module: IModuleWithState;
+  isOpen: boolean;
+  onToggle: () => void;
+  isEnrolled: boolean;
+}) => {
+  const totalLessons = module.lessons?.length || 0;
+
+  return (
+    <div
+      className={cn(
+        "overflow-hidden rounded-xl border transition-all duration-200",
+        isOpen
+          ? "border-primary/20 bg-white shadow-sm dark:border-primary/30 dark:bg-slate-900"
+          : "border-slate-200 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-800/30",
+      )}
+    >
+      <button
+        onClick={onToggle}
+        className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+        aria-expanded={isOpen}
+      >
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
+            Module {module.order}: {module.title}
+          </p>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            {totalLessons} lesson{totalLessons === 1 ? "" : "s"}
+            {module.quiz ? " • Includes quiz" : ""}
+          </p>
+        </div>
+
+        {isOpen ? (
+          <ChevronUp size={18} className="shrink-0 text-slate-400" />
+        ) : (
+          <ChevronDown size={18} className="shrink-0 text-slate-400" />
+        )}
+      </button>
+
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <div className="space-y-1 bg-white p-2 dark:bg-slate-900">
+              {module.lessons?.map((lesson, idx) => (
+                <CurriculumLessonItem
+                  key={lesson._id}
+                  courseId={courseId}
+                  lesson={lesson as ILessonWithState}
+                  lessonOrder={idx + 1}
+                  moduleOrder={module.order}
+                  isEnrolled={isEnrolled}
+                />
+              ))}
+
+              {module.quiz && (
+                <div className="flex items-center gap-3 rounded-lg bg-slate-50 p-3 dark:bg-slate-800/50">
+                  <div className="shrink-0">
+                    {!isEnrolled || module.quiz.isLockedForUser ? (
+                      <Lock size={16} className="text-slate-400" />
+                    ) : (
+                      <HelpCircle size={16} className="text-amber-500" />
+                    )}
+                  </div>
+
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      Module Quiz
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+const CurriculumLessonItem = ({
+  courseId,
+  lesson,
+  moduleOrder,
+  lessonOrder,
+  isEnrolled,
+}: {
+  courseId: string;
+  lesson: ILessonWithState;
+  moduleOrder: number;
+  lessonOrder: number;
+  isEnrolled: boolean;
+}) => {
+  const isLocked = !isEnrolled || lesson.isLockedForUser;
+
+  const getIcon = () => {
+    if (isLocked) return <Lock size={16} className="text-slate-400" />;
+
+    switch (lesson.type) {
+      case "video":
+        return <PlayCircle size={16} className="text-blue-500" />;
+      case "article":
+        return <FileText size={16} className="text-green-500" />;
+      case "audio":
+        return <PlayCircle size={16} className="text-purple-500" />;
+      default:
+        return <PlayCircle size={16} className="text-slate-400" />;
+    }
+  };
+
+  const content = (
+    <div
+      className={cn(
+        "flex items-start gap-3 rounded-lg p-3 transition-colors",
+        !isLocked && "hover:bg-slate-50 dark:hover:bg-slate-800",
+      )}
+    >
+      <div className="shrink-0">{getIcon()}</div>
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium text-slate-700 dark:text-slate-300">
+          {moduleOrder}.{lessonOrder} {lesson.title}
+        </p>
+
+        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-400">
+          <span className="capitalize">{lesson.type}</span>
+
+          {lesson.durationSeconds ? (
+            <>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <Clock size={12} />
+                {formatDuration(lesson.durationSeconds)}
+              </span>
+            </>
+          ) : null}
+
+          {lesson.quiz ? (
+            <>
+              <span>•</span>
+              <span className="text-amber-500">Quiz</span>
+            </>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+
+  if (isLocked) {
+    return <div className="opacity-70">{content}</div>;
+  }
+
+  return (
+    <Link href={`/courses/${courseId}/learn?lessonId=${lesson._id}`}>
+      {content}
+    </Link>
   );
 };
 

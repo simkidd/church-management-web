@@ -1,11 +1,10 @@
-
-export default async function QuizLayout({
+export default function LearningLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="w-full">
+    <div className="h-screen overflow-hidden">
       {children}
     </div>
   );

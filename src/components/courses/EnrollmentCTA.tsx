@@ -4,7 +4,6 @@ import courseApi from "@/lib/api/course.api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { ArrowRight } from "lucide-react";
-import React, { use } from "react";
 import { toast } from "sonner";
 
 const EnrollmentCTA = ({ courseId }: { courseId: string }) => {
