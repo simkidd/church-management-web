@@ -174,9 +174,9 @@ const CourseDetails = ({ courseId }: { courseId: string }) => {
             {introMedia ? (
               <VideoPlayer2
                 media={introMedia}
-                type="lesson"
+                type="video"
                 showTitle={false}
-                autoPlay={false}
+                autoplay={false}
               />
             ) : (
               <div className="flex aspect-video items-center justify-center bg-slate-950 text-slate-400">
