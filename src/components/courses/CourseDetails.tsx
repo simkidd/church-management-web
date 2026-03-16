@@ -401,16 +401,24 @@ const CourseDetails = ({ courseId }: { courseId: string }) => {
             </div>
 
             <div className="custom-scrollbar flex-1 space-y-3 overflow-y-auto p-3">
-              {modules.map((module) => (
-                <CurriculumModuleAccordion
-                  key={module._id}
-                  courseId={courseId}
-                  module={module}
-                  isOpen={!!openModules[module._id]}
-                  onToggle={() => toggleModule(module._id)}
-                  isEnrolled={isEnrolled}
-                />
-              ))}
+              {modules.length > 0 ? (
+                modules.map((module) => (
+                  <CurriculumModuleAccordion
+                    key={module._id}
+                    courseId={courseId}
+                    module={module}
+                    isOpen={!!openModules[module._id]}
+                    onToggle={() => toggleModule(module._id)}
+                    isEnrolled={isEnrolled}
+                  />
+                ))
+              ) : (
+                <div className="flex h-full flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 p-5 text-center dark:border-slate-700 dark:bg-slate-800/50">
+                  <p className="text-slate-500 text-sm">
+                    No modules available.
+                  </p>
+                </div>
+              )}
             </div>
           </motion.div>
         </div>

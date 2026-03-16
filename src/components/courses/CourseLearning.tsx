@@ -8,6 +8,7 @@ import { AxiosError } from "axios";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import {
+  ArrowLeft,
   BookOpen,
   CheckCircle2,
   ChevronDown,
@@ -211,9 +212,10 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
         <div className="border-b border-slate-200 px-5 py-4 dark:border-slate-800">
           <Link
             href={`/courses/${courseId}`}
-            className="text-xs font-medium text-slate-500 hover:text-primary"
+            className="text-xs font-medium text-slate-500 hover:text-primary flex items-center gap-1 py-2 w-fit"
           >
-            ← Back to course
+            <ArrowLeft size={16} />
+             Back to course
           </Link>
 
           <h2 className="mt-2 line-clamp-2 text-base font-bold text-slate-900 dark:text-white">

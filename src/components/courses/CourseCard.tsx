@@ -27,7 +27,7 @@ const CourseCard = ({ course, index = 0 }: CourseCardProps) => {
     enrollmentStatus === "completed" || (isEnrolled && progress >= 100);
 
   const href = isEnrolled
-    ? `/courses/${course._id}/learn`
+    ? `/courses/${course._id}`
     : `/courses/${course._id}`;
 
   const thumbnailUrl =
