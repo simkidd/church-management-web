@@ -50,6 +50,7 @@ import TextContentRenderer from "../../shared/TextContentRenderer";
 import CourseLearningSkeleton from "./CourseLearningSkeleton";
 import { quizApi } from "@/lib/api/quiz.api";
 import QuizIntroCard from "../quiz/QuizIntroCard";
+import { IQuizSummary } from "@/interfaces/quiz.interface";
 
 const CourseLearning = ({ courseId }: { courseId: string }) => {
   const router = useRouter();
@@ -80,6 +81,7 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
     setActiveQuiz,
     nextAfterLesson,
     getLessonById,
+    course,
   } = useCourseLearningStore();
 
   const { data, isPending } = useQuery<
@@ -88,6 +90,7 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
       enrolled: { isEnrolled: boolean };
       progress: IProgressStats;
       modules: IModuleWithState[];
+      quiz: IQuizSummary | null;
     }>
   >({
     queryKey: ["course-learning", courseId],
@@ -111,6 +114,7 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
       modules: data.data.modules,
       progress: data.data.progress,
       enrolled: data.data.enrolled,
+      quiz: data.data.quiz,
       preferredLessonId: lessonId ?? undefined,
     });
   }, [data, lessonId, setCourseData]);
@@ -211,12 +215,13 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
     return <div className="p-8 text-sm text-slate-500">Course not found.</div>;
   }
 
-  const course = data.data.course;
+  const currentCourse = data.data.course;
   const currentModuleData = currentModule();
   const nextItem = nextPlayable();
   const previousLesson = previousPlayableLesson();
   const currentPosition = currentLessonPosition();
   const totalLessonCount = totalLessons();
+  const courseQuiz = course?.quiz ?? data.data.quiz ?? null;
 
   const completedLessons = modules.reduce(
     (acc, module) => acc + countCompletedLessons(module.lessons ?? []),
@@ -254,7 +259,7 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
             }
           : undefined,
         thumbnail: {
-          url: course.thumbnail?.url,
+          url: currentCourse.thumbnail?.url,
           alt: activeLesson.title,
         },
         duration:
@@ -279,7 +284,13 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
       return;
     }
 
-    router.push(`/courses/${courseId}/learn?quizId=${nextItem.id}`);
+    if (
+      nextItem.type === "lesson-quiz" ||
+      nextItem.type === "module-quiz" ||
+      nextItem.type === "course-quiz"
+    ) {
+      router.push(`/courses/${courseId}/learn?quizId=${nextItem.id}`);
+    }
   };
 
   const handlePrevious = () => {
@@ -316,11 +327,11 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
     let nextLessonTitle: string | undefined;
 
     if (hasPassedQuiz && activeLesson) {
-      const nextItem = nextAfterLesson(activeLesson._id);
-      if (nextItem?.type === "lesson") {
+      const nextItemAfterLesson = nextAfterLesson(activeLesson._id);
+      if (nextItemAfterLesson?.type === "lesson") {
         hasNextLesson = true;
-        nextLessonId = nextItem.id;
-        const nextLesson = getLessonById(nextItem.id);
+        nextLessonId = nextItemAfterLesson.id;
+        const nextLesson = getLessonById(nextItemAfterLesson.id);
         nextLessonTitle = nextLesson?.title;
       }
     }
@@ -328,6 +339,17 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
     const handleNextLessonFromQuiz = () => {
       if (nextLessonId) {
         router.push(`/courses/${courseId}/learn?lessonId=${nextLessonId}`);
+        return;
+      }
+
+      const computedNext = nextPlayable();
+
+      if (
+        computedNext &&
+        (computedNext.type === "module-quiz" ||
+          computedNext.type === "course-quiz")
+      ) {
+        router.push(`/courses/${courseId}/learn?quizId=${computedNext.id}`);
       }
     };
 
@@ -344,7 +366,7 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
             </Link>
 
             <h2 className="mt-2 line-clamp-2 text-base font-bold text-slate-900 dark:text-white">
-              {course.title}
+              {currentCourse.title}
             </h2>
 
             <div className="mt-4 space-y-2">
@@ -376,6 +398,15 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
                   activeQuizId={quizId}
                 />
               ))}
+
+              {courseQuiz && (
+                <CourseQuizSidebarItem
+                  courseQuiz={courseQuiz}
+                  isEnrolled={isEnrolled}
+                  courseId={courseId}
+                  isActive={quizId === courseQuiz._id}
+                />
+              )}
             </div>
           </div>
         </aside>
@@ -450,7 +481,7 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
           </Link>
 
           <h2 className="mt-2 line-clamp-2 text-base font-bold text-slate-900 dark:text-white">
-            {course.title}
+            {currentCourse.title}
           </h2>
 
           <div className="mt-4 space-y-2">
@@ -481,6 +512,15 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
                 courseId={courseId}
               />
             ))}
+
+            {courseQuiz && (
+              <CourseQuizSidebarItem
+                courseQuiz={courseQuiz}
+                isEnrolled={isEnrolled}
+                courseId={courseId}
+                isActive={quizId === courseQuiz._id}
+              />
+            )}
           </div>
         </div>
       </aside>
@@ -798,6 +838,57 @@ const LearningSidebarModule = ({
   );
 };
 
+const CourseQuizSidebarItem = ({
+  courseQuiz,
+  isEnrolled,
+  courseId,
+  isActive,
+}: {
+  courseQuiz: IQuizSummary;
+  isEnrolled: boolean;
+  courseId: string;
+  isActive: boolean;
+}) => {
+  const router = useRouter();
+  const isLocked = !isEnrolled || courseQuiz.isLockedForUser;
+
+  return (
+    <button
+      onClick={() => {
+        if (isLocked) return;
+        router.push(`/courses/${courseId}/learn?quizId=${courseQuiz._id}`);
+      }}
+      disabled={isLocked}
+      className={cn(
+        "flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left cursor-pointer",
+        isActive
+          ? "border-primary/30 bg-primary/10"
+          : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900",
+        isLocked && "cursor-not-allowed opacity-60",
+      )}
+    >
+      {isLocked ? (
+        <Lock className="h-4 w-4 text-slate-400" />
+      ) : (
+        <BookOpen className="h-4 w-4 text-primary" />
+      )}
+
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold text-slate-900 dark:text-white">
+          Final Course Quiz
+        </p>
+        <p className="mt-0.5 text-xs text-slate-500">
+          Passing score: {courseQuiz.passingScore}%
+        </p>
+      </div>
+
+      {courseQuiz.isPassed ? (
+        <CheckCircle2 className="h-4 w-4 text-green-500" />
+      ) : null}
+    </button>
+  );
+};
+
 const SidebarLessonItem = ({
   lesson,
   index,
@@ -849,7 +940,7 @@ const SidebarLessonItem = ({
           <p
             className={cn(
               "line-clamp-2 text-sm font-medium",
-              isActive ? "text-primary" : "text-slate-700 dark:text-slate-300",
+              isActive ? "text-primary-light" : "text-slate-700 dark:text-slate-300",
             )}
           >
             {moduleOrder}.{index} {lesson.title}

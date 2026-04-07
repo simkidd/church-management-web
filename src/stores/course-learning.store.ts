@@ -10,12 +10,13 @@ import {
   getLessonHasQuiz,
   getLessonQuizPassed,
 } from "@/utils/helpers/course-learning";
-import { IQuizAttempt } from "@/interfaces/quiz.interface";
+import { IQuizAttempt, IQuizSummary } from "@/interfaces/quiz.interface";
 
 type NextPlayableItem =
   | { type: "lesson"; id: string }
   | { type: "lesson-quiz"; id: string }
-  | { type: "module-quiz"; id: string };
+  | { type: "module-quiz"; id: string }
+  | { type: "course-quiz"; id: string };
 
 interface QuizState {
   attemptsUsed: number;
@@ -24,8 +25,12 @@ interface QuizState {
   isLoading: boolean;
 }
 
+interface CourseLearningCourse extends ICourse {
+  quiz?: IQuizSummary | null;
+}
+
 interface CourseLearningState {
-  course: ICourse | null;
+  course: CourseLearningCourse | null;
   modules: IModuleWithState[];
   progress: IProgressStats | null;
   isEnrolled: boolean;
@@ -41,6 +46,7 @@ interface CourseLearningState {
     modules: IModuleWithState[];
     progress: IProgressStats;
     enrolled: { isEnrolled: boolean };
+    quiz?: IQuizSummary | null;
     preferredLessonId?: string;
   }) => void;
 
@@ -143,6 +149,7 @@ export const useCourseLearningStore = create<CourseLearningState>(
       modules,
       progress,
       enrolled,
+      quiz,
       preferredLessonId,
     }) => {
       const previousActiveLessonId = get().activeLesson?._id;
@@ -170,7 +177,10 @@ export const useCourseLearningStore = create<CourseLearningState>(
       }
 
       set((state) => ({
-        course,
+        course: {
+          ...course,
+          quiz: quiz ?? null,
+        },
         modules,
         progress,
         isEnrolled: enrolled.isEnrolled,
@@ -451,6 +461,20 @@ export const useCourseLearningStore = create<CourseLearningState>(
         if (nextLesson) {
           return { type: "lesson", id: nextLesson._id };
         }
+      }
+
+      const courseQuiz = get().course?.quiz;
+
+      if (
+        courseQuiz &&
+        !courseQuiz.isLockedForUser &&
+        modules.length > 0 &&
+        modules.every((module) => areAllModuleLessonsCompleted(module))
+      ) {
+        return {
+          type: "course-quiz",
+          id: courseQuiz._id,
+        };
       }
 
       return null;

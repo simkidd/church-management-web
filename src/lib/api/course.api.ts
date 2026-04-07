@@ -6,6 +6,7 @@ import {
   PaginatedResponse,
 } from "@/interfaces/response.interface";
 import api from "../axios";
+import { IQuiz, IQuizSummary } from "@/interfaces/quiz.interface";
 
 export const courseApi = {
   //  GET all courses
@@ -50,6 +51,7 @@ export const courseApi = {
       enrolled: { isEnrolled: boolean; status: string | null };
       progress: IProgressStats;
       modules: IModuleWithState[];
+      quiz: IQuizSummary | null
     }>
   > => {
     const response = await api.get(`/courses/${courseId}/modules`);

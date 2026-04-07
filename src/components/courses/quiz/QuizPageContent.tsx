@@ -1,32 +1,36 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
-import { ChevronLeft, ChevronRight, Loader2, LogOut, Send, ShieldAlert } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  LogOut,
+  Send,
+  ShieldAlert,
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { quizApi } from "@/lib/api/quiz.api";
 import {
   IQuiz,
   IQuizQuestion,
   SubmitAnswersResponse,
 } from "@/interfaces/quiz.interface";
 import { ApiErrorResponse, ApiResponse } from "@/interfaces/response.interface";
+import { quizApi } from "@/lib/api/quiz.api";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog"; // Assuming you have shadcn dialog
-import QuizIntroCard from "./QuizIntroCard";
-import QuizHeader from "./QuizHeader";
-import QuizQuestionNavigator from "./QuizQuestionNavigator";
-import QuizQuestionCard from "./QuizQuestionCard";
-import QuizFooterActions from "./QuizFooterActions";
-import QuizSubmitDialog from "./QuizSubmitDialog";
-import QuizLeaveDialog from "./QuizLeaveDialog";
-import QuizTimeUpDialog from "./QuizTimeUpDialog";
 import { cn } from "@/lib/utils";
+import QuizHeader from "./QuizHeader";
+import QuizLeaveDialog from "./QuizLeaveDialog";
+import QuizQuestionCard from "./QuizQuestionCard";
+import QuizQuestionNavigator from "./QuizQuestionNavigator";
+import QuizSubmitDialog from "./QuizSubmitDialog";
 
 type QuizPageContentProps = {
   courseId: string;
@@ -38,14 +42,13 @@ type AnswersState = Record<string, string[]>;
 const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const isNavigatingRef = useRef(false);
 
   const [answers, setAnswers] = useState<AnswersState>({});
-  const [hasStarted, setHasStarted] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
-  const [timeUpDialogOpen, setTimeUpDialogOpen] = useState(false);
   const [isSubmittingDialogOpen, setIsSubmittingDialogOpen] = useState(false); // New loading dialog
 
   const { data, isPending, isError, error } = useQuery<ApiResponse<IQuiz>>({
@@ -61,6 +64,28 @@ const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
   const currentQuestion = quiz?.questions?.[currentIndex] as
     | IQuizQuestion
     | undefined;
+
+  useEffect(() => {
+    // push a fake state so back button doesn't immediately leave
+    window.history.pushState(null, "", window.location.href);
+
+    const handlePopState = () => {
+      // prevent infinite loop
+      if (isNavigatingRef.current) return;
+
+      // open your existing leave dialog
+      setLeaveDialogOpen(true);
+
+      // push state again so user stays on page
+      window.history.pushState(null, "", window.location.href);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
 
   const answeredCount = useMemo(() => {
     return Object.values(answers).filter(
@@ -124,11 +149,6 @@ const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
     },
   });
 
-  useEffect(() => {
-    if (!quiz || !hasStarted) return;
-    if (!quiz.durationMinutes || quiz.durationMinutes <= 0) return;
-  }, [quiz, hasStarted]);
-
   const handleSingleSelect = (questionId: string, optionId: string) => {
     setAnswers((prev) => ({
       ...prev,
@@ -186,9 +206,12 @@ const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
     submitMutation.mutate();
   };
 
-  const handleTimeUpSubmit = () => {
-    setTimeUpDialogOpen(false);
-    submitMutation.mutate();
+  const handleConfirmLeave = () => {
+    isNavigatingRef.current = true;
+
+    setLeaveDialogOpen(false);
+
+    router.back();
   };
 
   if (isPending) {
@@ -237,8 +260,6 @@ const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
                 totalQuestions={totalQuestions}
                 answeredCount={answeredCount}
                 progressValue={progressValue}
-                durationMinutes={quiz.durationMinutes}
-                onTimeUp={() => setTimeUpDialogOpen(true)}
               />
 
               <QuizQuestionNavigator
@@ -405,14 +426,7 @@ const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
       <QuizLeaveDialog
         open={leaveDialogOpen}
         onOpenChange={setLeaveDialogOpen}
-        leaveHref={`/courses/${courseId}/learn`}
-      />
-
-      <QuizTimeUpDialog
-        open={timeUpDialogOpen}
-        onOpenChange={setTimeUpDialogOpen}
-        isSubmitting={submitMutation.isPending}
-        onConfirm={handleTimeUpSubmit}
+        onConfirm={handleConfirmLeave}
       />
     </>
   );
