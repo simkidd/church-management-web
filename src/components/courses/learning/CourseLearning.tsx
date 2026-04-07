@@ -48,6 +48,8 @@ import { Progress } from "@/components/ui/progress";
 import VideoPlayer from "../../sermons/VideoPlayer";
 import TextContentRenderer from "../../shared/TextContentRenderer";
 import CourseLearningSkeleton from "./CourseLearningSkeleton";
+import { quizApi } from "@/lib/api/quiz.api";
+import QuizIntroCard from "../quiz/QuizIntroCard";
 
 const CourseLearning = ({ courseId }: { courseId: string }) => {
   const router = useRouter();
@@ -55,6 +57,7 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
   const queryClient = useQueryClient();
 
   const lessonId = searchParams.get("lessonId");
+  const quizId = searchParams.get("quizId");
 
   const progressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [watchProgress, setWatchProgress] = useState(0); // Track watch percentage
@@ -73,6 +76,10 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
     previousPlayableLesson,
     currentLessonPosition,
     totalLessons,
+    setQuizState,
+    setActiveQuiz,
+    nextAfterLesson,
+    getLessonById,
   } = useCourseLearningStore();
 
   const { data, isPending } = useQuery<
@@ -88,6 +95,14 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
     enabled: !!courseId,
   });
 
+  // Query for quiz data when showing intro
+  const { data: quizData, isPending: isQuizPending } = useQuery({
+    queryKey: ["quiz", quizId],
+    queryFn: () => quizApi.getQuizById(quizId!),
+    enabled: !!quizId,
+    staleTime: 30_000,
+  });
+
   useEffect(() => {
     if (!data?.data) return;
 
@@ -100,14 +115,18 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
     });
   }, [data, lessonId, setCourseData]);
 
-  // useEffect(() => {
-  //   if (!activeLesson?._id) return;
-
-  //   const currentLessonId = searchParams.get("lessonId");
-  //   if (currentLessonId === activeLesson._id) return;
-
-  //   router.replace(`/courses/${courseId}/learn?lessonId=${activeLesson._id}`);
-  // }, [activeLesson?._id, courseId, router, searchParams]);
+  // Sync quiz data to store when fetched
+  useEffect(() => {
+    if (quizData?.data && quizId) {
+      setQuizState(quizId, {
+        attemptsUsed: quizData.data.attemptsUsed ?? 0,
+        attemptsLeft: quizData.data.attemptsLeft ?? 0,
+        lastAttempt: quizData.data.lastAttempt,
+        isLoading: false,
+      });
+      setActiveQuiz(quizId);
+    }
+  }, [quizData, quizId, setQuizState, setActiveQuiz]);
 
   const markContentCompleteMutation = useMutation({
     mutationFn: (selectedLessonId: string) =>
@@ -260,7 +279,7 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
       return;
     }
 
-    router.push(`/courses/${courseId}/quiz/${nextItem.id}`);
+    router.push(`/courses/${courseId}/learn?quizId=${nextItem.id}`);
   };
 
   const handlePrevious = () => {
@@ -270,8 +289,153 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
 
   const handleOpenLessonQuiz = () => {
     if (!activeLesson?.quiz?._id) return;
-    router.push(`/courses/${courseId}/quiz/${activeLesson.quiz._id}`);
+    router.push(`/courses/${courseId}/learn?quizId=${activeLesson.quiz._id}`);
   };
+
+  const handleStartQuiz = (targetQuizId: string) => {
+    router.push(`/courses/${courseId}/quiz/${targetQuizId}`);
+  };
+
+  const handleCloseQuizIntro = () => {
+    // Go back to the lesson or course learn page without quiz param
+    if (activeLesson) {
+      router.replace(`/courses/${courseId}/learn?lessonId=${activeLesson._id}`);
+    } else {
+      router.replace(`/courses/${courseId}/learn`);
+    }
+  };
+
+  if (quizId) {
+    // Get quiz state from store (synced from API)
+    const quizState = useCourseLearningStore.getState().quizStates[quizId];
+    const hasPassedQuiz = quizState?.lastAttempt?.passed ?? false;
+
+    // Use store's nextAfterLesson to find next lesson when quiz is passed
+    let hasNextLesson = false;
+    let nextLessonId: string | null = null;
+    let nextLessonTitle: string | undefined;
+
+    if (hasPassedQuiz && activeLesson) {
+      const nextItem = nextAfterLesson(activeLesson._id);
+      if (nextItem?.type === "lesson") {
+        hasNextLesson = true;
+        nextLessonId = nextItem.id;
+        const nextLesson = getLessonById(nextItem.id);
+        nextLessonTitle = nextLesson?.title;
+      }
+    }
+
+    const handleNextLessonFromQuiz = () => {
+      if (nextLessonId) {
+        router.push(`/courses/${courseId}/learn?lessonId=${nextLessonId}`);
+      }
+    };
+
+    return (
+      <div className="flex h-full min-h-0 bg-slate-50 dark:bg-slate-950">
+        <aside className="hidden h-full w-[360px] shrink-0 border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 lg:flex lg:flex-col">
+          <div className="border-b border-slate-200 px-5 py-4 dark:border-slate-800">
+            <Link
+              href={`/courses/${courseId}`}
+              className="text-xs font-medium text-slate-500 hover:text-primary flex items-center gap-1 py-2 w-fit"
+            >
+              <ArrowLeft size={16} />
+              Back to course
+            </Link>
+
+            <h2 className="mt-2 line-clamp-2 text-base font-bold text-slate-900 dark:text-white">
+              {course.title}
+            </h2>
+
+            <div className="mt-4 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-500">Progress</span>
+                <span className="font-semibold text-slate-900 dark:text-white">
+                  {progressPercentage}%
+                </span>
+              </div>
+              <Progress value={progressPercentage} className="h-1.5" />
+              <p className="text-xs text-slate-500">
+                {completedLessons} of {totalLessonCount} lessons completed
+              </p>
+            </div>
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto p-3">
+            <div className="space-y-3">
+              {modules.map((module) => (
+                <LearningSidebarModule
+                  key={module._id}
+                  module={module}
+                  isOpen={!!openModules[module._id]}
+                  onToggle={() => toggleModule(module._id)}
+                  activeLessonId={activeLesson?._id}
+                  isEnrolled={isEnrolled}
+                  onSelectLesson={handleSelectLesson}
+                  courseId={courseId}
+                  activeQuizId={quizId}
+                />
+              ))}
+            </div>
+          </div>
+        </aside>
+
+        <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          <div className="border-b border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900 sm:px-6">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCloseQuizIntro}
+                className="text-slate-500"
+              >
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Back
+              </Button>
+              <h1 className="text-lg font-semibold text-slate-900 dark:text-white">
+                Quiz Preview
+              </h1>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+            {isQuizPending ? (
+              <QuizIntroSkeleton />
+            ) : quizData?.data ? (
+              <QuizIntroCard
+                quiz={quizData.data}
+                attemptsUsed={quizData.data.attemptsUsed ?? 0}
+                lastAttempt={quizData.data.lastAttempt}
+                backHref={`/courses/${courseId}/learn${
+                  activeLesson?._id ? `?lessonId=${activeLesson._id}` : ""
+                }`}
+                startHref={`/courses/${courseId}/quiz/${quizId}`}
+                onStart={() => handleStartQuiz(quizId)}
+                hasNextLesson={hasNextLesson}
+                onNextLesson={handleNextLessonFromQuiz}
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center">
+                <div className="text-center">
+                  <FileQuestion className="mx-auto h-10 w-10 text-slate-300" />
+                  <p className="mt-3 text-sm text-slate-500">
+                    Quiz not found or unavailable.
+                  </p>
+                  <Button
+                    variant="outline"
+                    className="mt-4"
+                    onClick={handleCloseQuizIntro}
+                  >
+                    Go Back
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full min-h-0 bg-slate-50 dark:bg-slate-950">
@@ -497,14 +661,6 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
                       </span>
                     </div>
                   </div>
-
-                  {hasQuiz && (
-                    <LessonQuizPanel
-                      passingScore={activeLesson.quiz?.passingScore ?? 0}
-                      status={lessonStatus}
-                      onOpenQuiz={handleOpenLessonQuiz}
-                    />
-                  )}
                 </div>
               </div>
             ) : isArticle ? (
@@ -521,14 +677,6 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
                       </p>
                     )}
                   </article>
-
-                  {hasQuiz && (
-                    <LessonQuizPanel
-                      passingScore={activeLesson.quiz?.passingScore ?? 0}
-                      status={lessonStatus}
-                      onOpenQuiz={handleOpenLessonQuiz}
-                    />
-                  )}
                 </div>
               </div>
             ) : (
@@ -543,49 +691,6 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
   );
 };
 
-const LessonQuizPanel = ({
-  passingScore,
-  status,
-  onOpenQuiz,
-}: {
-  passingScore: number;
-  status: string | null;
-  onOpenQuiz: () => void;
-}) => {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold text-slate-900 dark:text-white">
-            Lesson Quiz
-          </p>
-          <p className="mt-1 text-sm text-slate-500">
-            Pass this quiz after completing the lesson content.
-          </p>
-          <p className="mt-2 text-xs text-slate-500">
-            Passing score: {passingScore}%
-          </p>
-        </div>
-
-        {status === "content-pending" ? (
-          <span className="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
-            Complete lesson first
-          </span>
-        ) : status === "quiz-pending" ? (
-          <Button onClick={onOpenQuiz} className="text-white">
-            <FileQuestion className="h-4 w-4" />
-            Take Quiz
-          </Button>
-        ) : (
-          <span className="inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 dark:bg-green-950/40 dark:text-green-300">
-            Passed
-          </span>
-        )}
-      </div>
-    </div>
-  );
-};
-
 const LearningSidebarModule = ({
   module,
   isOpen,
@@ -594,6 +699,7 @@ const LearningSidebarModule = ({
   isEnrolled,
   onSelectLesson,
   courseId,
+  activeQuizId,
 }: {
   module: IModuleWithState;
   isOpen: boolean;
@@ -602,6 +708,7 @@ const LearningSidebarModule = ({
   isEnrolled: boolean;
   onSelectLesson: (lesson: ILessonWithState) => void;
   courseId: string;
+  activeQuizId?: string | null;
 }) => {
   const router = useRouter();
   const completedLessons = countCompletedLessons(module.lessons ?? []);
@@ -647,7 +754,7 @@ const LearningSidebarModule = ({
                   lesson={lesson as ILessonWithState}
                   index={idx + 1}
                   moduleOrder={module.order}
-                  isActive={lesson._id === activeLessonId}
+                  isActive={lesson._id === activeLessonId && !activeQuizId}
                   isLocked={!isEnrolled || !!lesson.isLockedForUser}
                   onClick={() => onSelectLesson(lesson as ILessonWithState)}
                   courseId={courseId}
@@ -659,7 +766,7 @@ const LearningSidebarModule = ({
                   onClick={() => {
                     if (!isEnrolled || module.quiz?.isLockedForUser) return;
                     router.push(
-                      `/courses/${courseId}/quiz/${module.quiz?._id}`,
+                      `/courses/${courseId}/learn?quizId=${module.quiz?._id}`,
                     );
                   }}
                   disabled={!isEnrolled || module.quiz?.isLockedForUser}
@@ -782,7 +889,9 @@ const SidebarLessonItem = ({
         <div className="pl-10 mt-1">
           <button
             onClick={() =>
-              router.push(`/courses/${courseId}/quiz/${lesson.quiz!._id}`)
+              router.push(
+                `/courses/${courseId}/learn?quizId=${lesson.quiz!._id}`,
+              )
             }
             className={cn(
               "w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs cursor-pointer",
@@ -802,6 +911,50 @@ const SidebarLessonItem = ({
           </button>
         </div>
       )}
+    </div>
+  );
+};
+
+const QuizIntroSkeleton = () => {
+  return (
+    <div className="mx-auto max-w-4xl animate-pulse">
+      <div className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="border-b border-slate-200 bg-gradient-to-r from-slate-100 via-white to-white px-6 py-10 dark:border-slate-800 dark:from-slate-800 dark:via-slate-900 dark:to-slate-900 sm:px-10">
+          <div className="h-4 w-24 rounded bg-slate-200 dark:bg-slate-800" />
+          <div className="mt-3 h-10 w-3/4 rounded bg-slate-200 dark:bg-slate-800" />
+          <div className="mt-4 h-4 w-full rounded bg-slate-200 dark:bg-slate-800" />
+        </div>
+
+        <div className="grid gap-4 px-6 py-6 sm:grid-cols-3 sm:px-10">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 dark:border-slate-800 dark:bg-slate-950/50"
+            >
+              <div className="h-4 w-20 rounded bg-slate-200 dark:bg-slate-800" />
+              <div className="mt-2 h-6 w-12 rounded bg-slate-200 dark:bg-slate-800" />
+            </div>
+          ))}
+        </div>
+
+        <div className="border-t border-slate-200 px-6 py-6 dark:border-slate-800 sm:px-10">
+          <div className="rounded-2xl bg-slate-50 p-5 dark:bg-slate-950/50">
+            <div className="h-4 w-32 rounded bg-slate-200 dark:bg-slate-800" />
+            <div className="mt-3 space-y-2">
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="h-3 w-full rounded bg-slate-200 dark:bg-slate-800"
+                />
+              ))}
+            </div>
+          </div>
+          <div className="mt-6 flex gap-3">
+            <div className="h-10 w-32 rounded bg-slate-200 dark:bg-slate-800" />
+            <div className="h-10 w-32 rounded bg-slate-200 dark:bg-slate-800" />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

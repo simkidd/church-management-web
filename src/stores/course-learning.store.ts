@@ -10,11 +10,19 @@ import {
   getLessonHasQuiz,
   getLessonQuizPassed,
 } from "@/utils/helpers/course-learning";
+import { IQuizAttempt } from "@/interfaces/quiz.interface";
 
 type NextPlayableItem =
   | { type: "lesson"; id: string }
   | { type: "lesson-quiz"; id: string }
   | { type: "module-quiz"; id: string };
+
+interface QuizState {
+  attemptsUsed: number;
+  attemptsLeft: number;
+  lastAttempt: IQuizAttempt | null;
+  isLoading: boolean;
+}
 
 interface CourseLearningState {
   course: ICourse | null;
@@ -23,6 +31,10 @@ interface CourseLearningState {
   isEnrolled: boolean;
   activeLesson: ILessonWithState | null;
   openModules: Record<string, boolean>;
+
+  // Quiz state
+  activeQuizId: string | null;
+  quizStates: Record<string, QuizState>;
 
   setCourseData: (data: {
     course: ICourse;
@@ -47,10 +59,31 @@ interface CourseLearningState {
   lessonIndex: () => number;
   currentLessonPosition: () => number;
   totalLessons: () => number;
+
+  // Updated nextPlayable that considers quiz state
   nextPlayable: () => NextPlayableItem | null;
+
+  // New: Get next item after specific lesson (for quiz flow)
+  nextAfterLesson: (lessonId: string) => NextPlayableItem | null;
+
   previousPlayableLesson: () => ILessonWithState | null;
   isFirstLesson: () => boolean;
   isLastLesson: () => boolean;
+
+  // Quiz actions
+  setActiveQuiz: (quizId: string | null) => void;
+  setQuizState: (quizId: string, state: Partial<QuizState>) => void;
+  clearQuizState: (quizId?: string) => void;
+
+  // Quiz helpers
+  hasPassedQuiz: (quizId: string) => boolean;
+  canAttemptQuiz: (quizId: string, maxAttempts: number) => boolean;
+  getQuizAttemptsUsed: (quizId: string) => number;
+  isQuizLocked: (quizId: string, maxAttempts: number) => boolean;
+
+  getNextModuleFirstLesson: (
+    currentModuleId: string,
+  ) => ILessonWithState | null;
 }
 
 const getAllLessons = (modules: IModuleWithState[]): ILessonWithState[] =>
@@ -102,6 +135,9 @@ export const useCourseLearningStore = create<CourseLearningState>(
     activeLesson: null,
     openModules: {},
 
+    activeQuizId: null,
+    quizStates: {},
+
     setCourseData: ({
       course,
       modules,
@@ -150,6 +186,7 @@ export const useCourseLearningStore = create<CourseLearningState>(
     setActiveLesson: (lesson) =>
       set((state) => ({
         activeLesson: lesson,
+        activeQuizId: null,
         openModules: lesson
           ? mergeOpenModules(state.modules, state.openModules, lesson._id)
           : state.openModules,
@@ -157,7 +194,7 @@ export const useCourseLearningStore = create<CourseLearningState>(
 
     setActiveLessonById: (lessonId) => {
       if (!lessonId) {
-        set({ activeLesson: null });
+        set({ activeLesson: null, activeQuizId: null });
         return;
       }
 
@@ -171,6 +208,7 @@ export const useCourseLearningStore = create<CourseLearningState>(
 
       set((state) => ({
         activeLesson: lesson,
+        activeQuizId: null,
         openModules: mergeOpenModules(
           state.modules,
           state.openModules,
@@ -200,6 +238,7 @@ export const useCourseLearningStore = create<CourseLearningState>(
 
       set((state) => ({
         activeLesson: nextLesson,
+        activeQuizId: null,
         openModules: mergeOpenModules(
           state.modules,
           state.openModules,
@@ -240,7 +279,57 @@ export const useCourseLearningStore = create<CourseLearningState>(
         isEnrolled: false,
         activeLesson: null,
         openModules: {},
+        activeQuizId: null,
+        quizStates: {},
       }),
+
+    setActiveQuiz: (quizId) => set({ activeQuizId: quizId }),
+
+    setQuizState: (quizId, quizState) =>
+      set((state) => ({
+        quizStates: {
+          ...state.quizStates,
+          [quizId]: {
+            ...(state.quizStates[quizId] ?? {
+              attemptsUsed: 0,
+              attemptsLeft: 1,
+              lastAttempt: null,
+              isLoading: false,
+            }),
+            ...quizState,
+          },
+        },
+      })),
+
+    clearQuizState: (quizId) =>
+      set((state) => {
+        if (quizId) {
+          const { [quizId]: _, ...rest } = state.quizStates;
+          return { quizStates: rest, activeQuizId: null };
+        }
+        return { quizStates: {}, activeQuizId: null };
+      }),
+
+    hasPassedQuiz: (quizId) => {
+      const state = get().quizStates[quizId];
+      return state?.lastAttempt?.passed ?? false;
+    },
+
+    canAttemptQuiz: (quizId, maxAttempts) => {
+      const state = get().quizStates[quizId];
+      const attemptsUsed = state?.attemptsUsed ?? 0;
+      return attemptsUsed < maxAttempts;
+    },
+
+    getQuizAttemptsUsed: (quizId) => {
+      return get().quizStates[quizId]?.attemptsUsed ?? 0;
+    },
+
+    isQuizLocked: (quizId, maxAttempts) => {
+      const state = get().quizStates[quizId];
+      if (!state) return false;
+      return state.attemptsUsed >= maxAttempts && !state.lastAttempt?.passed;
+    },
 
     flatLessons: () => getAllLessons(get().modules),
 
@@ -297,9 +386,14 @@ export const useCourseLearningStore = create<CourseLearningState>(
 
       const hasQuiz = getLessonHasQuiz(activeLesson);
       const contentCompleted = getLessonContentCompleted(activeLesson);
-      const quizPassed = getLessonQuizPassed(activeLesson);
-      const completed = getLessonCompleted(activeLesson);
 
+      // Check quiz state from store OR lesson state
+      const quizId = activeLesson.quiz?._id;
+      const quizPassedFromStore = quizId ? get().hasPassedQuiz(quizId) : false;
+      const quizPassedFromLesson = getLessonQuizPassed(activeLesson);
+      const quizPassed = quizPassedFromStore || quizPassedFromLesson;
+
+      // If has quiz, content done, but quiz not passed -> go to quiz
       if (
         hasQuiz &&
         contentCompleted &&
@@ -307,15 +401,20 @@ export const useCourseLearningStore = create<CourseLearningState>(
         !activeLesson.quiz?.isLockedForUser
       ) {
         return {
-          type: "lesson-quiz",
+          type: "lesson-quiz" as const,
           id: activeLesson.quiz!._id,
         };
       }
+
+      // Lesson not fully complete (including quiz) -> no next
+      const completed =
+        getLessonCompleted(activeLesson) || (contentCompleted && quizPassed);
 
       if (!completed) {
         return null;
       }
 
+      // Find next lesson in current module
       const moduleLessons = currentModule.lessons ?? [];
       const currentIndex = moduleLessons.findIndex(
         (lesson) => lesson._id === activeLesson._id,
@@ -327,6 +426,7 @@ export const useCourseLearningStore = create<CourseLearningState>(
         }
       }
 
+      // Check for module quiz
       if (
         currentModule.quiz &&
         !currentModule.quiz.isLockedForUser &&
@@ -338,6 +438,7 @@ export const useCourseLearningStore = create<CourseLearningState>(
         };
       }
 
+      // Look in next modules
       const modules = get().modules;
       const currentModuleIndex = modules.findIndex(
         (m) => m._id === currentModule._id,
@@ -349,6 +450,25 @@ export const useCourseLearningStore = create<CourseLearningState>(
         );
         if (nextLesson) {
           return { type: "lesson", id: nextLesson._id };
+        }
+      }
+
+      return null;
+    },
+
+    nextAfterLesson: (lessonId) => {
+      const allLessons = get().flatLessons();
+      const lessonIndex = allLessons.findIndex((l) => l._id === lessonId);
+
+      if (lessonIndex === -1 || lessonIndex >= allLessons.length - 1) {
+        return null;
+      }
+
+      // Find next unlocked lesson
+      for (let i = lessonIndex + 1; i < allLessons.length; i++) {
+        const nextLesson = allLessons[i];
+        if (!nextLesson.isLockedForUser) {
+          return { type: "lesson" as const, id: nextLesson._id };
         }
       }
 
@@ -390,6 +510,15 @@ export const useCourseLearningStore = create<CourseLearningState>(
         .filter((lesson) => !lesson.isLockedForUser);
 
       return lessons[lessons.length - 1]?._id === activeLessonId;
+    },
+
+    getNextModuleFirstLesson: (currentModuleId) => {
+      const modules = get().modules;
+      const currentIdx = modules.findIndex((m) => m._id === currentModuleId);
+      if (currentIdx === -1 || currentIdx >= modules.length - 1) return null;
+
+      const nextModule = modules[currentIdx + 1];
+      return nextModule.lessons?.[0] ?? null;
     },
   }),
 );

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
-import { Loader2, ShieldAlert } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, LogOut, Send, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 
 import { quizApi } from "@/lib/api/quiz.api";
@@ -40,7 +40,7 @@ const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
   const queryClient = useQueryClient();
 
   const [answers, setAnswers] = useState<AnswersState>({});
-  const [hasStarted, setHasStarted] = useState(false);
+  const [hasStarted, setHasStarted] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
@@ -74,6 +74,10 @@ const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
 
   const remainingQuestions = totalQuestions - answeredCount;
 
+  const isFirst = currentIndex === 0;
+  const isLast = currentIndex === totalQuestions - 1;
+  const allAnswered = remainingQuestions === 0;
+
   const submitMutation = useMutation<
     ApiResponse<SubmitAnswersResponse>,
     AxiosError<ApiErrorResponse>
@@ -93,8 +97,6 @@ const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
       setIsSubmittingDialogOpen(true);
     },
     onSuccess: async (response) => {
-      toast.success("Quiz submitted successfully");
-
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["quiz", quizId] }),
         queryClient.invalidateQueries({
@@ -216,16 +218,6 @@ const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
     );
   }
 
-  if (!hasStarted) {
-    return (
-      <QuizIntroCard
-        quiz={quiz}
-        onStart={() => setHasStarted(true)}
-        backHref={`/courses/${courseId}/learn`}
-      />
-    );
-  }
-
   return (
     <>
       {/* Main quiz content - blurred when submitting */}
@@ -236,6 +228,7 @@ const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
         )}
       >
         <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+          {/* Left Sidebar - Unchanged */}
           <aside className="order-2 lg:order-1">
             <div className="sticky top-20 space-y-4">
               <QuizHeader
@@ -258,7 +251,108 @@ const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
             </div>
           </aside>
 
+          {/* Right Content - Actions moved to top */}
           <section className="order-1 lg:order-2 min-w-0 space-y-4">
+            {/* Top Action Bar */}
+            <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              <div className="flex items-center justify-between gap-4">
+                {/* Left: Exit */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setLeaveDialogOpen(true)}
+                  className="text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
+                >
+                  <LogOut className="h-4 w-4 " />
+                  Exit
+                </Button>
+
+                {/* Center: Progress Info */}
+                <div className="hidden sm:flex items-center gap-4 text-sm">
+                  <span className="text-slate-500">
+                    Question{" "}
+                    <span className="font-semibold text-slate-900 dark:text-white">
+                      {currentIndex + 1}
+                    </span>{" "}
+                    of {totalQuestions}
+                  </span>
+                  <div className="h-4 w-px bg-slate-200 dark:bg-slate-700" />
+                  <span
+                    className={cn(
+                      "text-sm",
+                      allAnswered
+                        ? "text-green-600 dark:text-green-400"
+                        : "text-slate-500",
+                    )}
+                  >
+                    {allAnswered
+                      ? "All answered"
+                      : `${remainingQuestions} remaining`}
+                  </span>
+                </div>
+
+                {/* Right: Navigation */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePreviousQuestion}
+                    disabled={isFirst}
+                    className="h-9 w-9 p-0 rounded-xl"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+
+                  {isLast ? (
+                    <Button
+                      onClick={() => setSubmitDialogOpen(true)}
+                      disabled={!allAnswered || submitMutation.isPending}
+                      size="sm"
+                      className={cn(
+                        "rounded-xl px-4 text-white",
+                        allAnswered
+                          ? "bg-green-600 hover:bg-green-700"
+                          : "opacity-50 cursor-not-allowed",
+                      )}
+                    >
+                      {submitMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4 " />
+                          Submit
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={handleNextQuestion}
+                      size="sm"
+                      className="rounded-xl px-4 text-white"
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Mobile-only progress info */}
+              <div className="mt-3 flex sm:hidden items-center justify-between text-xs text-slate-500 border-t border-slate-100 dark:border-slate-800 pt-3">
+                <span>
+                  {currentIndex + 1} / {totalQuestions}
+                </span>
+                <span
+                  className={
+                    allAnswered ? "text-green-600 dark:text-green-400" : ""
+                  }
+                >
+                  {allAnswered ? "All answered" : `${remainingQuestions} left`}
+                </span>
+              </div>
+            </div>
+
+            {/* Question Card */}
             {currentQuestion ? (
               <QuizQuestionCard
                 question={currentQuestion}
@@ -269,17 +363,6 @@ const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
                 }
               />
             ) : null}
-
-            <QuizFooterActions
-              currentIndex={currentIndex}
-              totalQuestions={totalQuestions}
-              remainingQuestions={remainingQuestions}
-              isSubmitting={submitMutation.isPending}
-              onPrevious={handlePreviousQuestion}
-              onNext={handleNextQuestion}
-              onOpenSubmitDialog={() => setSubmitDialogOpen(true)}
-              onOpenLeaveDialog={() => setLeaveDialogOpen(true)}
-            />
           </section>
         </div>
       </div>

@@ -1,10 +1,17 @@
-import { IQuiz, IQuizAttempt, SubmitAnswersResponse } from "@/interfaces/quiz.interface";
+import {
+  IQuiz,
+  IQuizAttempt,
+  IQuizWithAttempts,
+  SubmitAnswersResponse,
+} from "@/interfaces/quiz.interface";
 import { ApiResponse } from "@/interfaces/response.interface";
 import api from "../axios";
 
 export const quizApi = {
   // get quiz by id
-  getQuizById: async (quizId: string): Promise<ApiResponse<IQuiz>> => {
+  getQuizById: async (
+    quizId: string,
+  ): Promise<ApiResponse<IQuizWithAttempts>> => {
     const response = await api.get(`/quizzes/${quizId}`);
     return response.data;
   },
