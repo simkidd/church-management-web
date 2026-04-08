@@ -2,24 +2,18 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
-import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
   Award,
   BookOpen,
   CheckCircle2,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ChevronUp,
-  Circle,
   FileQuestion,
-  FileText,
   Headphones,
   Lock,
   PlayCircle,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -34,22 +28,20 @@ import { ApiErrorResponse, ApiResponse } from "@/interfaces/response.interface";
 import courseApi from "@/lib/api/course.api";
 import progressApi from "@/lib/api/progress.api";
 import { quizApi } from "@/lib/api/quiz.api";
-import { cn } from "@/lib/utils";
 import { useCourseLearningStore } from "@/stores/course-learning.store";
 import {
   countCompletedLessons,
   getLessonContentCompleted,
   getLessonHasQuiz,
   getLessonQuizPassed,
-  getLessonStatus,
 } from "@/utils/helpers/course-learning";
 import { calculateReadTime, formatDuration } from "@/utils/helpers/time";
 
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import VideoPlayer from "../../sermons/VideoPlayer";
 import TextContentRenderer from "../../shared/TextContentRenderer";
 import QuizIntroCard from "../quiz/QuizIntroCard";
+import { CourseLearningSidebar } from "./CourseLearningSidebar";
 import CourseLearningSkeleton from "./CourseLearningSkeleton";
 
 const CourseLearning = ({ courseId }: { courseId: string }) => {
@@ -82,7 +74,6 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
     nextAfterLesson,
     course,
     getNextModuleFirstLesson,
-    isModuleCompleted,
   } = useCourseLearningStore();
 
   const { data, isPending } = useQuery<
@@ -394,8 +385,6 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
     !!activeLesson &&
     (hasQuiz ? contentCompleted && quizPassed : contentCompleted);
 
-  
-
   const formatLessonMetaDuration = (lesson?: ILessonWithState | null) => {
     if (!lesson?.durationSeconds) return null;
 
@@ -699,426 +688,6 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
         )}
       </main>
     </div>
-  );
-};
-
-type SidebarProps = {
-  course: ICourse;
-  courseId: string;
-  modules: IModuleWithState[];
-  openModules: Record<string, boolean>;
-  toggleModule: (moduleId: string) => void;
-  activeLessonId?: string;
-  activeQuizId?: string | null;
-  isEnrolled: boolean;
-  progressPercentage: number;
-  completedLessons: number;
-  totalLessonCount: number;
-  courseQuiz: IQuizSummary | null;
-  courseCompleted: boolean;
-  onSelectLesson: (lesson: ILessonWithState) => void;
-};
-
-const CourseLearningSidebar = ({
-  course,
-  courseId,
-  modules,
-  openModules,
-  toggleModule,
-  activeLessonId,
-  activeQuizId,
-  isEnrolled,
-  progressPercentage,
-  completedLessons,
-  totalLessonCount,
-  courseQuiz,
-  courseCompleted,
-  onSelectLesson,
-}: SidebarProps) => {
-  return (
-    <>
-      <div className="border-b border-slate-200 px-5 py-4 dark:border-slate-800">
-        <Link
-          href={`/courses/${courseId}`}
-          className="flex w-fit items-center gap-1 py-2 text-sm font-medium text-slate-500 hover:text-primary"
-        >
-          <ArrowLeft size={16} />
-          Back to course
-        </Link>
-
-        <h2 className="mt-2 line-clamp-2 text-base font-bold text-slate-900 dark:text-white">
-          {course.title}
-        </h2>
-
-        <div className="mt-4 space-y-2">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-500">Progress</span>
-            <span className="font-semibold text-slate-900 dark:text-white">
-              {progressPercentage}%
-            </span>
-          </div>
-          <Progress value={progressPercentage} className="h-1.5" />
-          <p className="text-xs text-slate-500">
-            {completedLessons} of {totalLessonCount} lessons completed
-          </p>
-        </div>
-      </div>
-
-      <div className="min-h-0 flex-1 overflow-y-auto p-3">
-        <div className="space-y-3">
-          {modules.map((module) => (
-            <LearningSidebarModule
-              key={module._id}
-              module={module}
-              isOpen={!!openModules[module._id]}
-              onToggle={() => toggleModule(module._id)}
-              activeLessonId={activeLessonId}
-              isEnrolled={isEnrolled}
-              onSelectLesson={onSelectLesson}
-              courseId={courseId}
-              activeQuizId={activeQuizId}
-            />
-          ))}
-
-          {courseQuiz && (
-            <CourseQuizSidebarItem
-              courseQuiz={courseQuiz}
-              isEnrolled={isEnrolled}
-              courseId={courseId}
-              isActive={activeQuizId === courseQuiz._id}
-            />
-          )}
-
-          {courseCompleted && (
-            <CertificateSidebarItem
-              courseId={courseId}
-              isEnrolled={isEnrolled}
-            />
-          )}
-        </div>
-      </div>
-    </>
-  );
-};
-
-const LearningSidebarModule = ({
-  module,
-  isOpen,
-  onToggle,
-  activeLessonId,
-  isEnrolled,
-  onSelectLesson,
-  courseId,
-  activeQuizId,
-}: {
-  module: IModuleWithState;
-  isOpen: boolean;
-  onToggle: () => void;
-  activeLessonId?: string;
-  isEnrolled: boolean;
-  onSelectLesson: (lesson: ILessonWithState) => void;
-  courseId: string;
-  activeQuizId?: string | null;
-}) => {
-  const router = useRouter();
-  const completedLessons = countCompletedLessons(module.lessons ?? []);
-  const totalLessons = module.lessons?.length || 0;
-  const moduleQuizPassed = module.quiz?.isPassed || false;
-  const allLessonsCompleted =
-    completedLessons === totalLessons && totalLessons > 0;
-
-  return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 dark:border-slate-800 dark:bg-slate-800/30">
-      <button
-        onClick={onToggle}
-        className="flex w-full items-start justify-between gap-3 px-4 py-3 text-left"
-      >
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">
-            Module {module.order}
-          </p>
-          <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-300">
-            {module.title}
-          </p>
-          <p className="mt-1 text-xs text-slate-500">
-            {completedLessons}/{totalLessons} completed
-            {module.quiz && (
-              <span className="ml-2">
-                • Quiz {moduleQuizPassed ? "✓" : "pending"}
-              </span>
-            )}
-          </p>
-        </div>
-
-        {isOpen ? (
-          <ChevronUp className="mt-1 h-4 w-4 shrink-0 text-slate-400" />
-        ) : (
-          <ChevronDown className="mt-1 h-4 w-4 shrink-0 text-slate-400" />
-        )}
-      </button>
-
-      <AnimatePresence initial={false}>
-        {isOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden"
-          >
-            <div className="space-y-1 border-t border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-900">
-              {module.lessons?.map((lesson, idx) => (
-                <SidebarLessonItem
-                  key={lesson._id}
-                  lesson={lesson as ILessonWithState}
-                  index={idx + 1}
-                  moduleOrder={module.order}
-                  isActive={lesson._id === activeLessonId && !activeQuizId}
-                  isLocked={!isEnrolled || !!lesson.isLockedForUser}
-                  onClick={() => onSelectLesson(lesson as ILessonWithState)}
-                  courseId={courseId}
-                />
-              ))}
-
-              {module.quiz && (
-                <button
-                  onClick={() => {
-                    if (!isEnrolled || module.quiz?.isLockedForUser) return;
-                    router.push(
-                      `/courses/${courseId}/learn?quizId=${module.quiz?._id}`,
-                    );
-                  }}
-                  disabled={!isEnrolled || module.quiz?.isLockedForUser}
-                  className={cn(
-                    "mt-2 flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm",
-                    !isEnrolled || module.quiz.isLockedForUser
-                      ? "cursor-not-allowed opacity-50"
-                      : "hover:bg-slate-50 dark:hover:bg-slate-800",
-                    activeQuizId === module.quiz?._id &&
-                      "bg-primary/10 text-primary",
-                  )}
-                >
-                  {!isEnrolled || module.quiz.isLockedForUser ? (
-                    <Lock className="h-4 w-4 text-slate-400" />
-                  ) : (
-                    <FileQuestion className="h-4 w-4 text-amber-500" />
-                  )}
-                  <span className="font-medium text-slate-700 dark:text-slate-300">
-                    Module Assessment
-                  </span>
-                  {module.quiz.isPassed ? (
-                    <CheckCircle2 className="ml-auto h-4 w-4 text-green-500" />
-                  ) : !module.quiz?.isLockedForUser ? (
-                    <span className="ml-auto text-xs text-amber-500">
-                      Ready
-                    </span>
-                  ) : null}
-                </button>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
-
-const SidebarLessonItem = ({
-  lesson,
-  index,
-  moduleOrder,
-  isActive,
-  isLocked,
-  onClick,
-  courseId,
-}: {
-  lesson: ILessonWithState;
-  index: number;
-  moduleOrder: number;
-  isActive: boolean;
-  isLocked: boolean;
-  onClick: () => void;
-  courseId: string;
-}) => {
-  const router = useRouter();
-  const status = getLessonStatus(lesson);
-
-  const quizPassed = !!lesson.progress.quizPassed || !!lesson.quiz?.isPassed;
-  const quizLocked = !!lesson.quiz?.isLockedForUser;
-  return (
-    <>
-      <button
-        onClick={onClick}
-        disabled={isLocked}
-        className={cn(
-          "flex w-full items-start gap-3 rounded-xl px-3 py-2 text-left transition cursor-pointer",
-          isActive
-            ? "bg-primary/10"
-            : "hover:bg-slate-50 dark:hover:bg-slate-800",
-          isLocked && "cursor-not-allowed opacity-60",
-        )}
-      >
-        <div className="mt-0.5 shrink-0">
-          {isLocked ? (
-            <Lock className="h-4 w-4 text-slate-400" />
-          ) : lesson.type === "video" ? (
-            <PlayCircle className="h-4 w-4 text-blue-500" />
-          ) : lesson.type === "audio" ? (
-            <Headphones className="h-4 w-4 text-purple-500" />
-          ) : (
-            <FileText className="h-4 w-4 text-amber-500" />
-          )}
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <p
-            className={cn(
-              "line-clamp-2 text-sm font-medium",
-              isActive ? "text-primary" : "text-slate-800 dark:text-slate-200",
-            )}
-          >
-            {index}. {lesson.title}
-          </p>
-
-          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-            <span>M{moduleOrder}</span>
-
-            {lesson.durationSeconds ? (
-              <>
-                <span>•</span>
-                <span>
-                  {lesson.type === "article"
-                    ? calculateReadTime(lesson.content?.textContent)
-                    : formatDuration(lesson.durationSeconds)}
-                </span>
-              </>
-            ) : null}
-          </div>
-        </div>
-
-        {status === "completed" ? (
-          <CheckCircle2 className="mt-1 h-4 w-4 text-green-500" />
-        ) : (
-          <Circle className="mt-1 h-4 w-4 text-slate-300" />
-        )}
-      </button>
-
-      {lesson.quiz && (
-        <div className="mt-1 ml-8">
-          <button
-            type="button"
-            onClick={() => {
-              if (quizLocked) return;
-              router.push(
-                `/courses/${courseId}/learn?quizId=${lesson.quiz?._id}`,
-              );
-            }}
-            disabled={quizLocked}
-            className={cn(
-              "flex items-center gap-2 rounded-lg border px-2 py-1 text-[11px] cursor-pointer",
-              quizLocked
-                ? "cursor-not-allowed border-slate-200 text-slate-400 dark:border-slate-700"
-                : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800",
-            )}
-          >
-            <FileQuestion className="h-3 w-3" />
-            <span>
-              {quizLocked
-                ? "Quiz locked until lesson is completed"
-                : !quizPassed
-                  ? "Take lesson quiz"
-                  : "Review lesson quiz"}
-            </span>
-          </button>
-        </div>
-      )}
-    </>
-  );
-};
-
-const CourseQuizSidebarItem = ({
-  courseQuiz,
-  isEnrolled,
-  courseId,
-  isActive,
-}: {
-  courseQuiz: IQuizSummary;
-  isEnrolled: boolean;
-  courseId: string;
-  isActive: boolean;
-}) => {
-  const router = useRouter();
-  const isLocked = !isEnrolled || courseQuiz.isLockedForUser;
-
-  return (
-    <button
-      onClick={() => {
-        if (isLocked) return;
-        router.push(`/courses/${courseId}/learn?quizId=${courseQuiz._id}`);
-      }}
-      disabled={isLocked}
-      className={cn(
-        "flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left",
-        "hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer",
-        isActive
-          ? "border-primary/30 bg-primary/10"
-          : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900",
-        isLocked && "cursor-not-allowed opacity-60",
-      )}
-    >
-      {isLocked ? (
-        <Lock className="h-4 w-4 text-slate-400" />
-      ) : (
-        <Award className="h-4 w-4 text-primary" />
-      )}
-
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-slate-900 dark:text-white">
-          Final Course Assessment
-        </p>
-        <p className="mt-0.5 text-xs text-slate-500">
-          Passing score: {courseQuiz.passingScore}%
-        </p>
-      </div>
-
-      {courseQuiz.isPassed ? (
-        <CheckCircle2 className="h-4 w-4 text-green-500" />
-      ) : null}
-    </button>
-  );
-};
-
-const CertificateSidebarItem = ({
-  courseId,
-  isEnrolled,
-}: {
-  courseId: string;
-  isEnrolled: boolean;
-}) => {
-  const router = useRouter();
-
-  return (
-    <button
-      onClick={() => {
-        if (!isEnrolled) return;
-        router.push(`/courses/${courseId}/certificate`);
-      }}
-      disabled={!isEnrolled}
-      className={cn(
-        "flex w-full items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-left dark:border-emerald-900/60 dark:bg-emerald-950/30",
-        !isEnrolled && "cursor-not-allowed opacity-60",
-      )}
-    >
-      <Award className="h-4 w-4 text-emerald-600" />
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-slate-900 dark:text-white">
-          Certificate
-        </p>
-        <p className="mt-0.5 text-xs text-slate-500">
-          View and download your certificate
-        </p>
-      </div>
-      <ChevronRight className="h-4 w-4 text-slate-400" />
-    </button>
   );
 };
 
