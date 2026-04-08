@@ -33,6 +33,7 @@ import CourseDetailSkeleton from "./CourseDetailSkeleton";
 import EnrollmentCTA from "./EnrollmentCTA";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { IQuizSummary } from "@/interfaces/quiz.interface";
 
 type DetailTab = "overview" | "materials";
 
@@ -49,6 +50,7 @@ const CourseDetails = ({ courseId }: { courseId: string }) => {
       enrolled: { isEnrolled: boolean };
       progress: IProgressStats;
       modules: IModuleWithState[];
+      quiz: IQuizSummary | null;
     }>
   >({
     queryKey: ["course-modules", courseId],
@@ -59,6 +61,7 @@ const CourseDetails = ({ courseId }: { courseId: string }) => {
   const modules = data?.data?.modules ?? [];
   const isEnrolled = data?.data?.enrolled?.isEnrolled ?? false;
   const progress = data?.data?.progress;
+  const courseQuiz = data?.data?.quiz ?? null;
 
   const progressPercentage = progress?.percentage ?? 0;
   const completedLessons = progress?.completedLessons ?? 0;
@@ -402,16 +405,51 @@ const CourseDetails = ({ courseId }: { courseId: string }) => {
 
             <div className="custom-scrollbar flex-1 space-y-3 overflow-y-auto p-3">
               {modules.length > 0 ? (
-                modules.map((module) => (
-                  <CurriculumModuleAccordion
-                    key={module._id}
-                    courseId={courseId}
-                    module={module}
-                    isOpen={!!openModules[module._id]}
-                    onToggle={() => toggleModule(module._id)}
-                    isEnrolled={isEnrolled}
-                  />
-                ))
+                <>
+                  {modules.map((module) => (
+                    <CurriculumModuleAccordion
+                      key={module._id}
+                      courseId={courseId}
+                      module={module}
+                      isOpen={!!openModules[module._id]}
+                      onToggle={() => toggleModule(module._id)}
+                      isEnrolled={isEnrolled}
+                    />
+                  ))}
+
+                  {/* ✅ COURSE QUIZ */}
+                  {courseQuiz && (
+                    <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+                      <div className="flex items-center gap-3">
+                        {!isEnrolled || courseQuiz.isLockedForUser ? (
+                          <Lock size={18} className="text-slate-400" />
+                        ) : (
+                          <HelpCircle size={18} className="text-primary" />
+                        )}
+
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                            Final Course Quiz
+                          </p>
+
+                          <p className="text-xs text-slate-500">
+                            Passing Score: {courseQuiz.passingScore}%
+                          </p>
+                        </div>
+
+                        {/* Status */}
+                        {courseQuiz.status && (
+                          <Badge
+                            variant="secondary"
+                            className="text-xs capitalize"
+                          >
+                            {courseQuiz.status.replace("-", " ")}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="flex h-full flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 p-5 text-center dark:border-slate-700 dark:bg-slate-800/50">
                   <p className="text-slate-500 text-sm">

@@ -38,6 +38,12 @@ export interface IQuiz {
   updatedAt: string;
 }
 
+export interface IQuizWithAttempts extends IQuiz {
+  attemptsUsed: number;
+  attemptsLeft: number;
+  lastAttempt: IQuizAttempt | null;
+}
+
 export interface IQuizSummary {
   _id: string;
   title: string;

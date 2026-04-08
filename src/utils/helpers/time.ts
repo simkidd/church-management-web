@@ -18,3 +18,17 @@ export const formatVideoDuration = (seconds?: number) => {
   }
   return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
 };
+
+const stripHtml = (html: string) => html.replace(/<[^>]*>/g, "");
+
+export const calculateReadTime = (text?: string) => {
+  if (!text) return null;
+
+  const cleanText = stripHtml(text);
+  const words = cleanText.trim().split(/\s+/).length;
+
+  const wordsPerMinute = 220; // realistic average
+  const minutes = Math.ceil(words / wordsPerMinute);
+
+  return `${minutes} min read`;
+};

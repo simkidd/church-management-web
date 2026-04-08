@@ -11,8 +11,8 @@ const EnrollmentCTA = ({ courseId }: { courseId: string }) => {
 
   const enrollMutation = useMutation({
     mutationFn: (courseId: string) => courseApi.enrollInCourse(courseId),
-    onSuccess: () => {
-      toast.success("Successfully enrolled in the course!");
+    onSuccess: (res) => {
+      toast.success(res.message || "Successfully enrolled in the course!");
       queryClient.invalidateQueries({
         queryKey: ["course-modules", courseId],
       });
@@ -21,7 +21,7 @@ const EnrollmentCTA = ({ courseId }: { courseId: string }) => {
     },
     onError: (err: AxiosError<ApiErrorResponse>) => {
       toast.error(
-        err.response?.data.message || "An error occurred during enrollment."
+        err.response?.data.message || "An error occurred during enrollment.",
       );
     },
   });

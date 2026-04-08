@@ -14,11 +14,13 @@ import { Button } from "@/components/ui/button";
 const QuizLeaveDialog = ({
   open,
   onOpenChange,
-  leaveHref,
+  onConfirm,
+  isLeaving = false,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  leaveHref: string;
+  onConfirm: () => void;
+  isLeaving?: boolean;
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -26,16 +28,26 @@ const QuizLeaveDialog = ({
         <DialogHeader>
           <DialogTitle>Leave quiz?</DialogTitle>
           <DialogDescription>
-            Your current answers on this screen will not be submitted unless you finish and submit the quiz.
+            Your current answers on this screen will not be submitted unless you
+            finish and submit the quiz.
           </DialogDescription>
         </DialogHeader>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="outline"
+            className="cursor-pointer"
+            onClick={() => onOpenChange(false)}
+          >
             Stay here
           </Button>
-          <Button asChild variant="destructive">
-            <Link href={leaveHref}>Leave quiz</Link>
+          <Button
+            variant="destructive"
+            onClick={onConfirm}
+            disabled={isLeaving}
+            className="cursor-pointer"
+          >
+            {isLeaving ? "Leaving..." : "Leave quiz"}
           </Button>
         </DialogFooter>
       </DialogContent>

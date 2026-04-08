@@ -14,10 +14,7 @@ export const getLessonCompleted = (lesson: ILessonWithState) => {
   const hasQuiz = getLessonHasQuiz(lesson);
   const quizPassed = getLessonQuizPassed(lesson);
 
-  return (
-    !!lesson.isCompleted ||
-    (hasQuiz ? contentCompleted && quizPassed : contentCompleted)
-  );
+  return hasQuiz ? contentCompleted && quizPassed : contentCompleted;
 };
 
 export const getLessonStatus = (lesson: ILessonWithState) => {
@@ -26,12 +23,25 @@ export const getLessonStatus = (lesson: ILessonWithState) => {
   const quizPassed = getLessonQuizPassed(lesson);
   const completed = getLessonCompleted(lesson);
 
-  if (completed) return "completed";
-  if (!hasQuiz && !contentCompleted) return "content-pending";
-  if (!hasQuiz && contentCompleted) return "completed";
-  if (hasQuiz && !contentCompleted) return "content-pending";
-  if (hasQuiz && contentCompleted && !quizPassed) return "quiz-pending";
+  const lessonLocked = lesson.isLockedForUser;
+  const quizLocked = lesson.quiz?.isLockedForUser;
 
+  // 🔒 Highest priority
+  if (lessonLocked) return "locked";
+
+  // ✅ Fully completed
+  if (completed) return "completed";
+
+  // ⏳ Content not completed
+  if (!contentCompleted) return "content-pending";
+
+  // 📝 Quiz logic
+  if (hasQuiz) {
+    if (quizLocked) return "quiz-locked";
+    if (!quizPassed) return "quiz-pending";
+  }
+
+  // ✅ No quiz + content done
   return "completed";
 };
 

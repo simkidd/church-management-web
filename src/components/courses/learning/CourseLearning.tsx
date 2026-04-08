@@ -1,52 +1,47 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
-import { AnimatePresence, motion } from "framer-motion";
-import { toast } from "sonner";
 import {
   ArrowLeft,
+  Award,
   BookOpen,
   CheckCircle2,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ChevronUp,
-  Circle,
   FileQuestion,
-  FileText,
   Headphones,
   Lock,
   PlayCircle,
 } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { ICourse } from "@/interfaces/course.interface";
 import { ILessonWithState } from "@/interfaces/lesson.interface";
 import { IModuleWithState } from "@/interfaces/module.interface";
 import { IProgressStats } from "@/interfaces/progress.interface";
+import { IQuizSummary } from "@/interfaces/quiz.interface";
 import { ApiErrorResponse, ApiResponse } from "@/interfaces/response.interface";
 
 import courseApi from "@/lib/api/course.api";
 import progressApi from "@/lib/api/progress.api";
+import { quizApi } from "@/lib/api/quiz.api";
 import { useCourseLearningStore } from "@/stores/course-learning.store";
-import { cn } from "@/lib/utils";
-import { formatDuration } from "@/utils/helpers/time";
 import {
   countCompletedLessons,
-  getLessonCompleted,
   getLessonContentCompleted,
   getLessonHasQuiz,
   getLessonQuizPassed,
-  getLessonStatus,
 } from "@/utils/helpers/course-learning";
+import { calculateReadTime, formatDuration } from "@/utils/helpers/time";
 
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import VideoPlayer from "../../sermons/VideoPlayer";
 import TextContentRenderer from "../../shared/TextContentRenderer";
+import QuizIntroCard from "../quiz/QuizIntroCard";
+import { CourseLearningSidebar } from "./CourseLearningSidebar";
 import CourseLearningSkeleton from "./CourseLearningSkeleton";
 
 const CourseLearning = ({ courseId }: { courseId: string }) => {
@@ -55,9 +50,11 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
   const queryClient = useQueryClient();
 
   const lessonId = searchParams.get("lessonId");
+  const quizId = searchParams.get("quizId");
 
   const progressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [watchProgress, setWatchProgress] = useState(0); // Track watch percentage
+  const [watchProgress, setWatchProgress] = useState(0);
+  const [showMobileOutline, setShowMobileOutline] = useState(false);
 
   const {
     setCourseData,
@@ -73,19 +70,32 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
     previousPlayableLesson,
     currentLessonPosition,
     totalLessons,
+    setQuizState,
+    setActiveQuiz,
+    nextAfterLesson,
+    course,
+    getNextModuleFirstLesson,
   } = useCourseLearningStore();
 
   const { data, isPending } = useQuery<
     ApiResponse<{
       course: ICourse;
-      enrolled: { isEnrolled: boolean };
+      enrolled: { isEnrolled: boolean; status?: string | null };
       progress: IProgressStats;
       modules: IModuleWithState[];
+      quiz: IQuizSummary | null;
     }>
   >({
     queryKey: ["course-learning", courseId],
     queryFn: () => courseApi.getCourseModules(courseId),
     enabled: !!courseId,
+  });
+
+  const { data: quizData, isPending: isQuizPending } = useQuery({
+    queryKey: ["quiz", quizId],
+    queryFn: () => quizApi.getQuizById(quizId!),
+    enabled: !!quizId,
+    staleTime: 30_000,
   });
 
   useEffect(() => {
@@ -96,18 +106,22 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
       modules: data.data.modules,
       progress: data.data.progress,
       enrolled: data.data.enrolled,
+      quiz: data.data.quiz,
       preferredLessonId: lessonId ?? undefined,
     });
   }, [data, lessonId, setCourseData]);
 
-  // useEffect(() => {
-  //   if (!activeLesson?._id) return;
-
-  //   const currentLessonId = searchParams.get("lessonId");
-  //   if (currentLessonId === activeLesson._id) return;
-
-  //   router.replace(`/courses/${courseId}/learn?lessonId=${activeLesson._id}`);
-  // }, [activeLesson?._id, courseId, router, searchParams]);
+  useEffect(() => {
+    if (quizData?.data && quizId) {
+      setQuizState(quizId, {
+        attemptsUsed: quizData.data.attemptsUsed ?? 0,
+        attemptsLeft: quizData.data.attemptsLeft ?? 0,
+        lastAttempt: quizData.data.lastAttempt,
+        isLoading: false,
+      });
+      setActiveQuiz(quizId);
+    }
+  }, [quizData, quizId, setQuizState, setActiveQuiz]);
 
   const markContentCompleteMutation = useMutation({
     mutationFn: (selectedLessonId: string) =>
@@ -140,42 +154,36 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
         watchTimeSeconds,
         lastPositionSeconds,
       }),
-    onSuccess: () => {
-      // Invalidate to refresh progress data
-      queryClient.invalidateQueries({
-        queryKey: ["course-learning", courseId],
-      });
-    },
-    onError: (error: AxiosError<ApiErrorResponse>) => {
-      toast.error("Failed to update playback progress", {
-        description: error.response?.data?.message,
-      });
-    },
+    // onSuccess: () => {
+    //   queryClient.invalidateQueries({
+    //     queryKey: ["course-learning", courseId],
+    //   });
+    // },
+    // onError: (error: AxiosError<ApiErrorResponse>) => {
+    //   toast.error("Failed to update playback progress", {
+    //     description: error.response?.data?.message,
+    //   });
+    // },
   });
 
-  // Debounce helper
-
   const saveProgress = (
-    lessonId: string,
+    lessonIdValue: string,
     watchTime: number,
     position: number,
   ) => {
-    // Clear pending save
     if (progressTimeoutRef.current) {
       clearTimeout(progressTimeoutRef.current);
     }
 
-    // Debounce by 1 second
     progressTimeoutRef.current = setTimeout(() => {
       updatePlaybackMutation.mutate({
-        lessonId,
+        lessonId: lessonIdValue,
         watchTimeSeconds: Math.floor(watchTime),
         lastPositionSeconds: Math.floor(position),
       });
     }, 1000);
   };
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (progressTimeoutRef.current) {
@@ -192,20 +200,21 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
     return <div className="p-8 text-sm text-slate-500">Course not found.</div>;
   }
 
-  const course = data.data.course;
+  const currentCourse = data.data.course;
   const currentModuleData = currentModule();
   const nextItem = nextPlayable();
   const previousLesson = previousPlayableLesson();
   const currentPosition = currentLessonPosition();
   const totalLessonCount = totalLessons();
+  const courseQuiz = course?.quiz ?? data.data.quiz ?? null;
 
   const completedLessons = modules.reduce(
     (acc, module) => acc + countCompletedLessons(module.lessons ?? []),
     0,
   );
   const progressPercentage = progress?.percentage ?? 0;
+  const courseCompleted = !!progress?.courseCompleted;
 
-  // Calculate if user has watched enough to manually complete (e.g., 80%)
   const hasWatchedEnough = watchProgress >= 80;
 
   const isLocked = !!activeLesson?.isLockedForUser || !isEnrolled;
@@ -218,10 +227,6 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
     ? getLessonContentCompleted(activeLesson)
     : false;
   const quizPassed = activeLesson ? getLessonQuizPassed(activeLesson) : false;
-  const lessonCompleted = activeLesson
-    ? getLessonCompleted(activeLesson)
-    : false;
-  const lessonStatus = activeLesson ? getLessonStatus(activeLesson) : null;
 
   const mediaItem = activeLesson
     ? {
@@ -235,7 +240,7 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
             }
           : undefined,
         thumbnail: {
-          url: course.thumbnail?.url,
+          url: currentCourse.thumbnail?.url,
           alt: activeLesson.title,
         },
         duration:
@@ -260,7 +265,18 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
       return;
     }
 
-    router.push(`/courses/${courseId}/quiz/${nextItem.id}`);
+    if (
+      nextItem.type === "lesson-quiz" ||
+      nextItem.type === "module-quiz" ||
+      nextItem.type === "course-quiz"
+    ) {
+      router.push(`/courses/${courseId}/learn?quizId=${nextItem.id}`);
+      return;
+    }
+
+    if (nextItem.type === "certificate") {
+      router.push(`/courses/${courseId}/certificate`);
+    }
   };
 
   const handlePrevious = () => {
@@ -270,538 +286,528 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
 
   const handleOpenLessonQuiz = () => {
     if (!activeLesson?.quiz?._id) return;
-    router.push(`/courses/${courseId}/quiz/${activeLesson.quiz._id}`);
+    router.push(`/courses/${courseId}/learn?quizId=${activeLesson.quiz._id}`);
+  };
+
+  const handleStartQuiz = (targetQuizId: string) => {
+    router.push(`/courses/${courseId}/quiz/${targetQuizId}`);
+  };
+
+  const handleCloseQuizIntro = () => {
+    if (activeLesson) {
+      router.replace(`/courses/${courseId}/learn?lessonId=${activeLesson._id}`);
+    } else {
+      router.replace(`/courses/${courseId}/learn`);
+    }
+  };
+
+  const quizState = quizId
+    ? useCourseLearningStore.getState().quizStates[quizId]
+    : null;
+  const hasPassedActiveQuiz = quizState?.lastAttempt?.passed ?? false;
+
+  let nextQuizAction: { type: string; label: string; href: string } | null =
+    null;
+
+  if (quizId && hasPassedActiveQuiz) {
+    const isLessonQuiz = activeLesson?.quiz?._id === quizId;
+    const isModuleQuiz = currentModuleData?.quiz?._id === quizId;
+    const isCourseQuiz = courseQuiz?._id === quizId;
+
+    if (isLessonQuiz && activeLesson) {
+      const nextLesson = nextAfterLesson(activeLesson._id);
+
+      if (nextLesson?.type === "lesson") {
+        nextQuizAction = {
+          type: "lesson",
+          label: "Next Lesson",
+          href: `/courses/${courseId}/learn?lessonId=${nextLesson.id}`,
+        };
+      } else if (nextLesson?.type === "module-quiz") {
+        nextQuizAction = {
+          type: "module-quiz",
+          label: "Module Assessment",
+          href: `/courses/${courseId}/learn?quizId=${nextLesson.id}`,
+        };
+      } else if (nextLesson?.type === "course-quiz") {
+        nextQuizAction = {
+          type: "course-quiz",
+          label: "Final Assessment",
+          href: `/courses/${courseId}/learn?quizId=${nextLesson.id}`,
+        };
+      } else if (nextLesson?.type === "certificate" && courseCompleted) {
+        nextQuizAction = {
+          type: "certificate",
+          label: "View Certificate",
+          href: `/courses/${courseId}/certificate`,
+        };
+      }
+    } else if (isModuleQuiz && currentModuleData) {
+      const nextModuleLesson = getNextModuleFirstLesson(currentModuleData._id);
+
+      if (nextModuleLesson) {
+        nextQuizAction = {
+          type: "lesson",
+          label: "Next Module",
+          href: `/courses/${courseId}/learn?lessonId=${nextModuleLesson._id}`,
+        };
+      } else if (courseQuiz && !courseQuiz.isPassed) {
+        nextQuizAction = {
+          type: "course-quiz",
+          label: "Final Assessment",
+          href: `/courses/${courseId}/learn?quizId=${courseQuiz._id}`,
+        };
+      } else if (courseCompleted) {
+        nextQuizAction = {
+          type: "certificate",
+          label: "View Certificate",
+          href: `/courses/${courseId}/certificate`,
+        };
+      }
+    } else if (isCourseQuiz && courseCompleted) {
+      nextQuizAction = {
+        type: "certificate",
+        label: "View Certificate",
+        href: `/courses/${courseId}/certificate`,
+      };
+    }
+  }
+
+  const showMarkCompleteButton =
+    !!activeLesson &&
+    !isLocked &&
+    !contentCompleted &&
+    (!isVideo || hasWatchedEnough);
+
+  const showTakeQuizButton =
+    !!activeLesson && !isLocked && hasQuiz && contentCompleted && !quizPassed;
+
+  const showCompletedButton =
+    !!activeLesson &&
+    (hasQuiz ? contentCompleted && quizPassed : contentCompleted);
+
+  const formatLessonMetaDuration = (lesson?: ILessonWithState | null) => {
+    if (!lesson?.durationSeconds) return null;
+
+    if (lesson.type === "article") {
+      return calculateReadTime(lesson.content?.textContent);
+    }
+
+    return formatDuration(lesson.durationSeconds);
   };
 
   return (
-    <div className="flex h-full min-h-0 bg-slate-50 dark:bg-slate-950">
+    <div className="flex h-full min-h-0 bg-[#f6f1e8] dark:bg-slate-950">
       <aside className="hidden h-full w-[360px] shrink-0 border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 lg:flex lg:flex-col">
-        <div className="border-b border-slate-200 px-5 py-4 dark:border-slate-800">
-          <Link
-            href={`/courses/${courseId}`}
-            className="text-xs font-medium text-slate-500 hover:text-primary flex items-center gap-1 py-2 w-fit"
-          >
-            <ArrowLeft size={16} />
-            Back to course
-          </Link>
-
-          <h2 className="mt-2 line-clamp-2 text-base font-bold text-slate-900 dark:text-white">
-            {course.title}
-          </h2>
-
-          <div className="mt-4 space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-500">Progress</span>
-              <span className="font-semibold text-slate-900 dark:text-white">
-                {progressPercentage}%
-              </span>
-            </div>
-            <Progress value={progressPercentage} className="h-1.5" />
-            <p className="text-xs text-slate-500">
-              {completedLessons} of {totalLessonCount} lessons completed
-            </p>
-          </div>
-        </div>
-
-        <div className="min-h-0 flex-1 overflow-y-auto p-3">
-          <div className="space-y-3">
-            {modules.map((module) => (
-              <LearningSidebarModule
-                key={module._id}
-                module={module}
-                isOpen={!!openModules[module._id]}
-                onToggle={() => toggleModule(module._id)}
-                activeLessonId={activeLesson?._id}
-                isEnrolled={isEnrolled}
-                onSelectLesson={handleSelectLesson}
-                courseId={courseId}
-              />
-            ))}
-          </div>
-        </div>
+        <CourseLearningSidebar
+          course={currentCourse}
+          courseId={courseId}
+          modules={modules}
+          openModules={openModules}
+          toggleModule={toggleModule}
+          activeLessonId={activeLesson?._id}
+          activeQuizId={quizId}
+          isEnrolled={isEnrolled}
+          progressPercentage={progressPercentage}
+          completedLessons={completedLessons}
+          totalLessonCount={totalLessonCount}
+          courseQuiz={courseQuiz}
+          courseCompleted={courseCompleted}
+          onSelectLesson={handleSelectLesson}
+        />
       </aside>
 
       <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <div className="border-b border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900 sm:px-6">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                {currentModuleData && (
-                  <span>Module {currentModuleData.order}</span>
-                )}
-                {currentModuleData && <span>•</span>}
-                <span>
-                  Lesson {currentPosition} of {totalLessonCount}
-                </span>
-                {activeLesson?.durationSeconds ? (
-                  <>
-                    <span>•</span>
-                    <span>{formatDuration(activeLesson.durationSeconds)}</span>
-                  </>
-                ) : null}
+        {quizId ? (
+          <>
+            <div className="border-b border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900 sm:px-6">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCloseQuizIntro}
+                  className="text-slate-500"
+                >
+                  <ArrowLeft className="mr-1 h-4 w-4" />
+                  Back
+                </Button>
+                <h1 className="text-lg font-semibold text-slate-900 dark:text-white">
+                  Quiz Preview
+                </h1>
               </div>
-
-              <h1 className="mt-1 truncate text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
-                {activeLesson?.title || "Select a lesson"}
-              </h1>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={handlePrevious}
-                disabled={!previousLesson}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Previous
-              </Button>
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+              {isQuizPending ? (
+                <QuizIntroSkeleton />
+              ) : quizData?.data ? (
+                <QuizIntroCard
+                  quiz={quizData.data}
+                  attemptsUsed={quizData.data.attemptsUsed ?? 0}
+                  lastAttempt={quizData.data.lastAttempt}
+                  backHref={`/courses/${courseId}/learn${
+                    activeLesson?._id ? `?lessonId=${activeLesson._id}` : ""
+                  }`}
+                  startHref={`/courses/${courseId}/quiz/${quizId}`}
+                  onStart={() => handleStartQuiz(quizId)}
+                  hasNextLesson={!!nextQuizAction}
+                  nextLessonTitle={nextQuizAction?.label}
+                  onNextLesson={() => {
+                    if (nextQuizAction) {
+                      router.push(nextQuizAction.href);
+                    }
+                  }}
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center">
+                  <div className="text-center">
+                    <FileQuestion className="mx-auto h-10 w-10 text-slate-300" />
+                    <p className="mt-3 text-sm text-slate-500">
+                      Quiz not found or unavailable.
+                    </p>
+                    <Button
+                      variant="outline"
+                      className="mt-4"
+                      onClick={handleCloseQuizIntro}
+                    >
+                      Go Back
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="border-b border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900 sm:px-6">
+              <div className="mb-3 flex items-center justify-between gap-2 lg:hidden">
+                <Button
+                  variant={"outline"}
+                  size={"sm"}
+                  onClick={() => setShowMobileOutline(true)}
+                  className="cursor-pointer"
+                >
+                  <BookOpen className="h-4 w-4" />
+                  Course Content
+                </Button>
 
-              {activeLesson &&
-                !lessonCompleted &&
-                (!hasQuiz || !contentCompleted) &&
-                (!isVideo ||
-                  (isVideo && hasWatchedEnough && !contentCompleted)) && (
+                <div className="text-xs text-slate-500">
+                  {completedLessons}/{totalLessonCount} completed
+                </div>
+              </div>
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                    {currentModuleData && (
+                      <span>Module {currentModuleData.order}</span>
+                    )}
+                    {currentModuleData && <span>•</span>}
+                    <span>
+                      Lesson {currentPosition} of {totalLessonCount}
+                    </span>
+                    {formatLessonMetaDuration(activeLesson) ? (
+                      <>
+                        <span>•</span>
+                        <span>{formatLessonMetaDuration(activeLesson)}</span>
+                      </>
+                    ) : null}
+                  </div>
+
+                  <h1 className="mt-1 truncate text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
+                    {activeLesson?.title || "Select a lesson"}
+                  </h1>
+                </div>
+
+                <div className="flex w-full flex-wrap items-stretch gap-2 lg:w-auto lg:items-center">
                   <Button
                     variant="outline"
-                    onClick={() =>
-                      markContentCompleteMutation.mutate(activeLesson._id)
-                    }
-                    disabled={
-                      isLocked ||
-                      contentCompleted ||
-                      markContentCompleteMutation.isPending
-                    }
+                    onClick={handlePrevious}
+                    disabled={!previousLesson}
+                    className="flex-1 sm:flex-none"
                   >
-                    <CheckCircle2 className="h-4 w-4" />
-                    {contentCompleted
-                      ? "Content completed"
-                      : markContentCompleteMutation.isPending
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+
+                  {showMarkCompleteButton && (
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        markContentCompleteMutation.mutate(activeLesson._id)
+                      }
+                      disabled={markContentCompleteMutation.isPending}
+                      className="flex-1 sm:flex-none"
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      {markContentCompleteMutation.isPending
                         ? "Saving..."
                         : hasQuiz
                           ? "Mark lesson complete"
                           : "Mark complete"}
+                    </Button>
+                  )}
+
+                  {showTakeQuizButton && (
+                    <Button
+                      onClick={handleOpenLessonQuiz}
+                      disabled={isLocked}
+                      className="flex-1 sm:flex-none"
+                    >
+                      <FileQuestion className="h-4 w-4" />
+                      Take Quiz
+                    </Button>
+                  )}
+
+                  {showCompletedButton && (
+                    <Button
+                      variant="outline"
+                      disabled
+                      className="flex-1 sm:flex-none"
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      Completed
+                    </Button>
+                  )}
+
+                  <Button
+                    onClick={handleNext}
+                    disabled={
+                      !nextItem || (hasQuiz && contentCompleted && !quizPassed)
+                    }
+                    className="flex-1 sm:flex-none"
+                  >
+                    {nextItem?.type === "certificate" ? (
+                      <>
+                        <Award className="mr-1 h-4 w-4" />
+                        Certificate
+                      </>
+                    ) : nextItem?.type === "module-quiz" ? (
+                      <>
+                        Module Quiz
+                        <ChevronRight className="h-4 w-4" />
+                      </>
+                    ) : nextItem?.type === "course-quiz" ? (
+                      <>
+                        Final Quiz
+                        <ChevronRight className="h-4 w-4" />
+                      </>
+                    ) : (
+                      <>
+                        Next
+                        <ChevronRight className="h-4 w-4" />
+                      </>
+                    )}
                   </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto ">
+              <div className="container mx-auto">
+                {!activeLesson ? (
+                  <div className="flex h-full items-center justify-center p-8">
+                    <div className="text-center">
+                      <BookOpen className="mx-auto h-10 w-10 text-slate-300" />
+                      <p className="mt-3 text-sm text-slate-500">
+                        Select a lesson to begin learning.
+                      </p>
+                    </div>
+                  </div>
+                ) : isLocked ? (
+                  <div className="flex h-full items-center justify-center p-8">
+                    <div className="max-w-md text-center">
+                      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-800">
+                        <Lock className="h-7 w-7 text-slate-500" />
+                      </div>
+                      <h3 className="mt-4 text-xl font-bold text-slate-900 dark:text-white">
+                        Lesson locked
+                      </h3>
+                      <p className="mt-2 text-sm text-slate-500">
+                        Complete the previous lesson and its assessment to
+                        unlock.
+                      </p>
+                    </div>
+                  </div>
+                ) : isVideo ? (
+                  <div className="space-y-4 p-3 sm:p-6 lg:p-8">
+                    <div className="overflow-hidden rounded-2xl bg-black shadow-sm">
+                      {mediaItem ? (
+                        <VideoPlayer
+                          media={mediaItem}
+                          type={
+                            activeLesson.type === "audio" ? "audio" : "video"
+                          }
+                          showTitle={false}
+                          autoplay={false}
+                          onProgress={(videoProgress) => {
+                            saveProgress(
+                              activeLesson._id,
+                              videoProgress.watchTimeSeconds,
+                              videoProgress.lastPositionSeconds,
+                            );
+
+                            if (mediaItem.duration) {
+                              const percent =
+                                (videoProgress.lastPositionSeconds /
+                                  mediaItem.duration) *
+                                100;
+                              setWatchProgress(percent);
+                            }
+                          }}
+                          onComplete={() => {
+                            updatePlaybackMutation.mutate({
+                              lessonId: activeLesson._id,
+                              watchTimeSeconds: Math.floor(
+                                mediaItem.duration || 0,
+                              ),
+                              lastPositionSeconds: Math.floor(
+                                mediaItem.duration || 0,
+                              ),
+                            });
+                          }}
+                        />
+                      ) : (
+                        <div className="flex aspect-video items-center justify-center text-slate-400">
+                          No media available
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mx-auto w-full max-w-4xl space-y-4">
+                      <div className="rounded-2xl bg-white p-4 sm:p-6 shadow-sm dark:bg-slate-900">
+                        <div className="flex items-center gap-2 text-sm text-slate-500">
+                          {activeLesson.type === "audio" ? (
+                            <Headphones className="h-4 w-4 text-purple-500" />
+                          ) : (
+                            <PlayCircle className="h-4 w-4 text-blue-500" />
+                          )}
+                          <span className="capitalize">
+                            {activeLesson.type} lesson
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : isArticle ? (
+                  <div className="px-4 py-6 sm:px-6 lg:px-8">
+                    <div className="mx-auto w-full max-w-4xl space-y-4">
+                      <article className="min-h-[calc(100vh-10rem)] bg-white px-6 py-8 shadow-[0_10px_30px_rgba(0,0,0,0.06)] dark:bg-slate-900 sm:px-8 sm:py-8 lg:px-14 lg:py-12">
+                        {activeLesson.content?.textContent ? (
+                          <TextContentRenderer
+                            content={activeLesson.content.textContent}
+                          />
+                        ) : (
+                          <p className="text-sm text-slate-500">
+                            No article content available.
+                          </p>
+                        )}
+                      </article>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex h-full items-center justify-center p-8 text-sm text-slate-500">
+                    Unsupported lesson type.
+                  </div>
                 )}
+              </div>
+            </div>
+          </>
+        )}
+      </main>
 
-              {activeLesson && hasQuiz && contentCompleted && !quizPassed && (
-                <Button
-                  onClick={handleOpenLessonQuiz}
-                  disabled={isLocked}
-                  className="text-white"
-                >
-                  <FileQuestion className="h-4 w-4" />
-                  Take Quiz
-                </Button>
-              )}
-
-              {activeLesson && lessonCompleted && (
-                <Button variant="outline" disabled>
-                  <CheckCircle2 className="h-4 w-4" />
-                  Completed
-                </Button>
-              )}
-
+      {showMobileOutline && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowMobileOutline(false)}
+          />
+          <div className="absolute inset-y-0 left-0 w-[88%] max-w-sm bg-white shadow-xl dark:bg-slate-900">
+            <div className="flex items-center justify-between border-b border-slate-200 px-4 py-4 dark:border-slate-800">
+              <div>
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                  Course Content
+                </p>
+                <p className="text-xs text-slate-500">
+                  {completedLessons} of {totalLessonCount} completed
+                </p>
+              </div>
               <Button
-                onClick={handleNext}
-                disabled={
-                  !nextItem || (hasQuiz && contentCompleted && !quizPassed)
-                }
-                className="text-white"
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowMobileOutline(false)}
               >
-                Next
-                <ChevronRight className="h-4 w-4" />
+                Close
               </Button>
             </div>
-          </div>
-        </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          <div className="container mx-auto">
-            {!activeLesson ? (
-              <div className="flex h-full items-center justify-center p-8">
-                <div className="text-center">
-                  <BookOpen className="mx-auto h-10 w-10 text-slate-300" />
-                  <p className="mt-3 text-sm text-slate-500">
-                    Select a lesson to begin learning.
-                  </p>
-                </div>
-              </div>
-            ) : isLocked ? (
-              <div className="flex h-full items-center justify-center p-8">
-                <div className="max-w-md text-center">
-                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-800">
-                    <Lock className="h-7 w-7 text-slate-500" />
-                  </div>
-                  <h3 className="mt-4 text-xl font-bold text-slate-900 dark:text-white">
-                    Lesson locked
-                  </h3>
-                  <p className="mt-2 text-sm text-slate-500">
-                    Complete the required lessons before accessing this content.
-                  </p>
-                </div>
-              </div>
-            ) : isVideo ? (
-              <div className="space-y-6 p-4 sm:p-6 lg:p-8">
-                <div className="overflow-hidden rounded-2xl bg-black shadow-sm">
-                  {mediaItem ? (
-                    <VideoPlayer
-                      media={mediaItem}
-                      type={activeLesson.type === "audio" ? "audio" : "video"}
-                      showTitle={false}
-                      autoplay={false}
-                      onProgress={(progress) => {
-                        // Debounced save every 10 seconds from VideoPlayer
-                        saveProgress(
-                          activeLesson._id,
-                          progress.watchTimeSeconds,
-                          progress.lastPositionSeconds,
-                        );
-
-                        // Calculate watch percentage for manual completion threshold
-                        if (mediaItem.duration) {
-                          const percent =
-                            (progress.lastPositionSeconds /
-                              mediaItem.duration) *
-                            100;
-                          setWatchProgress(percent);
-                        }
-                      }}
-                      onComplete={() => {
-                        // Immediate final save
-                        updatePlaybackMutation.mutate({
-                          lessonId: activeLesson._id,
-                          watchTimeSeconds: Math.floor(mediaItem.duration || 0),
-                          lastPositionSeconds: Math.floor(
-                            mediaItem.duration || 0,
-                          ),
-                        });
-                      }}
-                    />
-                  ) : (
-                    <div className="flex aspect-video items-center justify-center text-slate-400">
-                      No media available
-                    </div>
-                  )}
-                </div>
-
-                <div className="mx-auto w-full max-w-4xl space-y-4">
-                  <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-slate-900">
-                    <div className="flex items-center gap-2 text-sm text-slate-500">
-                      {activeLesson.type === "audio" ? (
-                        <Headphones className="h-4 w-4 text-purple-500" />
-                      ) : (
-                        <PlayCircle className="h-4 w-4 text-blue-500" />
-                      )}
-                      <span className="capitalize">
-                        {activeLesson.type} lesson
-                      </span>
-                    </div>
-                  </div>
-
-                  {hasQuiz && (
-                    <LessonQuizPanel
-                      passingScore={activeLesson.quiz?.passingScore ?? 0}
-                      status={lessonStatus}
-                      onOpenQuiz={handleOpenLessonQuiz}
-                    />
-                  )}
-                </div>
-              </div>
-            ) : isArticle ? (
-              <div className="bg-[#f6f1e8] px-4 py-6 dark:bg-slate-950 sm:px-6 lg:px-8">
-                <div className="mx-auto w-full max-w-4xl space-y-4">
-                  <article className="min-h-[calc(100vh-10rem)] bg-white px-6 py-8 shadow-[0_10px_30px_rgba(0,0,0,0.06)] dark:bg-slate-900 sm:px-10 sm:py-10 lg:px-14 lg:py-12">
-                    {activeLesson.content?.textContent ? (
-                      <TextContentRenderer
-                        content={activeLesson.content.textContent}
-                      />
-                    ) : (
-                      <p className="text-sm text-slate-500">
-                        No article content available.
-                      </p>
-                    )}
-                  </article>
-
-                  {hasQuiz && (
-                    <LessonQuizPanel
-                      passingScore={activeLesson.quiz?.passingScore ?? 0}
-                      status={lessonStatus}
-                      onOpenQuiz={handleOpenLessonQuiz}
-                    />
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="flex h-full items-center justify-center p-8 text-sm text-slate-500">
-                Unsupported lesson type.
-              </div>
-            )}
-          </div>
-        </div>
-      </main>
-    </div>
-  );
-};
-
-const LessonQuizPanel = ({
-  passingScore,
-  status,
-  onOpenQuiz,
-}: {
-  passingScore: number;
-  status: string | null;
-  onOpenQuiz: () => void;
-}) => {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold text-slate-900 dark:text-white">
-            Lesson Quiz
-          </p>
-          <p className="mt-1 text-sm text-slate-500">
-            Pass this quiz after completing the lesson content.
-          </p>
-          <p className="mt-2 text-xs text-slate-500">
-            Passing score: {passingScore}%
-          </p>
-        </div>
-
-        {status === "content-pending" ? (
-          <span className="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
-            Complete lesson first
-          </span>
-        ) : status === "quiz-pending" ? (
-          <Button onClick={onOpenQuiz} className="text-white">
-            <FileQuestion className="h-4 w-4" />
-            Take Quiz
-          </Button>
-        ) : (
-          <span className="inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 dark:bg-green-950/40 dark:text-green-300">
-            Passed
-          </span>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const LearningSidebarModule = ({
-  module,
-  isOpen,
-  onToggle,
-  activeLessonId,
-  isEnrolled,
-  onSelectLesson,
-  courseId,
-}: {
-  module: IModuleWithState;
-  isOpen: boolean;
-  onToggle: () => void;
-  activeLessonId?: string;
-  isEnrolled: boolean;
-  onSelectLesson: (lesson: ILessonWithState) => void;
-  courseId: string;
-}) => {
-  const router = useRouter();
-  const completedLessons = countCompletedLessons(module.lessons ?? []);
-  const totalLessons = module.lessons?.length || 0;
-
-  return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 dark:border-slate-800 dark:bg-slate-800/30">
-      <button
-        onClick={onToggle}
-        className="flex w-full items-start justify-between gap-3 px-4 py-3 text-left"
-      >
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">
-            Module {module.order}
-          </p>
-          <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-300">
-            {module.title}
-          </p>
-          <p className="mt-1 text-xs text-slate-500">
-            {completedLessons}/{totalLessons} completed
-          </p>
-        </div>
-
-        {isOpen ? (
-          <ChevronUp className="mt-1 h-4 w-4 shrink-0 text-slate-400" />
-        ) : (
-          <ChevronDown className="mt-1 h-4 w-4 shrink-0 text-slate-400" />
-        )}
-      </button>
-
-      <AnimatePresence initial={false}>
-        {isOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden"
-          >
-            <div className="space-y-1 border-t border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-900">
-              {module.lessons?.map((lesson, idx) => (
-                <SidebarLessonItem
-                  key={lesson._id}
-                  lesson={lesson as ILessonWithState}
-                  index={idx + 1}
-                  moduleOrder={module.order}
-                  isActive={lesson._id === activeLessonId}
-                  isLocked={!isEnrolled || !!lesson.isLockedForUser}
-                  onClick={() => onSelectLesson(lesson as ILessonWithState)}
-                  courseId={courseId}
-                />
-              ))}
-
-              {module.quiz && (
-                <button
-                  onClick={() => {
-                    if (!isEnrolled || module.quiz?.isLockedForUser) return;
-                    router.push(
-                      `/courses/${courseId}/quiz/${module.quiz?._id}`,
-                    );
-                  }}
-                  disabled={!isEnrolled || module.quiz?.isLockedForUser}
-                  className={cn(
-                    "mt-2 w-full flex items-center gap-3 rounded-xl px-3 py-2 text-sm cursor-pointer",
-                    !isEnrolled || module.quiz.isLockedForUser
-                      ? "cursor-not-allowed opacity-50"
-                      : "hover:bg-slate-50 dark:hover:bg-slate-800",
-                  )}
-                >
-                  {!isEnrolled || module.quiz.isLockedForUser ? (
-                    <Lock className="h-4 w-4 text-slate-400" />
-                  ) : (
-                    <BookOpen className="h-4 w-4 text-amber-500" />
-                  )}
-                  <span className="font-medium text-slate-700 dark:text-slate-300">
-                    Module Quiz
-                  </span>
-                  {module.quiz.isPassed ? (
-                    <CheckCircle2 className="ml-auto h-4 w-4 text-green-500" />
-                  ) : null}
-                </button>
-              )}
+            <div className="h-[calc(100%-73px)] overflow-y-auto">
+              <CourseLearningSidebar
+                course={currentCourse}
+                courseId={courseId}
+                modules={modules}
+                openModules={openModules}
+                toggleModule={toggleModule}
+                activeLessonId={activeLesson?._id}
+                activeQuizId={quizId}
+                isEnrolled={isEnrolled}
+                progressPercentage={progressPercentage}
+                completedLessons={completedLessons}
+                totalLessonCount={totalLessonCount}
+                courseQuiz={courseQuiz}
+                courseCompleted={courseCompleted}
+                onSelectLesson={(lesson) => {
+                  handleSelectLesson(lesson);
+                  setShowMobileOutline(false);
+                }}
+              />
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
-
-const SidebarLessonItem = ({
-  lesson,
-  index,
-  moduleOrder,
-  isActive,
-  isLocked,
-  onClick,
-  courseId,
-}: {
-  lesson: ILessonWithState;
-  index: number;
-  moduleOrder: number;
-  isActive: boolean;
-  isLocked: boolean;
-  onClick: () => void;
-  courseId: string;
-}) => {
-  const router = useRouter();
-  const completed = getLessonCompleted(lesson);
-  const hasQuiz = getLessonHasQuiz(lesson);
-  const status = getLessonStatus(lesson);
-
-  const icon = isLocked ? (
-    <Lock className="h-4 w-4 text-slate-400" />
-  ) : lesson.type === "article" ? (
-    <FileText className="h-4 w-4 text-green-500" />
-  ) : lesson.type === "audio" ? (
-    <Headphones className="h-4 w-4 text-purple-500" />
-  ) : (
-    <PlayCircle className="h-4 w-4 text-blue-500" />
-  );
-
-  return (
-    <div className="rounded-xl">
-      <button
-        onClick={onClick}
-        disabled={isLocked}
-        className={cn(
-          "flex w-full items-start gap-3 rounded-xl px-3 py-2 text-left transitionv cursor-pointer",
-          isActive
-            ? "bg-primary/10"
-            : "hover:bg-slate-50 dark:hover:bg-slate-800",
-          isLocked && "cursor-not-allowed opacity-60 hover:bg-transparent",
-        )}
-      >
-        <div className="mt-0.5 shrink-0">{icon}</div>
-
-        <div className="min-w-0 flex-1">
-          <p
-            className={cn(
-              "line-clamp-2 text-sm font-medium",
-              isActive ? "text-primary" : "text-slate-700 dark:text-slate-300",
-            )}
-          >
-            {moduleOrder}.{index} {lesson.title}
-          </p>
-
-          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-400">
-            <span className="capitalize">{lesson.type}</span>
-            {lesson.durationSeconds ? (
-              <>
-                <span>•</span>
-                <span>{formatDuration(lesson.durationSeconds)}</span>
-              </>
-            ) : null}
-            {hasQuiz ? (
-              <>
-                <span>•</span>
-                <span>
-                  {status === "content-pending"
-                    ? "Complete lesson first"
-                    : status === "quiz-pending"
-                      ? "Quiz pending"
-                      : "Quiz passed"}
-                </span>
-              </>
-            ) : null}
           </div>
-        </div>
-
-        {completed && !isActive ? (
-          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />
-        ) : !completed && hasQuiz ? (
-          <Circle className="mt-0.5 h-4 w-4 shrink-0 text-slate-300" />
-        ) : null}
-      </button>
-
-      {hasQuiz && !isLocked && (
-        <div className="pl-10 mt-1">
-          <button
-            onClick={() =>
-              router.push(`/courses/${courseId}/quiz/${lesson.quiz!._id}`)
-            }
-            className={cn(
-              "w-full flex items-center gap-2 rounded-lg px-3 py-2 text-xs cursor-pointer",
-              lesson.quiz?.isLockedForUser
-                ? "pointer-events-none opacity-50 text-slate-400"
-                : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800",
-            )}
-          >
-            <FileQuestion className="h-3.5 w-3.5" />
-            <span>
-              {status === "content-pending"
-                ? "Quiz locked until lesson is completed"
-                : status === "quiz-pending"
-                  ? "Take lesson quiz"
-                  : "Review lesson quiz"}
-            </span>
-          </button>
         </div>
       )}
+    </div>
+  );
+};
+
+const QuizIntroSkeleton = () => {
+  return (
+    <div className="mx-auto max-w-4xl animate-pulse">
+      <div className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="border-b border-slate-200 bg-gradient-to-r from-slate-100 via-white to-white px-6 py-10 dark:border-slate-800 dark:from-slate-800 dark:via-slate-900 dark:to-slate-900 sm:px-10">
+          <div className="h-4 w-24 rounded bg-slate-200 dark:bg-slate-800" />
+          <div className="mt-3 h-10 w-3/4 rounded bg-slate-200 dark:bg-slate-800" />
+          <div className="mt-4 h-4 w-full rounded bg-slate-200 dark:bg-slate-800" />
+        </div>
+
+        <div className="grid gap-4 px-6 py-6 sm:grid-cols-3 sm:px-10">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 dark:border-slate-800 dark:bg-slate-950/50"
+            >
+              <div className="h-4 w-20 rounded bg-slate-200 dark:bg-slate-800" />
+              <div className="mt-2 h-6 w-12 rounded bg-slate-200 dark:bg-slate-800" />
+            </div>
+          ))}
+        </div>
+
+        <div className="border-t border-slate-200 px-6 py-6 dark:border-slate-800 sm:px-10">
+          <div className="rounded-2xl bg-slate-50 p-5 dark:bg-slate-950/50">
+            <div className="h-4 w-32 rounded bg-slate-200 dark:bg-slate-800" />
+            <div className="mt-3 space-y-2">
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="h-3 w-full rounded bg-slate-200 dark:bg-slate-800"
+                />
+              ))}
+            </div>
+          </div>
+          <div className="mt-6 flex gap-3">
+            <div className="h-10 w-32 rounded bg-slate-200 dark:bg-slate-800" />
+            <div className="h-10 w-32 rounded bg-slate-200 dark:bg-slate-800" />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

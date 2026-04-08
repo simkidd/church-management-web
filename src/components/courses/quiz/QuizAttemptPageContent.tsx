@@ -61,7 +61,7 @@ const QuizAttemptPageContent = ({
     );
   }
 
-  const { attempt, attemptsLeft } = data.data;
+  const { attempt } = data.data;
   const isPassed = attempt.passed;
   const isPendingReview = attempt.status === "pending-review";
 
@@ -94,7 +94,7 @@ const QuizAttemptPageContent = ({
                   ? "Your submission has been received and is awaiting review."
                   : isPassed
                     ? "Great job. Your quiz attempt met the required score."
-                    : "You can review your result and try again if attempts remain."}
+                    : "You can review your result and try again"}
               </p>
             </div>
 
@@ -121,7 +121,7 @@ const QuizAttemptPageContent = ({
           </div>
         </div>
 
-        <div className="grid gap-4 px-6 py-6 sm:grid-cols-2 lg:grid-cols-4 sm:px-10">
+        <div className="grid gap-4 px-6 py-6 sm:grid-cols-2 lg:grid-cols-3 sm:px-10">
           <StatCard
             icon={<Trophy className="h-5 w-5" />}
             label="Score"
@@ -132,11 +132,7 @@ const QuizAttemptPageContent = ({
             label="Percentage"
             value={`${attempt.percentage}%`}
           />
-          <StatCard
-            icon={<RotateCcw className="h-5 w-5" />}
-            label="Attempts left"
-            value={`${attemptsLeft}`}
-          />
+         
           <StatCard
             icon={<Clock3 className="h-5 w-5" />}
             label="Attempt"
@@ -169,7 +165,7 @@ const QuizAttemptPageContent = ({
               </Link>
             </Button>
 
-            {!isPendingReview && !isPassed && attemptsLeft > 0 && (
+            {!isPendingReview && !isPassed && (
               <Button asChild className="text-white">
                 <Link href={`/courses/${courseId}/quiz/${quizId}`}>
                   <RotateCcw className=" h-4 w-4" />
@@ -214,7 +210,7 @@ const QuizAttemptSkeleton = () => {
         <div className="mt-4 h-10 w-64 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
         <div className="mt-3 h-4 w-full max-w-xl animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}

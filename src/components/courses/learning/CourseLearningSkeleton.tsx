@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const CourseLearningSkeleton = () => {
   return (
-    <div className="flex h-full min-h-0 bg-slate-50 dark:bg-slate-950">
+    <div className="flex h-full min-h-0 bg-[#f6f1e8] dark:bg-slate-950">
       <aside className="hidden h-full w-90 shrink-0 border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 lg:flex lg:flex-col">
         <div className="border-b border-slate-200 px-5 py-4 dark:border-slate-800">
           <Skeleton className="h-4 w-28" />
