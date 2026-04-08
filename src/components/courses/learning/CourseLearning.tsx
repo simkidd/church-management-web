@@ -54,6 +54,7 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
 
   const progressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [watchProgress, setWatchProgress] = useState(0);
+  const [showMobileOutline, setShowMobileOutline] = useState(false);
 
   const {
     setCourseData,
@@ -479,6 +480,21 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
         ) : (
           <>
             <div className="border-b border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900 sm:px-6">
+              <div className="mb-3 flex items-center justify-between gap-2 lg:hidden">
+                <Button
+                  variant={"outline"}
+                  size={"sm"}
+                  onClick={() => setShowMobileOutline(true)}
+                  className="cursor-pointer"
+                >
+                  <BookOpen className="h-4 w-4" />
+                  Course Content
+                </Button>
+
+                <div className="text-xs text-slate-500">
+                  {completedLessons}/{totalLessonCount} completed
+                </div>
+              </div>
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
@@ -502,11 +518,12 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
                   </h1>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex w-full flex-wrap items-stretch gap-2 lg:w-auto lg:items-center">
                   <Button
                     variant="outline"
                     onClick={handlePrevious}
                     disabled={!previousLesson}
+                    className="flex-1 sm:flex-none"
                   >
                     <ChevronLeft className="h-4 w-4" />
                     Previous
@@ -519,6 +536,7 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
                         markContentCompleteMutation.mutate(activeLesson._id)
                       }
                       disabled={markContentCompleteMutation.isPending}
+                      className="flex-1 sm:flex-none"
                     >
                       <CheckCircle2 className="h-4 w-4" />
                       {markContentCompleteMutation.isPending
@@ -530,14 +548,22 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
                   )}
 
                   {showTakeQuizButton && (
-                    <Button onClick={handleOpenLessonQuiz} disabled={isLocked}>
+                    <Button
+                      onClick={handleOpenLessonQuiz}
+                      disabled={isLocked}
+                      className="flex-1 sm:flex-none"
+                    >
                       <FileQuestion className="h-4 w-4" />
                       Take Quiz
                     </Button>
                   )}
 
                   {showCompletedButton && (
-                    <Button variant="outline" disabled>
+                    <Button
+                      variant="outline"
+                      disabled
+                      className="flex-1 sm:flex-none"
+                    >
                       <CheckCircle2 className="h-4 w-4" />
                       Completed
                     </Button>
@@ -548,6 +574,7 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
                     disabled={
                       !nextItem || (hasQuiz && contentCompleted && !quizPassed)
                     }
+                    className="flex-1 sm:flex-none"
                   >
                     {nextItem?.type === "certificate" ? (
                       <>
@@ -602,7 +629,7 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
                     </div>
                   </div>
                 ) : isVideo ? (
-                  <div className="space-y-6 p-4 sm:p-6 lg:p-8">
+                  <div className="space-y-4 p-3 sm:p-6 lg:p-8">
                     <div className="overflow-hidden rounded-2xl bg-black shadow-sm">
                       {mediaItem ? (
                         <VideoPlayer
@@ -647,7 +674,7 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
                     </div>
 
                     <div className="mx-auto w-full max-w-4xl space-y-4">
-                      <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-slate-900">
+                      <div className="rounded-2xl bg-white p-4 sm:p-6 shadow-sm dark:bg-slate-900">
                         <div className="flex items-center gap-2 text-sm text-slate-500">
                           {activeLesson.type === "audio" ? (
                             <Headphones className="h-4 w-4 text-purple-500" />
@@ -664,7 +691,7 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
                 ) : isArticle ? (
                   <div className="px-4 py-6 sm:px-6 lg:px-8">
                     <div className="mx-auto w-full max-w-4xl space-y-4">
-                      <article className="min-h-[calc(100vh-10rem)] bg-white px-6 py-8 shadow-[0_10px_30px_rgba(0,0,0,0.06)] dark:bg-slate-900 sm:px-10 sm:py-10 lg:px-14 lg:py-12">
+                      <article className="min-h-[calc(100vh-10rem)] bg-white px-6 py-8 shadow-[0_10px_30px_rgba(0,0,0,0.06)] dark:bg-slate-900 sm:px-8 sm:py-8 lg:px-14 lg:py-12">
                         {activeLesson.content?.textContent ? (
                           <TextContentRenderer
                             content={activeLesson.content.textContent}
@@ -687,6 +714,56 @@ const CourseLearning = ({ courseId }: { courseId: string }) => {
           </>
         )}
       </main>
+
+      {showMobileOutline && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowMobileOutline(false)}
+          />
+          <div className="absolute inset-y-0 left-0 w-[88%] max-w-sm bg-white shadow-xl dark:bg-slate-900">
+            <div className="flex items-center justify-between border-b border-slate-200 px-4 py-4 dark:border-slate-800">
+              <div>
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                  Course Content
+                </p>
+                <p className="text-xs text-slate-500">
+                  {completedLessons} of {totalLessonCount} completed
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowMobileOutline(false)}
+              >
+                Close
+              </Button>
+            </div>
+
+            <div className="h-[calc(100%-73px)] overflow-y-auto">
+              <CourseLearningSidebar
+                course={currentCourse}
+                courseId={courseId}
+                modules={modules}
+                openModules={openModules}
+                toggleModule={toggleModule}
+                activeLessonId={activeLesson?._id}
+                activeQuizId={quizId}
+                isEnrolled={isEnrolled}
+                progressPercentage={progressPercentage}
+                completedLessons={completedLessons}
+                totalLessonCount={totalLessonCount}
+                courseQuiz={courseQuiz}
+                courseCompleted={courseCompleted}
+                onSelectLesson={(lesson) => {
+                  handleSelectLesson(lesson);
+                  setShowMobileOutline(false);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

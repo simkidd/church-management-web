@@ -21,7 +21,7 @@ export const CertificateSidebarItem = ({
       }}
       disabled={!isEnrolled}
       className={cn(
-        "flex w-full items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-left dark:border-emerald-900/60 dark:bg-emerald-950/30",
+        "flex w-full items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-left dark:border-emerald-900/60 dark:bg-emerald-950/30 cursor-pointer",
         !isEnrolled && "cursor-not-allowed opacity-60",
       )}
     >
