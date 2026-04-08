@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -24,7 +24,7 @@ import { ApiErrorResponse, ApiResponse } from "@/interfaces/response.interface";
 import { quizApi } from "@/lib/api/quiz.api";
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog"; // Assuming you have shadcn dialog
+import { Dialog, DialogContent } from "@/components/ui/dialog"; 
 import { cn } from "@/lib/utils";
 import QuizHeader from "./QuizHeader";
 import QuizLeaveDialog from "./QuizLeaveDialog";
@@ -42,7 +42,6 @@ type AnswersState = Record<string, string[]>;
 const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const isNavigatingRef = useRef(false);
 
   const [answers, setAnswers] = useState<AnswersState>({});
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -65,28 +64,6 @@ const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
     | IQuizQuestion
     | undefined;
 
-  useEffect(() => {
-    // push a fake state so back button doesn't immediately leave
-    window.history.pushState(null, "", window.location.href);
-
-    const handlePopState = () => {
-      // prevent infinite loop
-      if (isNavigatingRef.current) return;
-
-      // open your existing leave dialog
-      setLeaveDialogOpen(true);
-
-      // push state again so user stays on page
-      window.history.pushState(null, "", window.location.href);
-    };
-
-    window.addEventListener("popstate", handlePopState);
-
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, []);
-
   const answeredCount = useMemo(() => {
     return Object.values(answers).filter(
       (selectedOptions) =>
@@ -101,7 +78,6 @@ const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
 
   const isFirst = currentIndex === 0;
   const isLast = currentIndex === totalQuestions - 1;
-  const allAnswered = remainingQuestions === 0;
 
   const submitMutation = useMutation<
     ApiResponse<SubmitAnswersResponse>,
@@ -198,19 +174,11 @@ const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
   const handleManualSubmit = () => {
     if (!quiz) return;
 
-    if (answeredCount !== totalQuestions) {
-      toast.error("Answer all questions before submitting");
-      return;
-    }
-
     submitMutation.mutate();
   };
 
   const handleConfirmLeave = () => {
-    isNavigatingRef.current = true;
-
     setLeaveDialogOpen(false);
-
     router.back();
   };
 
@@ -279,13 +247,13 @@ const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
               <div className="flex items-center justify-between gap-4">
                 {/* Left: Exit */}
                 <Button
-                  variant="ghost"
+                  variant="destructive"
                   size="sm"
                   onClick={() => setLeaveDialogOpen(true)}
-                  className="text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
+                  className="cursor-pointer rounded-xl"
                 >
                   <LogOut className="h-4 w-4 " />
-                  Exit
+                  Quit
                 </Button>
 
                 {/* Center: Progress Info */}
@@ -297,19 +265,6 @@ const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
                     </span>{" "}
                     of {totalQuestions}
                   </span>
-                  <div className="h-4 w-px bg-slate-200 dark:bg-slate-700" />
-                  <span
-                    className={cn(
-                      "text-sm",
-                      allAnswered
-                        ? "text-green-600 dark:text-green-400"
-                        : "text-slate-500",
-                    )}
-                  >
-                    {allAnswered
-                      ? "All answered"
-                      : `${remainingQuestions} remaining`}
-                  </span>
                 </div>
 
                 {/* Right: Navigation */}
@@ -319,7 +274,7 @@ const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
                     size="sm"
                     onClick={handlePreviousQuestion}
                     disabled={isFirst}
-                    className="h-9 w-9 p-0 rounded-xl"
+                    className="h-9 w-9 p-0 rounded-xl cursor-pointer"
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
@@ -327,13 +282,10 @@ const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
                   {isLast ? (
                     <Button
                       onClick={() => setSubmitDialogOpen(true)}
-                      disabled={!allAnswered || submitMutation.isPending}
+                      disabled={submitMutation.isPending}
                       size="sm"
                       className={cn(
-                        "rounded-xl px-4 text-white",
-                        allAnswered
-                          ? "bg-green-600 hover:bg-green-700"
-                          : "opacity-50 cursor-not-allowed",
+                        "rounded-xl px-4 text-white cursor-pointer bg-green-600 hover:bg-green-700",
                       )}
                     >
                       {submitMutation.isPending ? (
@@ -349,10 +301,10 @@ const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
                     <Button
                       onClick={handleNextQuestion}
                       size="sm"
-                      className="rounded-xl px-4 text-white"
+                      className="rounded-xl px-4 text-white cursor-pointer"
                     >
                       Next
-                      <ChevronRight className="h-4 w-4 ml-2" />
+                      <ChevronRight className="h-4 w-4" />
                     </Button>
                   )}
                 </div>
@@ -362,13 +314,6 @@ const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
               <div className="mt-3 flex sm:hidden items-center justify-between text-xs text-slate-500 border-t border-slate-100 dark:border-slate-800 pt-3">
                 <span>
                   {currentIndex + 1} / {totalQuestions}
-                </span>
-                <span
-                  className={
-                    allAnswered ? "text-green-600 dark:text-green-400" : ""
-                  }
-                >
-                  {allAnswered ? "All answered" : `${remainingQuestions} left`}
                 </span>
               </div>
             </div>
@@ -399,7 +344,6 @@ const QuizPageContent = ({ courseId, quizId }: QuizPageContentProps) => {
           <div className="flex flex-col items-center justify-center py-8 space-y-4">
             <div className="relative">
               <Loader2 className="h-12 w-12 animate-spin text-primary" />
-              <div className="absolute inset-0 h-12 w-12 rounded-full border-4 border-primary/20" />
             </div>
             <div className="text-center space-y-2">
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white">

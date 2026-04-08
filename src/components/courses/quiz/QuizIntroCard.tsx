@@ -5,6 +5,7 @@ import { IQuiz, IQuizAttempt } from "@/interfaces/quiz.interface";
 import { cn } from "@/lib/utils";
 import {
   ArrowLeft,
+  Award,
   BookOpen,
   CheckCircle2,
   ChevronRight,
@@ -24,6 +25,10 @@ interface QuizIntroCardProps {
   hasNextLesson?: boolean;
   nextLessonTitle?: string;
   onNextLesson?: () => void;
+
+  hasNextAction?: boolean;
+  nextActionLabel?: string;
+  onNextAction?: () => void;
 }
 
 const QuizIntroCard = ({
@@ -35,6 +40,9 @@ const QuizIntroCard = ({
   hasNextLesson = false,
   nextLessonTitle,
   onNextLesson,
+  hasNextAction = false,
+  nextActionLabel,
+  onNextAction,
 }: QuizIntroCardProps) => {
   const hasPassed = lastAttempt?.passed ?? false;
   const hasPreviousAttempt = attemptsUsed > 0;
@@ -122,6 +130,17 @@ const QuizIntroCard = ({
                 </Button>
               )}
 
+              {hasNextAction && onNextAction && (
+                <Button
+                  onClick={onNextAction}
+                  className="bg-green-600 text-white hover:bg-green-700"
+                >
+                  <Award className="h-4 w-4" />
+                  {nextActionLabel || "Continue"}
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              )}
+
               <Button onClick={onStart} variant="outline">
                 <RotateCcw className="h-4 w-4" />
                 Retake Quiz
@@ -165,7 +184,7 @@ const QuizIntroCard = ({
             label="Questions"
             value={String(quiz.questions.length)}
           />
-         
+
           <InfoCard
             icon={<Trophy className="h-5 w-5" />}
             label="Passing Score"

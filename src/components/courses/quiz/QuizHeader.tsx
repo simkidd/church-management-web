@@ -1,7 +1,6 @@
 "use client";
 
 import { Progress } from "@/components/ui/progress";
-import { Clock3 } from "lucide-react";
 
 const QuizHeader = ({
   title,
@@ -49,10 +48,6 @@ const QuizHeader = ({
             {progressValue}%
           </span>
         </div>
-
-        <p className="mt-2 text-sm text-slate-500">
-          Answer all questions before submitting your quiz.
-        </p>
       </div>
     </div>
   );
