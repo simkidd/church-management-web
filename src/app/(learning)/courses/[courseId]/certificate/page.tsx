@@ -7,5 +7,9 @@ export default async function CourseCertificatePage({
 }) {
   const { courseId } = await params;
 
-  return <CourseCertificate courseId={courseId} />;
+  return (
+    <div className="h-full overflow-y-auto">
+      <CourseCertificate courseId={courseId} />
+    </div>
+  );
 }

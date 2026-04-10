@@ -1,25 +1,40 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
+import confetti from "canvas-confetti";
 import { Award, Download, ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-
 import { certificateApi } from "@/lib/api/certificate.api";
 import { ApiErrorResponse } from "@/interfaces/response.interface";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import CertificateViewer from "./CertificateViewer";
 
-const formatDate = (value: string) =>
-  new Intl.DateTimeFormat("en-NG", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  }).format(new Date(value));
+/* ---------------- CONFETTI ---------------- */
+const fireConfetti = () => {
+  confetti({
+    particleCount: 120,
+    spread: 70,
+    origin: { y: 0.6 },
+  });
+};
 
+/* ---------------- LOADER ---------------- */
+const Loader = () => (
+  <div className="flex min-h-dvh flex-col items-center justify-center gap-3 text-muted-foreground">
+    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+    <p className="text-sm">Preparing your certificate...</p>
+  </div>
+);
+
+/* ---------------- MAIN ---------------- */
 const CourseCertificate = ({ courseId }: { courseId: string }) => {
+  const hasCelebrated = useRef(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+
   const certificateQuery = useQuery({
     queryKey: ["course-certificate", courseId],
     queryFn: () => certificateApi.getMyCourseCertificate(courseId),
@@ -29,7 +44,8 @@ const CourseCertificate = ({ courseId }: { courseId: string }) => {
   const generateMutation = useMutation({
     mutationFn: () => certificateApi.generateCertificate(courseId),
     onSuccess: () => {
-      toast.success("Certificate generated successfully");
+      fireConfetti();
+      hasCelebrated.current = true;
       certificateQuery.refetch();
     },
     onError: (error: AxiosError<ApiErrorResponse>) => {
@@ -39,166 +55,144 @@ const CourseCertificate = ({ courseId }: { courseId: string }) => {
     },
   });
 
+  /* ---------------- DOWNLOAD FUNCTION WITH TOAST.PROMISE ---------------- */
+  const downloadCertificate = async () => {
+    const certificate = certificateQuery.data?.data;
+    if (!certificate?.certificateUrl) {
+      toast.error("Certificate URL not available");
+      return;
+    }
+
+    setIsDownloading(true);
+
+    const downloadPromise = (async () => {
+      const response = await fetch(certificate.certificateUrl as string);
+
+      if (!response.ok) {
+        throw new Error(`Failed to download: ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `certificate-${courseId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+
+      return true;
+    })();
+
+    toast.promise(downloadPromise, {
+      loading: "Downloading your certificate...",
+      success: () => {
+        setIsDownloading(false);
+        return "Certificate downloaded successfully! 🎓";
+      },
+      error: (error) => {
+        setIsDownloading(false);
+        console.error("Download error:", error);
+        return "Failed to download certificate. Please try again.";
+      },
+    });
+  };
+
+  /* Auto-generate */
   useEffect(() => {
-    const status =
-      certificateQuery.error as AxiosError<ApiErrorResponse> | null;
-    const isNotFound = status?.response?.status === 404;
+    const err = certificateQuery.error as AxiosError<ApiErrorResponse> | null;
 
     if (
       certificateQuery.isError &&
-      isNotFound &&
-      !generateMutation.isPending &&
-      !generateMutation.isSuccess
+      err?.response?.status === 404 &&
+      !generateMutation.isPending
     ) {
       generateMutation.mutate();
     }
-  }, [certificateQuery.isError, certificateQuery.error, generateMutation]);
+  }, [certificateQuery.isError]);
 
-  if (certificateQuery.isPending || generateMutation.isPending) {
-    return (
-      <div className="mx-auto flex min-h-[60vh] max-w-5xl items-center justify-center px-4 py-10">
-        <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
-          <p className="mt-3 text-sm text-muted-foreground">
-            Preparing your certificate...
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const isLoading = certificateQuery.isPending || generateMutation.isPending;
 
+  /* ---------------- LOADING ---------------- */
+  if (isLoading) return <Loader />;
+
+  /* ---------------- ERROR ---------------- */
   if (certificateQuery.isError) {
     const error = certificateQuery.error as AxiosError<ApiErrorResponse>;
-    return (
-      <div className="mx-auto max-w-4xl px-4 py-10">
-        <Card>
-          <CardContent className="py-10 text-center">
-            <h1 className="text-2xl font-bold">Certificate not available</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              {error.response?.data?.message ||
-                "Your certificate could not be loaded yet."}
-            </p>
-            <div className="mt-6 flex justify-center gap-3">
-              <Button asChild variant="outline">
-                <Link href={`/courses/${courseId}/learn`}>
-                  Back to learning
-                </Link>
-              </Button>
 
-              <Button
-                onClick={() => generateMutation.mutate()}
-                disabled={generateMutation.isPending}
-              >
-                Generate Certificate
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
+        <h1 className="text-xl font-semibold">Certificate not available</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {error.response?.data?.message ||
+            "We couldn't load your certificate yet."}
+        </p>
+
+        <div className="mt-6 flex gap-3">
+          <Button asChild variant="outline">
+            <Link href={`/courses/${courseId}/learn`}>Back</Link>
+          </Button>
+
+          <Button onClick={() => generateMutation.mutate()}>Generate</Button>
+        </div>
       </div>
     );
   }
 
   const certificate = certificateQuery.data?.data;
+  if (!certificate) return null;
 
-  if (!certificate) {
-    return null;
-  }
-
+  /* ---------------- UI ---------------- */
   return (
-    <div className="mx-auto max-w-5xl space-y-6 px-4 py-8">
-      <div>
-        <div className="flex items-center gap-2 text-primary">
+    <div className="mx-auto max-w-5xl space-y-6 px-4 py-10">
+      {/* HEADER */}
+      <div className="text-center">
+        <div className="inline-flex items-center gap-2 text-primary dark:text-primary-light">
           <Award className="h-5 w-5" />
-          <span className="text-sm font-semibold">Course Completed</span>
+          <span className="text-sm font-medium">Certificate Earned</span>
         </div>
 
-        <h1 className="mt-2 text-3xl font-bold tracking-tight">
-          Your Certificate
-        </h1>
-        <p className="mt-1 text-muted-foreground">
-          Congratulations on completing this course successfully.
+        <h1 className="mt-2 text-3xl font-bold">🎉 Congratulations</h1>
+
+        <p className="text-muted-foreground">
+          Your certificate is ready for download
         </p>
       </div>
 
-      <Card className="overflow-hidden">
-        <CardContent className="space-y-6 p-6">
+      {/* PDF VIEWER */}
+      <Card className="overflow-hidden border py-0">
+        <CardContent className="p-0">
           {certificate.certificateUrl ? (
-            <div className="overflow-hidden rounded-xl border bg-white">
-              <iframe
-                src={certificate.certificateUrl}
-                title="Certificate Preview"
-                className="h-[75vh] w-full"
-              />
-            </div>
+            <CertificateViewer url={certificate.certificateUrl} />
           ) : (
-            <div className="rounded-xl border p-8 text-center text-sm text-muted-foreground">
-              Certificate preview is not available.
+            <div className="p-10 text-center text-muted-foreground">
+              No certificate preview available
             </div>
           )}
-
-          <div className="grid gap-4 rounded-xl border bg-muted/30 p-4 md:grid-cols-2">
-            <div>
-              <p className="text-xs text-muted-foreground">Recipient</p>
-              <p className="font-medium">{certificate.recipientName}</p>
-            </div>
-
-            <div>
-              <p className="text-xs text-muted-foreground">Course Title</p>
-              <p className="font-medium">{certificate.courseTitle}</p>
-            </div>
-
-            <div>
-              <p className="text-xs text-muted-foreground">
-                Certificate Number
-              </p>
-              <p className="font-medium">{certificate.certificateNumber}</p>
-            </div>
-
-            <div>
-              <p className="text-xs text-muted-foreground">Verification Code</p>
-              <p className="font-medium">{certificate.verificationCode}</p>
-            </div>
-
-            <div>
-              <p className="text-xs text-muted-foreground">Issued Date</p>
-              <p className="font-medium">{formatDate(certificate.issuedAt)}</p>
-            </div>
-
-            <div>
-              <p className="text-xs text-muted-foreground">Status</p>
-              <p className="font-medium capitalize">{certificate.status}</p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            {certificate.certificateUrl && (
-              <Button asChild>
-                <a
-                  href={certificate.certificateUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <Download className="h-4 w-4" />
-                  Download Certificate
-                </a>
-              </Button>
-            )}
-
-            <Button asChild variant="outline">
-              <Link
-                href={`/certificates/verify/${certificate.verificationCode}`}
-              >
-                <ExternalLink className="h-4 w-4" />
-                Verify Certificate
-              </Link>
-            </Button>
-
-            <Button asChild variant="outline">
-              <Link href={`/courses/${courseId}`}>Back to Course</Link>
-            </Button>
-          </div>
         </CardContent>
       </Card>
+
+      {/* ACTION BUTTONS */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+        <Button
+          onClick={downloadCertificate}
+          disabled={isDownloading}
+          className="w-full sm:w-auto text-white"
+        >
+          {isDownloading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Downloading...
+            </>
+          ) : (
+            <>
+              <Download className="h-4 w-4" />
+              Download Certificate
+            </>
+          )}
+        </Button>
+      </div>
     </div>
   );
 };
