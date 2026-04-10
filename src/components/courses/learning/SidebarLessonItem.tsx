@@ -65,7 +65,7 @@ export const SidebarLessonItem = ({
           <p
             className={cn(
               "line-clamp-2 text-sm font-medium",
-              isActive ? "text-primary" : "text-slate-800 dark:text-slate-200",
+              isActive ? "text-primary dark:text-primary-light" : "text-slate-800 dark:text-slate-200",
             )}
           >
             {index}. {lesson.title}
