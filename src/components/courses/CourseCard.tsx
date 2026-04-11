@@ -19,16 +19,15 @@ interface CourseCardProps {
 }
 
 const CourseCard = ({ course, index = 0 }: CourseCardProps) => {
-  const isEnrolled = !!course.enrollment?.isEnrolled;
-  const progress = Math.max(0, Math.min(100, course.progress?.percentage ?? 0));
   const enrollmentStatus = course.enrollment?.status ?? null;
+  const isEnrolled =
+    !!course.enrollment?.isEnrolled && enrollmentStatus === "active";
+  const progress = Math.max(0, Math.min(100, course.progress?.percentage ?? 0));
 
   const isCompleted =
     enrollmentStatus === "completed" || (isEnrolled && progress >= 100);
 
-  const href = isEnrolled
-    ? `/courses/${course._id}`
-    : `/courses/${course._id}`;
+  const href = isEnrolled ? `/courses/${course._id}` : `/courses/${course._id}`;
 
   const thumbnailUrl =
     course.thumbnail?.url ||
@@ -111,7 +110,7 @@ const CourseCard = ({ course, index = 0 }: CourseCardProps) => {
             {course.title}
           </h3>
 
-          {isEnrolled ? (
+          {isEnrolled || isCompleted ? (
             <div className="mt-5 rounded-2xl bg-slate-50 p-4 dark:bg-slate-950/60">
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-xs font-medium text-slate-500">

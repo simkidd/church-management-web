@@ -23,7 +23,10 @@ export interface ICourse {
     percentage: number;
     completedLessons: number;
     totalLessons: number;
+    courseCompleted: boolean;
   };
+
+  status?: "in-progress" | "completed";
 }
 
 export interface IMedia {

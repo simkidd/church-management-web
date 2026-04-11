@@ -42,6 +42,11 @@ export const courseApi = {
     return response.data;
   },
 
+  unenrollFromCourse: async (id: string): Promise<{ message: string }> => {
+    const response = await api.delete(`/courses/${id}/unenroll`);
+    return response.data;
+  },
+
   // get course modules
   getCourseModules: async (
     courseId: string,
@@ -51,7 +56,7 @@ export const courseApi = {
       enrolled: { isEnrolled: boolean; status: string | null };
       progress: IProgressStats;
       modules: IModuleWithState[];
-      quiz: IQuizSummary | null
+      quiz: IQuizSummary | null;
     }>
   > => {
     const response = await api.get(`/courses/${courseId}/modules`);
