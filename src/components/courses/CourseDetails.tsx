@@ -34,6 +34,7 @@ import EnrollmentCTA from "./EnrollmentCTA";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { IQuizSummary } from "@/interfaces/quiz.interface";
+import LessonMaterials from "./LessonMaterials";
 
 type DetailTab = "overview" | "materials";
 
@@ -57,6 +58,14 @@ const CourseDetails = ({ courseId }: { courseId: string }) => {
     queryFn: () => courseApi.getCourseModules(courseId),
     enabled: !!courseId,
   });
+
+  const { data: materialsData } = useQuery({
+    queryKey: ["course-materials", courseId],
+    queryFn: () => courseApi.getCourseMaterials(courseId),
+    enabled: activeTab === "materials",
+  });
+
+  const materials = materialsData?.data || [];
 
   const modules = data?.data?.modules ?? [];
   const isEnrolled = data?.data?.enrolled?.isEnrolled ?? false;
@@ -298,41 +307,11 @@ const CourseDetails = ({ courseId }: { courseId: string }) => {
               )}
 
               {activeTab === "materials" && (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-800/40">
-                      <p className="text-sm text-slate-500">Modules</p>
-                      <h3 className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
-                        {modules.length}
-                      </h3>
-                    </div>
-
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-800/40">
-                      <p className="text-sm text-slate-500">Lessons</p>
-                      <h3 className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
-                        {totalLessons}
-                      </h3>
-                    </div>
-
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-800/40">
-                      <p className="text-sm text-slate-500">Quizzes</p>
-                      <h3 className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
-                        {totalQuizzes}
-                      </h3>
-                    </div>
-                  </div>
-
-                  <div className="rounded-2xl border border-dashed border-slate-300 p-5 dark:border-slate-700">
-                    <h4 className="mb-2 font-semibold text-slate-900 dark:text-white">
-                      About the learning materials
-                    </h4>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                      This course contains videos, articles, and quizzes
-                      organized by module. Click any lesson in the curriculum to
-                      start learning.
-                    </p>
-                  </div>
-                </div>
+                <LessonMaterials
+                  courseId={courseId}
+                  modules={modules}
+                  isEnrolled={isEnrolled}
+                />
               )}
             </div>
           </motion.div>

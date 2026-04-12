@@ -1,30 +1,65 @@
 "use client";
 
-import { ICourse } from "@/interfaces/course.interface";
-import { cn } from "@/lib/utils";
-import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
-  PlayCircle,
-  CheckCircle2,
-  Award,
-  MoreVertical,
-  BookOpen,
-  Clock,
-} from "lucide-react";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
+import { ICourse } from "@/interfaces/course.interface";
+import { ApiErrorResponse } from "@/interfaces/response.interface";
+import courseApi from "@/lib/api/course.api";
+import { cn } from "@/lib/utils";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 import { motion } from "framer-motion";
+import {
+  Award,
+  BookOpen,
+  CheckCircle2,
+  Clock,
+  MoreVertical,
+  PlayCircle,
+} from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface EnrolledCourseCardProps {
   course: ICourse;
 }
 
 const EnrolledCourseCard = ({ course }: EnrolledCourseCardProps) => {
+  const queryClient = useQueryClient();
+  const [openUnenrollModal, setOpenUnenrollModal] = useState(false);
+
+  const { mutate: unenroll, isPending } = useMutation({
+    mutationFn: (courseId: string) => courseApi.unenrollFromCourse(courseId),
+
+    onSuccess: (res) => {
+      toast.success(res.message || "Unenrolled successfully");
+      queryClient.invalidateQueries({
+        queryKey: ["my-courses"],
+      });
+      setOpenUnenrollModal(false);
+    },
+
+    onError: (err: AxiosError<ApiErrorResponse>) => {
+      console.log(err);
+      toast.error(err?.response?.data?.message || "Failed to unenroll");
+    },
+  });
+
   const progress = Math.max(0, Math.min(100, course.progress?.percentage ?? 0));
   const completedLessons = course.progress?.completedLessons ?? 0;
   const totalLessons = course.progress?.totalLessons ?? 0;
@@ -89,32 +124,31 @@ const EnrolledCourseCard = ({ course }: EnrolledCourseCardProps) => {
           </Badge>
         </div>
 
-        <div className="absolute right-3 top-3 opacity-0 transition-opacity group-hover:opacity-100">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className="rounded-lg bg-black/50 p-2 text-white backdrop-blur-sm transition-colors hover:bg-black/70"
-              >
-                <MoreVertical size={16} />
-              </button>
-            </DropdownMenuTrigger>
+        {course.status === "in-progress" && (
+          <div className="absolute right-3 top-3 ">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="rounded-lg bg-black/50 p-2 text-white backdrop-blur-sm transition-colors hover:bg-black/70 cursor-pointer"
+                >
+                  <MoreVertical size={16} />
+                </button>
+              </DropdownMenuTrigger>
 
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem className="cursor-pointer">
-                <BookOpen size={16} className="mr-2" />
-                View Syllabus
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
-                <Award size={16} className="mr-2" />
-                View Certificate
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer text-red-600">
-                Unenroll
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem
+                  variant="destructive"
+                  className="cursor-pointer "
+                  onClick={() => setOpenUnenrollModal(true)}
+                  disabled={isPending}
+                >
+                  Unenroll
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
 
         <div className="absolute bottom-3 right-3">
           {isCompleted ? (
@@ -126,10 +160,7 @@ const EnrolledCourseCard = ({ course }: EnrolledCourseCardProps) => {
               href={`/courses/${course._id}/learn`}
               className="flex size-12 items-center justify-center rounded-full bg-white shadow-lg transition-transform group-hover:scale-110 dark:bg-slate-900"
             >
-              <PlayCircle
-                size={24}
-                className="fill-primary/20 text-primary"
-              />
+              <PlayCircle size={24} className="fill-primary/20 text-primary" />
             </Link>
           )}
         </div>
@@ -217,11 +248,58 @@ const EnrolledCourseCard = ({ course }: EnrolledCourseCardProps) => {
                     : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300",
               )}
             >
-              {isCompleted ? "Review" : hasStarted ? "Continue" : "Start Learning"}
+              {isCompleted
+                ? "Review"
+                : hasStarted
+                  ? "Continue"
+                  : "Start Learning"}
             </Link>
           </div>
         </div>
       </div>
+
+      <Dialog open={openUnenrollModal} onOpenChange={setOpenUnenrollModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Unenroll from course?</DialogTitle>
+            <DialogDescription>
+              You will lose easy access to this course. Your progress will be
+              saved, and you can re-enroll anytime.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="rounded-lg bg-slate-50 dark:bg-slate-800 p-3 text-sm">
+            <p className="font-medium text-slate-700 dark:text-slate-200">
+              {course.title}
+            </p>
+            <p className="text-xs text-slate-500 mt-1">
+              {progress}% completed • {completedLessons}/{totalLessons} lessons
+            </p>
+          </div>
+
+          <DialogFooter className="flex gap-2 sm:justify-end">
+            <Button
+              variant={"ghost"}
+              onClick={() => setOpenUnenrollModal(false)}
+              className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              variant={"destructive"}
+              onClick={() => {
+                unenroll(course._id);
+              }}
+              disabled={isPending}
+              className="px-4 py-2 text-sm font-semibold rounded-lg"
+            >
+              {isPending ? "Unenrolling..." : "Yes, Unenroll"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </motion.article>
   );
 };

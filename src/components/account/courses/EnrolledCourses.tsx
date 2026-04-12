@@ -22,7 +22,7 @@ import { motion, AnimatePresence } from "framer-motion";
 type CourseStatus = "in-progress" | "completed" | "all";
 
 const EnrolledCourses = () => {
-  const [status, setStatus] = useState<CourseStatus>("in-progress");
+  const [status, setStatus] = useState<CourseStatus>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data, isLoading } = useQuery({
@@ -42,9 +42,9 @@ const EnrolledCourses = () => {
   );
 
   const tabs = [
+    { id: "all" as const, label: "All Courses", icon: BookOpen },
     { id: "in-progress" as const, label: "In Progress", icon: Clock },
     { id: "completed" as const, label: "Completed", icon: CheckCircle2 },
-    { id: "all" as const, label: "All Courses", icon: BookOpen },
   ];
 
   return (
