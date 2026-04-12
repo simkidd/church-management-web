@@ -301,7 +301,6 @@ const LessonMaterials = ({
             <iframe
               src={`${previewUrl}#toolbar=0&navpanes=0&scrollbar=1`}
               className="w-full h-full"
-              sandbox="allow-same-origin allow-scripts"
             />
           </div>
         </div>
