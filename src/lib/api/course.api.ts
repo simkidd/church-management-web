@@ -1,4 +1,8 @@
-import { ICourse, ListCourseParams } from "@/interfaces/course.interface";
+import {
+  ICourse,
+  ILessonMaterial,
+  ListCourseParams,
+} from "@/interfaces/course.interface";
 import { IModuleWithState } from "@/interfaces/module.interface";
 import { IProgressStats } from "@/interfaces/progress.interface";
 import {
@@ -60,6 +64,13 @@ export const courseApi = {
     }>
   > => {
     const response = await api.get(`/courses/${courseId}/modules`);
+    return response.data;
+  },
+
+  getCourseMaterials: async (
+    courseId: string,
+  ): Promise<ApiResponse<ILessonMaterial[]>> => {
+    const response = await api.get(`/materials/course/${courseId}`);
     return response.data;
   },
 };
