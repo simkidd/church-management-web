@@ -68,7 +68,7 @@ const TitleAndFilter = () => {
             onChange={(e) => setSortBy(e.target.value as "popular" | "newest" | "az")}
             className="appearance-none pl-4 pr-10 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark text-slate-600 dark:text-slate-300 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm cursor-pointer outline-none focus:border-primary"
           >
-            <option value="popular">Sort by: Popular</option>
+            {/* <option value="popular">Sort by: Popular</option> */}
             <option value="newest">Sort by: Newest</option>
             <option value="az">Sort by: A-Z</option>
           </select>
